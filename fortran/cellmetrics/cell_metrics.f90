@@ -1,5 +1,5 @@
 !-*- f90 -*- -
-subroutine inv_metrics(xx, yy, xy_inv, M, N)
+subroutine inv_metrics(xx, xy_inv, M, N)
 ! calculates inverse grid metrics
 ! xy_inv = [y_eta(i+.5,j) x_eta(i+.5,j) y_zeta(i,j+.5) x_zeta(i,j+.5)]
 
