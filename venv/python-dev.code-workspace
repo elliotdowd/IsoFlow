@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "..\\..\\python-dev"
+		},
+		{
+			"path": "..\\..\\compressible_wedge"
+		}
+	],
+	"settings": {
+		"git.ignoreLimitWarning": true,
+		"explorer.sortOrder": "type"
+	}
+}
