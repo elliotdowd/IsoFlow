@@ -1,0 +1,4 @@
+f2py C:\Users\Elliot\Documents\Python\python-dev\fortran\heimenz\rk4.f90 -m runge -h runge.pyf
+python -m numpy.f2py -c -m runge C:\Users\Elliot\Documents\Python\python-dev\fortran\heimenz\rk4.f90
+
+note: copy ...gfortran-win_amd64.dll file from module_name\libs to working directory

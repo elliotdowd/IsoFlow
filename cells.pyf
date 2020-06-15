@@ -1,0 +1,29 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module cells ! in 
+    interface  ! in :cells
+        subroutine inv_metrics(xx,xy_inv,m,n) ! in :cells:C:\Users\Elliot\Documents\Python\python-dev\fortran\cellmetrics\cell_metrics.f90
+            real(kind=8) dimension(m + 1,n + 1,2),intent(in) :: xx
+            real(kind=8) dimension(m,n,4),intent(inout),depend(m,n) :: xy_inv
+            integer, optional,intent(in),check((shape(xx,0)-1)==m),depend(xx) :: m=(shape(xx,0)-1)
+            integer, optional,intent(in),check((shape(xx,1)-1)==n),depend(xx) :: n=(shape(xx,1)-1)
+        end subroutine inv_metrics
+        subroutine face_areas(xy_inv,s_proj,m,n) ! in :cells:C:\Users\Elliot\Documents\Python\python-dev\fortran\cellmetrics\cell_metrics.f90
+            real(kind=8) dimension(m,n,4),intent(in) :: xy_inv
+            real(kind=8) dimension(m,n,6),intent(inout),depend(m,n) :: s_proj
+            integer, optional,intent(in),check(shape(xy_inv,0)==m),depend(xy_inv) :: m=shape(xy_inv,0)
+            integer, optional,intent(in),check(shape(xy_inv,1)==n),depend(xy_inv) :: n=shape(xy_inv,1)
+        end subroutine face_areas
+        subroutine calc_cellcentroids(xx,cc,area,m,n) ! in :cells:C:\Users\Elliot\Documents\Python\python-dev\fortran\cellmetrics\cell_metrics.f90
+            real(kind=8) dimension(m + 1,n + 1,2),intent(in) :: xx
+            real(kind=8) dimension(m,n,2),intent(inout),depend(m,n) :: cc
+            real(kind=8) dimension(m,n),intent(inout),depend(m,n) :: area
+            integer, optional,intent(in),check((shape(xx,0)-1)==m),depend(xx) :: m=(shape(xx,0)-1)
+            integer, optional,intent(in),check((shape(xx,1)-1)==n),depend(xx) :: n=(shape(xx,1)-1)
+        end subroutine calc_cellcentroids
+    end interface 
+end python module cells
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/
