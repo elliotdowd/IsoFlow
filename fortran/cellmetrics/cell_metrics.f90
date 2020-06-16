@@ -67,7 +67,7 @@ end subroutine
 
 
 !-*- f90 -*- -
-subroutine calc_cellCentroids(xx, yy, ccx, ccy area, M, N)
+subroutine calc_cellCentroids(xx, yy, ccx, ccy, area, M, N)
     ! calculate polygon centroid and cell area given vectors of x and y points, cell area
     ! returns cx, cy in vector
     implicit none
@@ -76,12 +76,11 @@ subroutine calc_cellCentroids(xx, yy, ccx, ccy area, M, N)
     integer :: i, j, k
 
     real, dimension(sides+1) :: x, y
-    real :: A
-    real, dimension(2) :: temp
 
     integer, intent(in) :: M, N
 
-    real(kind=8), dimension(M, N), intent(inout) :: ccx, ccy
+    real(kind=8), dimension(M, N), intent(inout) :: ccx
+    real(kind=8), dimension(M, N), intent(inout) :: ccy
     real(kind=8), dimension(M, N), intent(in) :: area
     real(kind=8), dimension(M+1, N+1), intent(in) :: xx, yy
 
@@ -107,27 +106,31 @@ subroutine calc_cellCentroids(xx, yy, ccx, ccy area, M, N)
 end subroutine
 
 
-
-function calc_cellArea(N, xx)
+!-*- f90 -*- -
+subroutine calc_cellArea(sides, xx, yy, area, M, N)
         ! calculate polygon area given polygon side numbers N, vectors of x and y points
 
     integer :: i, j, k
-    integer, intent(in) :: N
+    integer, intent(in) :: sides
+    integer, intent(in) :: M, N
         
-    real, dimension(N), intent(in) :: x, y
-    real :: calc_cellArea
+    real(kind=8), dimension(M+1, N+1), intent(in) :: xx
+    real(kind=8), dimension(M+1, N+1), intent(in) :: yy
+    real(kind=8), dimension(N) :: x, y
+    real(kind=8), intent(inout) :: area(M, N)
+    
 
     do i = 1, M
 
         do j = 1, N
 
-            x = (/ xx(i, j, 1), xx(i+1, j, 1), xx(i+1, j+1, 1), xx(i, j+1, 1), xx(i, j, 1) /)
-            y = (/ xx(i, j, 2), xx(i+1, j, 2), xx(i+1, j+1, 2), xx(i, j+1, 2), xx(i, j, 2) /)
+            x = (/ xx(i, j), xx(i+1, j), xx(i+1, j+1), xx(i, j+1), xx(i, j) /)
+            y = (/ yy(i, j), yy(i+1, j), yy(i+1, j+1), yy(i, j+1), yy(i, j) /)
 
-            calc_cellArea = 0
-            do i = 1, N
+            area(i,j) = 0
+            do k = 1, sides
                 ! cell area summation
-                calc_cellArea = calc_cellArea + 0.5 * (x(i)*y(i+1) - x(i+1)*y(i))
+                area(i,j) = area(i,j) + 0.5 * (x(k)*y(k+1) - x(k+1)*y(k))
 
             end do
 
@@ -135,4 +138,4 @@ function calc_cellArea(N, xx)
     
     end do
 
-end function calc_cellArea
+end subroutine
