@@ -67,13 +67,13 @@ end subroutine
 
 
 !-*- f90 -*- -
-subroutine calc_cellCentroids(xx, cc, area, M, N)
+subroutine calc_cellCentroids(xx, yy, ccx, ccy area, M, N)
     ! calculate polygon centroid and cell area given vectors of x and y points, cell area
     ! returns cx, cy in vector
     implicit none
 
     integer, parameter :: sides = 4
-    integer :: i, k, l
+    integer :: i, j, k
 
     real, dimension(sides+1) :: x, y
     real :: A
@@ -81,55 +81,58 @@ subroutine calc_cellCentroids(xx, cc, area, M, N)
 
     integer, intent(in) :: M, N
 
-    real(kind=8), dimension(M, N, 2), intent(inout) :: cc
-    real(kind=8), dimension(M, N), intent(inout) :: area
-    real(kind=8), dimension(M+1, N+1, 2), intent(in) :: xx
+    real(kind=8), dimension(M, N), intent(inout) :: ccx, ccy
+    real(kind=8), dimension(M, N), intent(in) :: area
+    real(kind=8), dimension(M+1, N+1), intent(in) :: xx, yy
 
-    do k = 1, M
+    do i = 1, M
 
-        do l = 1, N
+        do j = 1, N
 
-            x = (/ xx(k, l, 1), xx(k+1, l, 1), xx(k+1, l+1, 1), xx(k, l+1, 1), xx(k, l, 1) /)
-            y = (/ xx(k, l, 2), xx(k+1, l, 2), xx(k+1, l+1, 2), xx(k, l+1, 2), xx(k, l, 2) /)
+            x = (/ xx(i, j), xx(i+1, j), xx(i+1, j+1), xx(i, j+1), xx(i, j) /)
+            y = (/ yy(i, j), yy(i+1, j), yy(i+1, j+1), yy(i, j+1), yy(i, j) /)
 
 
-            A = calc_cellArea(sides, x, y)
-            temp = (/ 0, 0 /)
-
-            do i = 1, sides
+            do k = 1, sides
                 ! cell area summation
-                temp = temp + (1/(6*A)) * (/ (x(i)+x(i+1)) * (x(i)*y(i+1)-x(i+1)*y(i)), &
-                                        &  (y(i)+y(i+1)) * (x(i)*y(i+1)-x(i+1)*y(i)) /)
+                ccx = ccx(i,j) + (1/(6*area(i,j))) * ((x(k)+x(k+1)) * (x(k)*y(k+1)-x(k+1)*y(k)))
+                ccy = ccy(i,j) + (1/(6*area(i,j))) * ((y(k)+y(k+1)) * (x(k)*y(k+1)-x(k+1)*y(k)))
 
             end do
 
-            area(k, l) = A
-
-            cc(k,l,1) = temp(1)
-            cc(k,l,2) = temp(2)
-
         end do
                     
-    end do
-
-    contains
-        function calc_cellArea(N, x, y)
-        ! calculate polygon area given polygon side numbers N, vectors of x and y points
-
-        integer :: i
-        integer, intent(in) :: N
-        
-        real, dimension(N), intent(in) :: x, y
-        real :: calc_cellArea
-
-        calc_cellArea = 0
-        do i = 1, N
-            ! cell area summation
-            calc_cellArea = calc_cellArea + 0.5 * (x(i)*y(i+1) - x(i+1)*y(i))
-
-        end do
-
-        end function calc_cellArea
+    end do        
 
 end subroutine
 
+
+
+function calc_cellArea(N, xx)
+        ! calculate polygon area given polygon side numbers N, vectors of x and y points
+
+    integer :: i, j, k
+    integer, intent(in) :: N
+        
+    real, dimension(N), intent(in) :: x, y
+    real :: calc_cellArea
+
+    do i = 1, M
+
+        do j = 1, N
+
+            x = (/ xx(i, j, 1), xx(i+1, j, 1), xx(i+1, j+1, 1), xx(i, j+1, 1), xx(i, j, 1) /)
+            y = (/ xx(i, j, 2), xx(i+1, j, 2), xx(i+1, j+1, 2), xx(i, j+1, 2), xx(i, j, 2) /)
+
+            calc_cellArea = 0
+            do i = 1, N
+                ! cell area summation
+                calc_cellArea = calc_cellArea + 0.5 * (x(i)*y(i+1) - x(i+1)*y(i))
+
+            end do
+
+        end do
+    
+    end do
+
+end function calc_cellArea
