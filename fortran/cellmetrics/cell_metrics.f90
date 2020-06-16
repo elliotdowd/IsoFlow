@@ -64,6 +64,7 @@ subroutine calc_cellCentroids(xx, yy, ccx, ccy, area, M, N)
     ! returns cx, cy in vector
     implicit none
 
+    integer, parameter:: dp=kind(0.d0)
     integer, parameter :: sides = 4
     integer :: i, j, k
 
@@ -88,8 +89,8 @@ subroutine calc_cellCentroids(xx, yy, ccx, ccy, area, M, N)
 
             do k = 1, sides
                 ! cell area summation
-                ccx(i,j) = ccx(i,j) + (1/(6*area(i,j))) * ((x(k)+x(k+1)) * (x(k)*y(k+1)-x(k+1)*y(k)))
-                ccy(i,j) = ccy(i,j) + (1/(6*area(i,j))) * ((y(k)+y(k+1)) * (x(k)*y(k+1)-x(k+1)*y(k)))
+                ccx(i,j) = ccx(i,j) + (1/(6.0_dp*area(i,j))) * ((x(k)+x(k+1)) * (x(k)*y(k+1)-x(k+1)*y(k)))
+                ccy(i,j) = ccy(i,j) + (1/(6.0_dp*area(i,j))) * ((y(k)+y(k+1)) * (x(k)*y(k+1)-x(k+1)*y(k)))
 
             end do
 
@@ -103,6 +104,9 @@ end subroutine
 !-*- f90 -*- -
 subroutine calc_cellArea(sides, xx, yy, area, M, N)
     ! calculate polygon area given polygon side numbers N, vectors of x and y points
+
+    implicit none
+    integer, parameter:: dp=kind(0.d0)
 
     integer :: i, j, k
     integer, intent(in) :: sides
@@ -124,7 +128,7 @@ subroutine calc_cellArea(sides, xx, yy, area, M, N)
             area(i,j) = 0
             do k = 1, sides
                 ! cell area summation
-                area(i,j) = area(i,j) + 0.5 * (x(k)*y(k+1) - x(k+1)*y(k))
+                area(i,j) = area(i,j) + 0.5_dp * (x(k)*y(k+1) - x(k+1)*y(k))
 
             end do
 

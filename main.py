@@ -14,10 +14,6 @@ from gen_wedge import mesh_wedge
 
 xx, yy = mesh_wedge(domain)
 
-class mesh:
-    xx = xx
-    yy = yy
-
 import cells
 
 # format grid variable for input into fortran subroutines
@@ -39,7 +35,15 @@ area = np.zeros((domain.M+2, domain.N+2), dtype='float', order='F')
 cells.calc_cellarea(4, xx, yy, area, domain.M+2, domain.N+2)
 
 # calculate cell centroids
-ccx = np.zeros((domain.M+2, domain.N+2), dtype='float', order='F'); ccy = ccx
+ccx = np.zeros((domain.M+2, domain.N+2), dtype='float', order='F')
+ccy = np.zeros((domain.M+2, domain.N+2), dtype='float', order='F')
+
 cells.calc_cellcentroids(xx, yy, ccx, ccy, area, domain.M+2, domain.N+2)
 
-print(ccx)
+# create mesh class
+class mesh:
+    xx = xx
+    yy = yy
+    ccx = ccx
+    ccy = ccy
+    dV = area
