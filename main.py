@@ -37,10 +37,9 @@ cells.face_areas(xy_inv, s_proj, domain.M+2, domain.N+2)
 # calculate cell areas
 area = np.zeros((domain.M+2, domain.N+2), dtype='float', order='F')
 cells.calc_cellarea(4, xx, yy, area, domain.M+2, domain.N+2)
-print(area)
 
 # calculate cell centroids
 ccx = np.zeros((domain.M+2, domain.N+2), dtype='float', order='F'); ccy = ccx
-cells.calc_cellcentroids(grid, ccx, ccy, area, domain.M+2, domain.N+2)
+cells.calc_cellcentroids(xx, yy, ccx, ccy, area, domain.M+2, domain.N+2)
 
-print(area)
+print(ccx)
