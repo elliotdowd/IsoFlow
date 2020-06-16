@@ -47,3 +47,5 @@ class mesh:
     ccx = ccx
     ccy = ccy
     dV = area
+
+print(mesh.dV)
