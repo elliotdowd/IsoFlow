@@ -48,9 +48,12 @@ class mesh:
     ccy = ccy
     dV = area
 
-#print(mesh.dV)
-
+# mesh plotting
 fig = plt.figure('Grid Generation')
 ax = fig.gca(projection='3d')
 
-ax.plot_surface(mesh.xx, mesh.yy, mesh.dV)
+ax.plot_wireframe(mesh.xx*0, mesh.xx, mesh.yy, color='green')
+ax.view_init(0, 0)
+ax.set_proj_type('ortho')
+
+plt.show()
