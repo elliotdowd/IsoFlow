@@ -3,8 +3,8 @@ import numpy as np
 
 class domain:
     name = 'wedge'
-    M = 30000
-    N = 26000
+    M = 6000
+    N = 5400
     wedge_start = 0.5
     length = 1.5
     height = 1
@@ -15,7 +15,6 @@ xx, yy = mesh_wedge(domain)
 
 from calc_cell_metrics import cellmetrics
 mesh = cellmetrics(xx, yy, domain)
-print(mesh.dV)
 
 # mesh plotting
 fig = plt.figure('Grid Generation')

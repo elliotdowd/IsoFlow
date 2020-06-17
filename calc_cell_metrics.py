@@ -40,5 +40,4 @@ def cellmetrics(xx, yy, domain):
     mesh.dV = -area
     mesh.s_proj = s_proj
 
-
     return mesh
