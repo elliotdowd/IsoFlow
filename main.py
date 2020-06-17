@@ -3,8 +3,8 @@ import numpy as np
 
 class domain:
     name = 'wedge'
-    M = 30
-    N = 26
+    M = 600
+    N = 540
     wedge_start = 0.5
     length = 1.5
     height = 1
@@ -48,4 +48,9 @@ class mesh:
     ccy = ccy
     dV = area
 
-print(mesh.dV)
+#print(mesh.dV)
+
+fig = plt.figure('Grid Generation')
+ax = fig.gca(projection='3d')
+
+ax.plot_surface(mesh.xx, mesh.yy, mesh.dV)

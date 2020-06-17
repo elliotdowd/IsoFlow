@@ -3,7 +3,6 @@
 def mesh_wedge(domain):
 
     # import matplotlib and numpy
-    import matplotlib.pyplot as plt
     import numpy as np
 
     # import domain values
@@ -14,8 +13,8 @@ def mesh_wedge(domain):
     theta = domain.theta
     wedge_start = domain.wedge_start
 
-    x = np.arange(-(1/M)*length, length*(1+(1/M)), (1/M)*length)
-    y = np.arange(-(1/N)*height, height*(1+(1/N)), (1/N)*height)
+    x = np.linspace(-(1/M)*length, length*(1+(1/M)), M+3)
+    y = np.linspace(-(1/N)*height, height*(1+(1/N)), N+3)
 
     xx, yy = np.meshgrid(x,y)
     xx = np.transpose(xx)
@@ -37,22 +36,6 @@ def mesh_wedge(domain):
             yy[i, j] = height - yy[i, j]
 
     yy = np.fliplr(yy)
-
-
-    # plotting
-    plt.figure()
-    ax = plt.axes(projection='3d')
-
-    ax.plot_wireframe(xx, yy, xx*0, color='green')
-
-    # Plot settings
-    ax.view_init(90, 0)
-    ax.set_xlabel('x-coordinate (m)')
-    ax.set_ylabel('y-coordinate (m)')
-
-
-    # Display the plot
-    plt.show()
 
     return xx, yy
 
