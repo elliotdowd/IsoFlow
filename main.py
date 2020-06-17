@@ -4,8 +4,8 @@ import numpy as np
 
 class domain:
     name = 'wedge'
-    M = 30
-    N = 26
+    M = 6000
+    N = 5400
     wedge_start = 0.5
     length = 1.5
     height = 1
@@ -19,7 +19,7 @@ xx, yy = mesh_wedge(domain)
 from calc_cell_metrics import cellmetrics
 mesh = cellmetrics(xx, yy, domain)
 
-# initialize state vector
+# initialize state vector, simulation parameters and fluid properties
 class parameters:
     M_in = 3
     p_in = 101325
@@ -31,8 +31,9 @@ class gas:
     R = 287
 
 from initialize import init_state
-
 state = init_state(domain, mesh, parameters, gas)
+
+# boundary conditions
 
 # mesh plotting
 fig = plt.figure('Grid Generation')
