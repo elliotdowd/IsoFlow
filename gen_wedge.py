@@ -24,7 +24,5 @@ def mesh_wedge(domain):
 
     wedge.mod2wedge(xx, yy, height, theta, wedge_start, M, N)
 
-    #yy = np.fliplr( yy )
-
     return xx, yy
 
