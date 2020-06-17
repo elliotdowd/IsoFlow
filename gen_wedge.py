@@ -20,22 +20,11 @@ def mesh_wedge(domain):
     xx = np.transpose(xx)
     yy = np.transpose(yy)
 
-        
-    for i in range(0, M+3):
+    import wedge
 
-        for j in range(0, N+3):
+    wedge.mod2wedge(xx, yy, height, theta, wedge_start, M, N)
 
-            # scale y-coordinates for wedge section
-            if xx[i, j] >= wedge_start:
-                # scale for wedge shape
-
-                yy[i, j] = yy[i, j] - height * ((j-1)/(N+2)) * (xx[i, j] - wedge_start) * np.tan(theta)
-
-            # flip geometry about x-axis
-
-            yy[i, j] = height - yy[i, j]
-
-    yy = np.fliplr(yy)
+    #yy = np.fliplr( yy )
 
     return xx, yy
 

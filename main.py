@@ -3,12 +3,12 @@ import numpy as np
 
 class domain:
     name = 'wedge'
-    M = 600
-    N = 540
+    M = 30
+    N = 26
     wedge_start = 0.5
     length = 1.5
     height = 1
-    theta = np.deg2rad(10)
+    theta = np.deg2rad(30)
 
 from gen_wedge import mesh_wedge
 
@@ -52,8 +52,12 @@ class mesh:
 fig = plt.figure('Grid Generation')
 ax = fig.gca(projection='3d')
 
-ax.plot_wireframe(mesh.xx*0, mesh.xx, mesh.yy, color='green')
-ax.view_init(0, 0)
+ax.plot_wireframe(mesh.xx, mesh.yy, mesh.xx*0, color='green')
+#ax.plot(mesh.ccx, mesh.ccy, 'b+')
+ax.view_init(-90, 90)
 ax.set_proj_type('ortho')
+
+plt.xlabel('x-coordinate (m)')
+plt.ylabel('y-coordinate (m)')
 
 plt.show()
