@@ -1,7 +1,6 @@
-import time
-
 def TicTocGenerator():
     # Generator that returns time differences
+    import time
     ti = 0           # initial time
     tf = time.time() # final time
     while True:
@@ -27,7 +26,7 @@ def tic():
 def init_state(domain, mesh, parameters, gas):
 
     import numpy as np
-    from calc_thermo import thermo
+    from helper import thermo
 
     tic()
 
@@ -48,6 +47,11 @@ def init_state(domain, mesh, parameters, gas):
     state.Qn = Q
     state.p = thermo.calc_p( Q[:,:,0], Q[:,:,3], Q[:,:,1]/Q[:,:,0], Q[:,:,2]/Q[:,:,0], gas.gamma )
     state.T = state.p / (gas.R * Q[:,:,0])
+
+    # boundary conditions
+
+    from boundary_cond import enforce_bc
+    state = enforce_bc(domain, mesh, state, gas)
 
     toc()
 
