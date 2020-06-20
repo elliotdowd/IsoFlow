@@ -43,6 +43,8 @@ def init_state(domain, mesh, parameters, gas):
     class state:
         pass
 
+    state.u = Q[:,:,1]/Q[:,:,0]
+    state.v = Q[:,:,2]/Q[:,:,0]
     state.Q = Q
     state.Qn = Q
     state.p = thermo.calc_p( Q[:,:,0], Q[:,:,3], Q[:,:,1]/Q[:,:,0], Q[:,:,2]/Q[:,:,0], gas.gamma )
@@ -50,8 +52,10 @@ def init_state(domain, mesh, parameters, gas):
 
     # boundary conditions
 
-    from boundary_cond import enforce_bc
+    from boundary_cond import enforce_bc, covariant
     state = enforce_bc(domain, mesh, state, gas)
+
+    state = covariant(mesh, state)
 
     toc()
 

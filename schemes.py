@@ -1,0 +1,164 @@
+
+def AUSM( domain, mesh, parameters, state, gas ):
+    import numpy as np
+    import matplotlib as plt
+    from helper import thermo, split
+    from boundary_cond import enforce_bc, covariant
+    from timestepping import local_timestep
+
+    n = 0
+
+    tic()
+
+    while n <= parameters.iterations: # and state.res(n+1) > parameters.tolerance: 
+
+        n = n+1
+
+        # state at previous timestep, use for outflow BCs
+        state.Qn = state.Q
+
+        # simplify variable notation from state vector
+        state.u = state.Q[:,:,1] / state.Q[:,:,0]
+        state.v = state.Q[:,:,2] / state.Q[:,:,0]
+        state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma) / state.Q[:,:,0] + state.p/state.Q[:,:,0]
+
+        # local timestepping
+        state = local_timestep( mesh, state, parameters, gas )
+
+        # density at cell interfaces, upwinded
+        rho_half_zeta = ( state.Q[0:-1,:,0] + state.Q[1:,:,0] ) / 2
+        rho_half_eta =  ( state.Q[:,0:-1,0] + state.Q[:,1:,0] ) / 2
+
+        # speed of sound at cell interfaces
+        # from Liou 2006 (JCP 214)
+
+        c_st = thermo.calc_c_star( state.ht, gas.gamma )
+
+        c_L = c_st[0:-1,:] / np.maximum( np.sqrt(c_st[0:-1,:]), state.U[0:-1,:] )
+        c_R = c_st[1:,:] / np.maximum( np.sqrt(c_st[1:,:]), -state.U[1:,:] ) 
+        c_D = c_st[:,0:-1] / np.maximum( np.sqrt(c_st[:,0:-1]), state.V[:,0:-1] )
+        c_U = c_st[:,1:] / np.maximum( np.sqrt(c_st[:,1:]), -state.V[:,1:] )
+
+        c_half_zeta = np.minimum( c_L, c_R )
+        c_half_eta =  np.minimum( c_D, c_U )
+
+        # cell face Mach numbers
+        M_L = state.U[0:-1,:] / c_half_zeta
+        M_R = state.U[1:,:] / c_half_zeta
+        M_D = state.V[:,0:-1] / c_half_eta
+        M_U = state.V[:,1:] / c_half_eta
+
+        # split interface Mach numbers in the zeta and eta directions
+        M_half_zeta = split.Mp( M_L ) + split.Mm( M_R )
+        M_half_eta = split.Mp( M_D ) + split.Mm( M_U )
+
+        U_half = c_half_zeta * M_half_zeta
+        V_half = c_half_eta * M_half_eta
+
+        # calculate mass flux at cell interfaces
+        mdot_half_zeta = c_half_zeta * M_half_zeta * ( np.double(M_half_zeta>0) * state.Q[0:-1,:,0] + np.double(M_half_zeta<=0) * state.Q[1:,:,0] )
+        mdot_half_eta =  c_half_eta  * M_half_eta  * ( np.double(M_half_eta>0)  * state.Q[:,0:-1,0] + np.double(M_half_eta<=0)  * state.Q[:,1:,0] )
+
+        if mdot_half_zeta.ndim < 3 :
+              mdot_half_zeta = np.dstack( [ mdot_half_zeta, mdot_half_zeta, mdot_half_zeta, mdot_half_zeta ] )
+              mdot_half_eta = np.dstack( [ mdot_half_eta, mdot_half_eta, mdot_half_eta, mdot_half_eta ] )
+
+
+        cr = 1e-60
+        # calculate pressure flux at cell interfaces
+        p_half_zeta = split.P1p( M_L+cr )*state.p[0:-1,:] + split.P1m( M_R+cr )*state.p[1:,:]
+        p_half_eta =  split.P1p( M_D+cr )*state.p[:,0:-1] + split.P1m( M_U+cr )*state.p[:,1:]
+
+        # initialize Phi vector components
+        Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
+        Phi[:,:,0] = np.ones( (domain.M+2, domain.N+2) )
+        Phi[:,:,1] = state.u
+        Phi[:,:,2] = state.v
+        Phi[:,:,3] = state.ht
+        
+        # pressure flux vector
+        P_zeta = np.zeros( (domain.M+1, domain.N+2, 4) )
+        P_zeta[:,:,0] = np.zeros( (domain.M+1, domain.N+2) )
+        P_zeta[:,:,1] = p_half_zeta * mesh.s_proj[0:-1,:,0] / mesh.s_proj[0:-1,:,4]
+        P_zeta[:,:,2] = p_half_zeta * mesh.s_proj[0:-1,:,1] / mesh.s_proj[0:-1,:,4]
+        P_zeta[:,:,3] = np.zeros( (domain.M+1, domain.N+2) )
+
+        P_eta = np.zeros( (domain.M+2, domain.N+1, 4) )
+        P_eta[:,:,0] = np.zeros( (domain.M+2, domain.N+1) )
+        P_eta[:,:,1] = p_half_eta * mesh.s_proj[:,0:-1,2] / mesh.s_proj[:,0:-1,5]
+        P_eta[:,:,2] = p_half_eta * mesh.s_proj[:,0:-1,3] / mesh.s_proj[:,0:-1,5]
+        P_eta[:,:,3] = np.zeros( (domain.M+2, domain.N+1) )
+
+        # dissipative term (Liou_JCP_160_2000)
+        Dm_zeta = np.abs( mdot_half_zeta )
+        Dm_eta  = np.abs( mdot_half_eta )
+
+        # flux vector reconstruction
+        E_hat_left = (1/2) * mdot_half_zeta[0:-1,1:-1] * ( Phi[0:-2,1:-1,:] + Phi[1:-1,1:-1,:] ) \
+                    -(1/2) * Dm_zeta[0:-1,1:-1] * ( Phi[1:-1,1:-1,:] - Phi[0:-2,1:-1,:] ) \
+                           + P_zeta[0:-1,1:-1,:]
+        E_hat_right= (1/2) * mdot_half_zeta[1:,1:-1] * ( Phi[1:-1,1:-1,:] + Phi[2:,1:-1,:] ) \
+                    -(1/2) * Dm_zeta[1:,1:-1] * ( Phi[2:,1:-1,:] - Phi[1:-1,1:-1,:] ) \
+                           + P_zeta[1:,1:-1,:]
+        F_hat_bot =  (1/2) * mdot_half_eta[1:-1,0:-1] * ( Phi[1:-1,0:-2,:] + Phi[1:-1,1:-1,:] ) \
+                    -(1/2) * Dm_eta[1:-1,0:-1] * ( Phi[1:-1,1:-1,:] - Phi[1:-1,0:-2,:] ) \
+                           + P_eta[1:-1,0:-1,:]
+        F_hat_top =  (1/2) * mdot_half_eta[1:-1,1:] * ( Phi[1:-1,1:-1,:] + Phi[1:-1,2:,:] ) \
+                    -(1/2) * Dm_eta[1:-1,1:] * ( Phi[1:-1,2:,:] - Phi[1:-1,1:-1,:] ) \
+                           + P_eta[1:-1,1:,:]
+
+        # update residuals at each interior cell
+        state.residual = np.zeros( [domain.M, domain.N, 4] )
+        state.residual = -state.dt[1:-1, 1:-1] * ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
+                                                   - E_hat_left * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) ) + \
+                                                   ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
+                                                   - F_hat_bot * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]]) ) )
+
+        state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / np.dstack([mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1]])
+
+        # L_inf-norm residual
+        #state.res = *( state.res np.log10())
+
+        # update cell temperatures and pressures
+        state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], state.u, state.v, gas.gamma )
+        state.T = state.p / (gas.R * state.Q[:,:,0])
+
+        # update covariant velocities
+        state = covariant(mesh, state)
+
+        # enforce boundary conditions
+        state = enforce_bc(domain, mesh, state, gas)
+
+
+        #toc()
+
+    state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma )
+
+    toc()
+
+    return state
+
+    
+
+def TicTocGenerator():
+    # Generator that returns time differences
+    import time
+    ti = 0           # initial time
+    tf = time.time() # final time
+    while True:
+        ti = tf
+        tf = time.time()
+        yield tf-ti # returns the time difference
+
+TicToc = TicTocGenerator() # create an instance of the TicTocGen generator
+
+# This will be the main function through which we define both tic() and toc()
+def toc(tempBool=True):
+    # Prints the time difference yielded by generator instance TicToc
+    tempTimeInterval = next(TicToc)
+    if tempBool:
+        print( "simulation time: %f seconds.\n" %tempTimeInterval )
+
+def tic():
+    # Records a time in TicToc, marks the beginning of a time interval
+    toc(False)

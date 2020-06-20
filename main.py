@@ -4,12 +4,12 @@ import numpy as np
 
 class domain:
     name = 'wedge'
-    M = 30
-    N = 26
+    M = 84
+    N = 72
     wedge_start = 0.5
     length = 1.5
-    height = 1
-    theta = np.deg2rad(30)
+    height = 1.3
+    theta = np.deg2rad(20)
 
 # calculate wedge grid coordinates
 from gen_wedge import mesh_wedge
@@ -24,7 +24,9 @@ class parameters:
     M_in = 3
     p_in = 101325
     T_in = 300
-
+    iterations = 1000
+    tolerance = 1e-6
+    CFL = 0.4
 class gas:
     gamma = 1.4
     Cp = 1006
@@ -33,9 +35,9 @@ class gas:
 from initialize import init_state
 state = init_state(domain, mesh, parameters, gas)
 
-
-
-
+# run AUSM scheme
+from schemes import AUSM
+state = AUSM( domain, mesh, parameters, state, gas )
 
 # mesh plotting
 fig = plt.figure('Grid Generation')
@@ -49,7 +51,7 @@ ax.set_proj_type('ortho')
 plt.xlabel('x-coordinate (m)')
 plt.ylabel('y-coordinate (m)')
 
-plt.show()
+#plt.show()
 
 # surf plotting
 
@@ -57,7 +59,7 @@ fig = plt.figure('Contour Plotting')
 ax = fig.gca(projection='3d')
 
 from matplotlib import cm
-ax.plot_surface(mesh.xxc, mesh.yyc, state.Q[:,:,1], cmap=cm.coolwarm, linewidth=0)
+ax.plot_surface(mesh.xxc, mesh.yyc, state.Mach, cmap=cm.jet, linewidth=0)
 ax.view_init(-90, 90)
 ax.set_proj_type('ortho')
 

@@ -12,29 +12,28 @@ class thermo:
     def calc_c( p, rho, gam ):
         c = ( (gam * p) / rho )**0.5
         return c
+    
+    def calc_c_star( ht, gam ):
+        cs = 2 * ht * ( (gam-1) / (gam+1) )
+        return cs
 
+class split:
+    def Mm( M ): 
+        import numpy as np
+        Msplit = 0.5 * ( M-np.abs(M) )
+        return Msplit
 
-# measure cpu time w/ tic toc
-class cpu_time:
-    def TicTocGenerator():
-        # Generator that returns time differences
-        import time
-        ti = 0           # initial time
-        tf = time.time() # final time
-        while True:
-            ti = tf
-            tf = time.time()
-            yield tf-ti # returns the time difference
+    def Mp( M ):
+        import numpy as np
+        Msplit = 0.5 * ( M+np.abs(M) )
+        return Msplit
 
-    TicToc = TicTocGenerator() # create an instance of the TicTocGen generator
+    def P1m( M ):
+        import numpy as np
+        Psplit = np.double(abs(M)<=1) * 0.5*(1-M) + np.double(abs(M)>1) * 0.5*(M-np.abs(M))/M
+        return Psplit
 
-    # This will be the main function through which we define both tic() and toc()
-    def toc(tempBool=True):
-        # Prints the time difference yielded by generator instance TicToc
-        tempTimeInterval = next(TicToc)
-        if tempBool:
-            print( "init_state time: %f seconds.\n" %tempTimeInterval )
-
-    def tic():
-        # Records a time in TicToc, marks the beginning of a time interval
-        toc(False)
+    def P1p( M ):
+        import numpy as np
+        Psplit = np.double(abs(M)<=1) * 0.5*(1+M) + np.double(abs(M)>1) * 0.5*(M+np.abs(M))/M
+        return Psplit

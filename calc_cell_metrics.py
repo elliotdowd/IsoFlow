@@ -28,7 +28,6 @@ def cellmetrics(xx, yy, domain):
 
     import numpy as np
     import cells
-    from helper import cpu_time
 
     # format grid variable for input into fortran subroutines
     grid = np.array((xx, yy), dtype='float', order='F')
@@ -67,7 +66,7 @@ def cellmetrics(xx, yy, domain):
     mesh.yy = yy
     mesh.xxc = xxc
     mesh.yyc = yyc
-    mesh.dV = -area
+    mesh.dV = area
     mesh.s_proj = s_proj
 
     return mesh
