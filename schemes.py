@@ -5,12 +5,15 @@ def AUSM( domain, mesh, parameters, state, gas ):
     from helper import thermo, split
     from boundary_cond import enforce_bc, covariant
     from timestepping import local_timestep
+    import soln_vars
 
     n = 0
 
     tic()
 
     while n <= parameters.iterations: # and state.res(n+1) > parameters.tolerance: 
+
+        #tic()
 
         n = n+1
 
@@ -52,9 +55,6 @@ def AUSM( domain, mesh, parameters, state, gas ):
         M_half_zeta = split.Mp( M_L ) + split.Mm( M_R )
         M_half_eta = split.Mp( M_D ) + split.Mm( M_U )
 
-        U_half = c_half_zeta * M_half_zeta
-        V_half = c_half_eta * M_half_eta
-
         # calculate mass flux at cell interfaces
         mdot_half_zeta = c_half_zeta * M_half_zeta * ( np.double(M_half_zeta>0) * state.Q[0:-1,:,0] + np.double(M_half_zeta<=0) * state.Q[1:,:,0] )
         mdot_half_eta =  c_half_eta  * M_half_eta  * ( np.double(M_half_eta>0)  * state.Q[:,0:-1,0] + np.double(M_half_eta<=0)  * state.Q[:,1:,0] )
@@ -68,6 +68,8 @@ def AUSM( domain, mesh, parameters, state, gas ):
         # calculate pressure flux at cell interfaces
         p_half_zeta = split.P1p( M_L+cr )*state.p[0:-1,:] + split.P1m( M_R+cr )*state.p[1:,:]
         p_half_eta =  split.P1p( M_D+cr )*state.p[:,0:-1] + split.P1m( M_U+cr )*state.p[:,1:]
+
+        #tic()
 
         # initialize Phi vector components
         Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
@@ -93,7 +95,7 @@ def AUSM( domain, mesh, parameters, state, gas ):
         Dm_zeta = np.abs( mdot_half_zeta )
         Dm_eta  = np.abs( mdot_half_eta )
 
-        # flux vector reconstruction
+                # flux vector reconstruction
         E_hat_left = (1/2) * mdot_half_zeta[0:-1,1:-1] * ( Phi[0:-2,1:-1,:] + Phi[1:-1,1:-1,:] ) \
                     -(1/2) * Dm_zeta[0:-1,1:-1] * ( Phi[1:-1,1:-1,:] - Phi[0:-2,1:-1,:] ) \
                            + P_zeta[0:-1,1:-1,:]
@@ -107,13 +109,14 @@ def AUSM( domain, mesh, parameters, state, gas ):
                     -(1/2) * Dm_eta[1:-1,1:] * ( Phi[1:-1,2:,:] - Phi[1:-1,1:-1,:] ) \
                            + P_eta[1:-1,1:,:]
 
-        # update residuals at each interior cell
-        state.residual = np.zeros( [domain.M, domain.N, 4] )
-        state.residual = -state.dt[1:-1, 1:-1] * ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
-                                                   - E_hat_left * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) ) + \
-                                                   ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
-                                                   - F_hat_bot * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]]) ) )
-
+        # update residuals and state vector at each interior cell, from Fortran 90 subroutine
+        state.residual = np.zeros( [domain.M, domain.N, 4], dtype='float', order='F' )
+#        state.residual = -state.dt[1:-1, 1:-1] * ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
+#                                                   - E_hat_left * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) ) + \
+#                                                   ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
+#                                                   - F_hat_bot * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]]) )
+        soln_vars.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
+                            mesh.s_proj[1:-1,1:-1,:], domain.M, domain.N ) 
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / np.dstack([mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1]])
 
         # L_inf-norm residual
@@ -133,12 +136,14 @@ def AUSM( domain, mesh, parameters, state, gas ):
         #toc()
 
     state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma )
+    state.p0 = (1+((gas.gamma-1)/2)*state.Mach**2)**(gas.gamma/(gas.gamma-1)) * state.p
+
 
     toc()
 
     return state
 
-    
+
 
 def TicTocGenerator():
     # Generator that returns time differences

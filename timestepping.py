@@ -15,14 +15,9 @@ def local_timestep( mesh, state, parameters, gas ):
     U = state.u*Sx + state.v*Sy
     V = state.u*Nx + state.v*Ny
 
-
-
     spec1 = np.abs(U) + c*np.sqrt(Sx**2 + Sy**2)
     spec2 = np.abs(V) + c*np.sqrt(Nx**2 + Ny**2)
 
     state.dt = parameters.CFL*np.minimum( 1/spec1, 1/spec2 )
-
-    if state.dt.ndim < 4:
-        state.dt = np.dstack( [state.dt, state.dt, state.dt, state.dt] )
 
     return state
