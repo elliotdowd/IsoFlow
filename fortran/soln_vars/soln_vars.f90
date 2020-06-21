@@ -107,3 +107,7 @@ subroutine residual(res, dt, E_left, E_right, F_bot, F_top, s_proj, M, N)
     end do
 
 end subroutine
+
+
+!-*- f90 -*- -
+subroutine face_flux( mdot_zeta, mdot_eta, phi, p_zeta, p_eta, )

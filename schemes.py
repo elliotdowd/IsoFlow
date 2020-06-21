@@ -95,7 +95,7 @@ def AUSM( domain, mesh, parameters, state, gas ):
         Dm_zeta = np.abs( mdot_half_zeta )
         Dm_eta  = np.abs( mdot_half_eta )
 
-                # flux vector reconstruction
+        # flux vector reconstruction
         E_hat_left = (1/2) * mdot_half_zeta[0:-1,1:-1] * ( Phi[0:-2,1:-1,:] + Phi[1:-1,1:-1,:] ) \
                     -(1/2) * Dm_zeta[0:-1,1:-1] * ( Phi[1:-1,1:-1,:] - Phi[0:-2,1:-1,:] ) \
                            + P_zeta[0:-1,1:-1,:]
