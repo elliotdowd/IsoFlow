@@ -69,7 +69,7 @@ def AUSM( domain, mesh, parameters, state, gas ):
         p_half_zeta = split.P1p( M_L+cr )*state.p[0:-1,:] + split.P1m( M_R+cr )*state.p[1:,:]
         p_half_eta =  split.P1p( M_D+cr )*state.p[:,0:-1] + split.P1m( M_U+cr )*state.p[:,1:]
 
-        #tic()
+        tic()
 
         # initialize Phi vector components
         Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
@@ -90,6 +90,8 @@ def AUSM( domain, mesh, parameters, state, gas ):
         P_eta[:,:,1] = p_half_eta * mesh.s_proj[:,0:-1,2] / mesh.s_proj[:,0:-1,5]
         P_eta[:,:,2] = p_half_eta * mesh.s_proj[:,0:-1,3] / mesh.s_proj[:,0:-1,5]
         P_eta[:,:,3] = np.zeros( (domain.M+2, domain.N+1) )
+
+        toc()
 
         # dissipative term (Liou_JCP_160_2000)
         Dm_zeta = np.abs( mdot_half_zeta )
