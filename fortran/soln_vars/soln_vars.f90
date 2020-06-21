@@ -60,15 +60,15 @@ subroutine calc_covariant(s_proj, u, v, uu, vv, M, N)
 
     do i = 1, M
        
-       do j = 1, N
+    !do j = 1, N
 
-           uu(:,:) = (1.0_dp/s_proj(i,j,5)) * &
-               &    (u*s_proj(i,j,1) + v*s_proj(i,j,2))
-       
-           vv(:,:) = (1.0_dp/s_proj(i,j,6)) * &
-               &    (u*s_proj(i,j,3) + v*s_proj(i,j,4))
+        uu(i,:) = (1.0_dp/s_proj(i,:,5)) * &
+            &    (u(i,:)*s_proj(i,:,1) + v(i,:)*s_proj(i,:,2))
+    
+        vv(i,:) = (1.0_dp/s_proj(i,:,6)) * &
+            &    (u(i,:)*s_proj(i,:,3) + v(i,:)*s_proj(i,:,4))
 
-       end do
+    !end do
 
     end do
 

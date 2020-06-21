@@ -4,8 +4,8 @@ import numpy as np
 
 class domain:
     name = 'wedge'
-    M = 30
-    N = 26
+    M = 60
+    N = 54
     wedge_start = 0.25
     length = 1.5
     height = 1.3

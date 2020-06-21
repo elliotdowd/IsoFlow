@@ -19,21 +19,35 @@ class thermo:
 
 class split:
     def Mm( M ): 
-        import numpy as np
-        Msplit = 0.5 * ( M-np.abs(M) )
+        #import numpy as np
+        Msplit = 0.5 * ( M-abs(M) )
         return Msplit
 
     def Mp( M ):
-        import numpy as np
-        Msplit = 0.5 * ( M+np.abs(M) )
+        #import numpy as np
+        Msplit = 0.5 * ( M+abs(M) )
         return Msplit
 
     def P1m( M ):
         import numpy as np
-        Psplit = np.double(abs(M)<=1) * 0.5*(1-M) + np.double(abs(M)>1) * 0.5*(M-np.abs(M))/M
+        Psplit = np.double(abs(M)<=1) * 0.5*(1-M) + np.double(abs(M)>1) * 0.5*(M-abs(M))/M
         return Psplit
 
     def P1p( M ):
         import numpy as np
-        Psplit = np.double(abs(M)<=1) * 0.5*(1+M) + np.double(abs(M)>1) * 0.5*(M+np.abs(M))/M
+        Psplit = np.double(abs(M)<=1) * 0.5*(1+M) + np.double(abs(M)>1) * 0.5*(M+abs(M))/M
         return Psplit
+
+
+# matrix functions
+class matrix:
+    def m22mul( A, B ):
+        import numpy as np
+        result = np.zeros((2,2))
+        for i in range(len(A)):
+            # iterate through columns of A
+            for j in range(len(B[0])):
+                # iterate through rows of B
+                for k in range(len(B)):
+                    result[i][j] += A[i][k] * B[k][j]
+        return result

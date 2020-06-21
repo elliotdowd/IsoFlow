@@ -5,6 +5,7 @@ def AUSM( domain, mesh, parameters, state, gas ):
     from helper import thermo, split
     from boundary_cond import enforce_bc, covariant
     from timestepping import local_timestep
+    import soln_vars
     import flux
 
     n = 0
@@ -104,8 +105,8 @@ def AUSM( domain, mesh, parameters, state, gas ):
         #toc()
 
         # dissipative term (Liou_JCP_160_2000)
-        Dm_zeta = np.abs( mdot_half_zeta )
-        Dm_eta  = np.abs( mdot_half_eta )
+        #Dm_zeta = np.abs( mdot_half_zeta )
+        #Dm_eta  = np.abs( mdot_half_eta )
 
         # flux vector reconstruction
         # E_hat_left = (1/2) * mdot_half_zeta[0:-1,1:-1] * ( Phi[0:-2,1:-1,:] + Phi[1:-1,1:-1,:] ) \
@@ -135,14 +136,20 @@ def AUSM( domain, mesh, parameters, state, gas ):
         # L_inf-norm residual
         #state.res = *( state.res np.log10())
 
+        #tic()
+
         # update cell temperatures and pressures
         state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], state.u, state.v, gas.gamma )
         state.T = state.p / (gas.R * state.Q[:,:,0])
 
+        #toc()
+
         # update covariant velocities
         state = covariant(mesh, state)
+        #soln_vars.calc_covariant(mesh.s_proj, state.u, state.v, state.U, state.V, domain.M+2, domain.N+2)
 
         # enforce boundary conditions
+        #tic()
         state = enforce_bc(domain, mesh, state, gas)
 
 

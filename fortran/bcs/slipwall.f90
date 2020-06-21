@@ -47,7 +47,6 @@ subroutine slip(u0, v0, u1, v1, s_proj, M)
         DOUBLE PRECISION :: DET
         DOUBLE PRECISION, DIMENSION(2,2) :: COFACTOR
 
-
         DET =   A(1,1)*A(2,2) - A(1,2)*A(2,1)
 
         COFACTOR(1,1) = +A(2,2)
@@ -58,6 +57,6 @@ subroutine slip(u0, v0, u1, v1, s_proj, M)
         M22INV = TRANSPOSE(COFACTOR) / DET
 
         END FUNCTION
-
+        
 
 end subroutine
