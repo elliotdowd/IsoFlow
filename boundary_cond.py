@@ -9,7 +9,12 @@ def enforce_bc(domain, mesh, state, gas):
     state.Q[:, 0:2, :] = invisc_wall(state.Q[:, 0:2, :], state.p[:, 0], state.T[:, 0], mesh.s_proj[:, 0:2, :], domain.M+2, gas)
 
     state.Q[domain.M+1, :, :] = state.Qn[domain.M+1, :, :]
+    state.p[domain.M+1, :] = state.p[domain.M, :]
+    state.T[domain.M+1, :] = state.T[domain.M, :]
+
     state.Q[:, domain.N+1, :] = state.Qn[:, domain.N+1, :]
+    state.p[:, domain.N+1] = state.p[:, domain.N]
+    state.T[:, domain.N+1] = state.T[:, domain.N]
 
     return state
 

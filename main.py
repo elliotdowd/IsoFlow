@@ -26,7 +26,7 @@ class parameters:
     T_in = 300
     iterations = 1000
     tolerance = 1e-6
-    CFL = 0.4
+    CFL = 0.25
 class gas:
     gamma = 1.4
     Cp = 1006

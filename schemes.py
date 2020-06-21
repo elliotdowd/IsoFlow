@@ -5,11 +5,29 @@ def AUSM( domain, mesh, parameters, state, gas ):
     from helper import thermo, split
     from boundary_cond import enforce_bc, covariant
     from timestepping import local_timestep
-    import soln_vars
+    import flux
 
     n = 0
 
     tic()
+
+    # initialize phi and p state vectors
+    Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
+    Phi[:,:,0] = np.ones( (domain.M+2, domain.N+2) )
+
+    P_zeta = np.zeros( (domain.M+1, domain.N+2, 4) )
+    P_zeta[:,:,0] = np.zeros( (domain.M+1, domain.N+2) )
+    P_zeta[:,:,3] = np.zeros( (domain.M+1, domain.N+2) )
+
+    P_eta = np.zeros( (domain.M+2, domain.N+1, 4) )
+    P_eta[:,:,0] = np.zeros( (domain.M+2, domain.N+1) )
+    P_eta[:,:,3] = np.zeros( (domain.M+2, domain.N+1) )
+
+    E_hat_left = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
+    E_hat_right = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
+    F_hat_bot = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
+    F_hat_top = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
+
 
     while n <= parameters.iterations: # and state.res(n+1) > parameters.tolerance: 
 
@@ -59,9 +77,9 @@ def AUSM( domain, mesh, parameters, state, gas ):
         mdot_half_zeta = c_half_zeta * M_half_zeta * ( np.double(M_half_zeta>0) * state.Q[0:-1,:,0] + np.double(M_half_zeta<=0) * state.Q[1:,:,0] )
         mdot_half_eta =  c_half_eta  * M_half_eta  * ( np.double(M_half_eta>0)  * state.Q[:,0:-1,0] + np.double(M_half_eta<=0)  * state.Q[:,1:,0] )
 
-        if mdot_half_zeta.ndim < 3 :
-              mdot_half_zeta = np.dstack( [ mdot_half_zeta, mdot_half_zeta, mdot_half_zeta, mdot_half_zeta ] )
-              mdot_half_eta = np.dstack( [ mdot_half_eta, mdot_half_eta, mdot_half_eta, mdot_half_eta ] )
+        # if mdot_half_zeta.ndim < 3 :
+        #       mdot_half_zeta = np.dstack( [ mdot_half_zeta, mdot_half_zeta, mdot_half_zeta, mdot_half_zeta ] )
+        #       mdot_half_eta = np.dstack( [ mdot_half_eta, mdot_half_eta, mdot_half_eta, mdot_half_eta ] )
 
 
         cr = 1e-60
@@ -69,47 +87,40 @@ def AUSM( domain, mesh, parameters, state, gas ):
         p_half_zeta = split.P1p( M_L+cr )*state.p[0:-1,:] + split.P1m( M_R+cr )*state.p[1:,:]
         p_half_eta =  split.P1p( M_D+cr )*state.p[:,0:-1] + split.P1m( M_U+cr )*state.p[:,1:]
 
-        tic()
+        #tic()
 
         # initialize Phi vector components
-        Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
-        Phi[:,:,0] = np.ones( (domain.M+2, domain.N+2) )
         Phi[:,:,1] = state.u
         Phi[:,:,2] = state.v
         Phi[:,:,3] = state.ht
         
         # pressure flux vector
-        P_zeta = np.zeros( (domain.M+1, domain.N+2, 4) )
-        P_zeta[:,:,0] = np.zeros( (domain.M+1, domain.N+2) )
         P_zeta[:,:,1] = p_half_zeta * mesh.s_proj[0:-1,:,0] / mesh.s_proj[0:-1,:,4]
         P_zeta[:,:,2] = p_half_zeta * mesh.s_proj[0:-1,:,1] / mesh.s_proj[0:-1,:,4]
-        P_zeta[:,:,3] = np.zeros( (domain.M+1, domain.N+2) )
 
-        P_eta = np.zeros( (domain.M+2, domain.N+1, 4) )
-        P_eta[:,:,0] = np.zeros( (domain.M+2, domain.N+1) )
         P_eta[:,:,1] = p_half_eta * mesh.s_proj[:,0:-1,2] / mesh.s_proj[:,0:-1,5]
         P_eta[:,:,2] = p_half_eta * mesh.s_proj[:,0:-1,3] / mesh.s_proj[:,0:-1,5]
-        P_eta[:,:,3] = np.zeros( (domain.M+2, domain.N+1) )
 
-        toc()
+        #toc()
 
         # dissipative term (Liou_JCP_160_2000)
         Dm_zeta = np.abs( mdot_half_zeta )
         Dm_eta  = np.abs( mdot_half_eta )
 
         # flux vector reconstruction
-        E_hat_left = (1/2) * mdot_half_zeta[0:-1,1:-1] * ( Phi[0:-2,1:-1,:] + Phi[1:-1,1:-1,:] ) \
-                    -(1/2) * Dm_zeta[0:-1,1:-1] * ( Phi[1:-1,1:-1,:] - Phi[0:-2,1:-1,:] ) \
-                           + P_zeta[0:-1,1:-1,:]
-        E_hat_right= (1/2) * mdot_half_zeta[1:,1:-1] * ( Phi[1:-1,1:-1,:] + Phi[2:,1:-1,:] ) \
-                    -(1/2) * Dm_zeta[1:,1:-1] * ( Phi[2:,1:-1,:] - Phi[1:-1,1:-1,:] ) \
-                           + P_zeta[1:,1:-1,:]
-        F_hat_bot =  (1/2) * mdot_half_eta[1:-1,0:-1] * ( Phi[1:-1,0:-2,:] + Phi[1:-1,1:-1,:] ) \
-                    -(1/2) * Dm_eta[1:-1,0:-1] * ( Phi[1:-1,1:-1,:] - Phi[1:-1,0:-2,:] ) \
-                           + P_eta[1:-1,0:-1,:]
-        F_hat_top =  (1/2) * mdot_half_eta[1:-1,1:] * ( Phi[1:-1,1:-1,:] + Phi[1:-1,2:,:] ) \
-                    -(1/2) * Dm_eta[1:-1,1:] * ( Phi[1:-1,2:,:] - Phi[1:-1,1:-1,:] ) \
-                           + P_eta[1:-1,1:,:]
+        # E_hat_left = (1/2) * mdot_half_zeta[0:-1,1:-1] * ( Phi[0:-2,1:-1,:] + Phi[1:-1,1:-1,:] ) \
+        #             -(1/2) * Dm_zeta[0:-1,1:-1] * ( Phi[1:-1,1:-1,:] - Phi[0:-2,1:-1,:] ) \
+        #                    + P_zeta[0:-1,1:-1,:]
+        # E_hat_right= (1/2) * mdot_half_zeta[1:,1:-1] * ( Phi[1:-1,1:-1,:] + Phi[2:,1:-1,:] ) \
+        #             -(1/2) * Dm_zeta[1:,1:-1] * ( Phi[2:,1:-1,:] - Phi[1:-1,1:-1,:] ) \
+        #                    + P_zeta[1:,1:-1,:]
+        # F_hat_bot =  (1/2) * mdot_half_eta[1:-1,0:-1] * ( Phi[1:-1,0:-2,:] + Phi[1:-1,1:-1,:] ) \
+        #             -(1/2) * Dm_eta[1:-1,0:-1] * ( Phi[1:-1,1:-1,:] - Phi[1:-1,0:-2,:] ) \
+        #                    + P_eta[1:-1,0:-1,:]
+        # F_hat_top =  (1/2) * mdot_half_eta[1:-1,1:] * ( Phi[1:-1,1:-1,:] + Phi[1:-1,2:,:] ) \
+        #             -(1/2) * Dm_eta[1:-1,1:] * ( Phi[1:-1,2:,:] - Phi[1:-1,1:-1,:] ) \
+        #                    + P_eta[1:-1,1:,:]
+        flux.face_flux( mdot_half_zeta, mdot_half_eta, Phi, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
 
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
         state.residual = np.zeros( [domain.M, domain.N, 4], dtype='float', order='F' )
@@ -117,7 +128,7 @@ def AUSM( domain, mesh, parameters, state, gas ):
 #                                                   - E_hat_left * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) ) + \
 #                                                   ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
 #                                                   - F_hat_bot * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]]) )
-        soln_vars.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
+        flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
                             mesh.s_proj[1:-1,1:-1,:], domain.M, domain.N ) 
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / np.dstack([mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1]])
 
