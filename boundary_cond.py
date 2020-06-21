@@ -31,15 +31,19 @@ def invisc_wall(Qwall, pwall, Twall, s_proj, M, gas):
     u1 = Qwall[:, 1, 1] / Qwall[:, 1, 0]
     v1 = Qwall[:, 1, 2] / Qwall[:, 1, 0]
 
-    u0 = -u1
-    v0 = -v1
+    # no-slip wall condition
 
-    #u0 = Qwall[:, 0, 1] / Qwall[:, 0, 0]
-    #v0 = Qwall[:, 0, 2] / Qwall[:, 0, 0]
+    #u0 = -u1
+    #v0 = -v1
 
-    #boundary.slip(u0, v0, u1, v1, s_proj, M)
+    # slip wall boundary condition
 
-    #u0v0 = np.zeros( [ 2, M ] )
+    u0 = Qwall[:, 0, 1] / Qwall[:, 0, 0]
+    v0 = Qwall[:, 0, 2] / Qwall[:, 0, 0]
+
+    boundary.slip(u0, v0, u1, v1, s_proj, M)
+
+    # u0v0 = np.zeros( [ 2, M ] )
 
     # for i in range( 0, M-1 ):
 
@@ -52,9 +56,9 @@ def invisc_wall(Qwall, pwall, Twall, s_proj, M, gas):
     #     u0v0[:, i] = np.matmul( np.matmul(inv(matL), matR), u1v1 )
     #     #u0v0[:,i] = (inv(matL) @ matR) @ u1v1
 
-    #     # return velocity at halo cells 
-    #     u0[i] = u0v0[0, i]
-    #     v0[i] = u0v0[1, i]
+    # # return velocity at halo cells 
+    # u0 = u0v0[0, :]
+    # v0 = u0v0[1, :]
 
     Qwall[:, 0, 0] = pwall / (gas.R * Twall)
     Qwall[:, 0, 1] = u0 * Qwall[:, 0, 0]

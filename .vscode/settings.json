@@ -13,5 +13,8 @@
         "*test*.py"
     ],
     "python.testing.promptToConfigure": false,
-    "explorer.sortOrder": "type"
+    "explorer.sortOrder": "type",
+    "files.exclude": {
+        "**/.pyd": true
+    }
 }

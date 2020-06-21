@@ -2,6 +2,7 @@
 !-*- f90 -*- -
 subroutine slip(u0, v0, u1, v1, s_proj, M)
     implicit none
+    integer, parameter:: dp=kind(0.d0)
 
     integer, intent(in) :: M
     integer :: i
@@ -12,7 +13,8 @@ subroutine slip(u0, v0, u1, v1, s_proj, M)
     real(kind=8), intent(in) :: v1(M)
     real(kind=8), intent(in) :: s_proj(M, 2, 6)
 
-    real(kind=8) :: matL(2, 2), matR(2, 2)
+    real(kind=8) :: matL(2, 2), matLinv(2, 2), matR(2, 2)
+    real(kind=8) :: det(2, 2)
     real(kind=8) :: u0v0(2, M)
     real(kind=8) :: u1v1(2)
 
@@ -25,7 +27,10 @@ subroutine slip(u0, v0, u1, v1, s_proj, M)
 
         u1v1 = (/ u1(i), v1(i) /)
 
-        u0v0(:, i) = matmul( matmul(M22INV(matL), matR), u1v1 )
+        det = 1.0_dp / (matL(1,1)*matL(2,2) - matL(1,2)*matL(2,1))
+        matLinv = det * reshape( (/matL(2,2), -matL(1,2), matL(2,1), matL(1,1) /), (/2, 2/) )
+
+        u0v0(:, i) = matmul( matmul(matLinv, matR), u1v1 )
 
         ! return velocity at halo cells 
         u0(i) = u0v0(1, i)
@@ -57,6 +62,6 @@ subroutine slip(u0, v0, u1, v1, s_proj, M)
         M22INV = TRANSPOSE(COFACTOR) / DET
 
         END FUNCTION
-        
+
 
 end subroutine
