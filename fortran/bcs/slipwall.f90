@@ -20,17 +20,17 @@ subroutine slip(u0, v0, u1, v1, s_proj, M)
 
     do i = 1, M
 
-        matL = reshape( (/ s_proj(i,1,4), -s_proj(i,1,3), &
-                & s_proj(i,1,3), s_proj(i,1,4) /), (/2, 2/) )
-        matR = reshape( (/ s_proj(i,2,4), -s_proj(i,2,3), &
-                & -s_proj(i,2,3), -s_proj(i,2,4) /), (/2, 2/) )
+        matL = transpose( reshape( (/ s_proj(i,1,4), -s_proj(i,1,3), &
+                & s_proj(i,1,3), s_proj(i,1,4) /), (/2, 2/) ) )
+        matR = transpose(reshape( (/ s_proj(i,2,4), -s_proj(i,2,3), &
+                & -s_proj(i,2,3), -s_proj(i,2,4) /), (/2, 2/) ) )
 
         u1v1 = (/ u1(i), v1(i) /)
 
         det = 1.0_dp / (matL(1,1)*matL(2,2) - matL(1,2)*matL(2,1))
-        matLinv = det * reshape( (/matL(2,2), -matL(1,2), matL(2,1), matL(1,1) /), (/2, 2/) )
+        matLinv = det * transpose( reshape( (/matL(2,2), -matL(1,2), matL(2,1), matL(1,1) /), (/2, 2/) ) )
 
-        u0v0(:, i) = matmul( matmul(matLinv, matR), u1v1 )
+        u0v0(:, i) = matmul( transpose( matmul(matLinv, matR) ), u1v1 )
 
         ! return velocity at halo cells 
         u0(i) = u0v0(1, i)

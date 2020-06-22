@@ -31,14 +31,13 @@ def enforce_bc(domain, mesh, parameters, state, gas):
 
     return state
 
-# input Qwall[M+2, 2, 4]
 
+# compute velocities at inviscid slip wall, input Qwall[M+2, 2, 4]
 def invisc_wall(Qwall, pwall, Twall, s_proj, M, gas):
 
     import numpy as np
-    from numpy.linalg import inv
 
-    from helper import thermo, matrix
+    from helper import thermo
     import boundary
 
     u1 = Qwall[:, 1, 1] / Qwall[:, 1, 0]
@@ -56,6 +55,30 @@ def invisc_wall(Qwall, pwall, Twall, s_proj, M, gas):
 
     # run Fortran 90 subroutine to determine wall velocities
     boundary.slip(u0, v0, u1, v1, s_proj, M)
+
+    Qwall[:, 0, 0] = pwall / (gas.R * Twall)
+    Qwall[:, 0, 1] = u0 * Qwall[:, 0, 0]
+    Qwall[:, 0, 2] = v0 * Qwall[:, 0, 0]
+    Qwall[:, 0, 3] = thermo.calc_rho_et( pwall, Qwall[:, 0, 0], Qwall[:, 0, 1]/Qwall[:, 0, 0], Qwall[:, 0, 2]/Qwall[:, 0, 0], gas.gamma )
+    
+    return Qwall
+
+
+# compute velocities at viscous no-slip wall, input Qwall[M+2, 2, 4]
+def visc_wall(Qwall, pwall, Twall, s_proj, M, gas):
+
+    import numpy as np
+
+    from helper import thermo
+    import boundary
+
+    u1 = Qwall[:, 1, 1] / Qwall[:, 1, 0]
+    v1 = Qwall[:, 1, 2] / Qwall[:, 1, 0]
+
+    # no-slip wall condition
+
+    u0 = -u1
+    v0 = -v1
 
     Qwall[:, 0, 0] = pwall / (gas.R * Twall)
     Qwall[:, 0, 1] = u0 * Qwall[:, 0, 0]
