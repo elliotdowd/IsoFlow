@@ -3,11 +3,11 @@ import numpy as np
 
 class domain:
     name = 'wedge'
-    M = 30
-    N = 26
+    M = 44
+    N = 40
     wedge_start = 0.5
     length = 1.5
-    height = 1.3
+    height = 1.2
     theta = np.deg2rad(20)
 
 # calculate wedge grid coordinates

@@ -29,7 +29,7 @@ def plot_contour(domain, mesh, state):
     fig, ax = plt.subplots()
     ax.set_facecolor( (0.3, 0.3, 0.3) )
 
-    cont = ax.contourf(mesh.xxc[1:-1,1:-1], mesh.yyc[1:-1,1:-1], state.Mach[1:-1,1:-1], 500, cmap=cm.jet)
+    cont = ax.contourf(mesh.xxc[1:-2,1:-1], mesh.yyc[1:-2,1:-1], state.Mach[1:-2,1:-1], 500, cmap=cm.jet)
     #fig.add_trace(go.Contour(z=z, line_smoothing=0.8), 1, 1)
     plt.gca().set_aspect('equal', adjustable='box')
 
