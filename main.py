@@ -3,12 +3,12 @@ import numpy as np
 
 class domain:
     name = 'wedge'
-    M = 60
-    N = 54
-    wedge_start = 0.25
+    M = 30
+    N = 26
+    wedge_start = 0.5
     length = 1.5
-    height = 2
-    theta = np.deg2rad(10)
+    height = 1.3
+    theta = np.deg2rad(20)
 
 # calculate wedge grid coordinates
 from gen_wedge import mesh_wedge
@@ -25,7 +25,7 @@ class parameters:
     T_in = 300
     iterations = 1000
     tolerance = 1e-6
-    CFL = 0.25
+    CFL = 0.2
 class gas:
     gamma = 1.4
     Cp = 1006
@@ -40,5 +40,5 @@ state = AUSM( domain, mesh, parameters, state, gas )
 
 # call plotting functions
 from plotting import plot_mesh, plot_contour
-#plot_mesh(mesh)
+plot_mesh(mesh)
 plot_contour(domain, mesh, state)

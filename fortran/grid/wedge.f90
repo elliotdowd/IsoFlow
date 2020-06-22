@@ -27,7 +27,7 @@ subroutine mod2wedge(xx, yy, height, theta, wedge_start, M, N)
             if (xx(i+1, j+1) >= wedge_start) then
                 ! scale for wedge shape
 
-                yy(i+1, j+1) = yy(i+1, j+1) - height * (real(j-1)/real(N+2)) * (xx(i+1, j+1) - wedge_start) * tantheta
+                yy(i+1, j+1) = yy(i+1, j+1) - (real(j-1)/real(N)) * (xx(i+1, j+1) - wedge_start) * tantheta
 
             end if
 
