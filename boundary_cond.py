@@ -4,8 +4,14 @@
 
 def enforce_bc(domain, mesh, state, gas):
 
+    import numpy as np
+    from helper import thermo
+
+    wedge_i = abs(mesh.yy[:,1]) > 0.0000001
+    wedge_i = wedge_i[0]
+
     state.p[:, 0] = state.p[:, 1]
-    state.T[:, 0] = 300
+    state.T[wedge_i:, 0] = 300
     state.Q[:, 0:2, :] = invisc_wall(state.Q[:, 0:2, :], state.p[:, 0], state.T[:, 0], mesh.s_proj[:, 0:2, :], domain.M+2, gas)
 
     state.Q[domain.M+1, :, :] = state.Qn[domain.M+1, :, :]
@@ -41,24 +47,8 @@ def invisc_wall(Qwall, pwall, Twall, s_proj, M, gas):
     u0 = Qwall[:, 0, 1] / Qwall[:, 0, 0]
     v0 = Qwall[:, 0, 2] / Qwall[:, 0, 0]
 
+    # run Fortran 90 subroutine to determine wall velocities
     boundary.slip(u0, v0, u1, v1, s_proj, M)
-
-    # u0v0 = np.zeros( [ 2, M ] )
-
-    # for i in range( 0, M-1 ):
-
-    #     matL = np.reshape( [ s_proj[i,0,3], -s_proj[i,0,2], \
-    #                          s_proj[i,0,2], s_proj[i,0,3] ], [2, 2] )
-    #     matR = np.reshape( [ s_proj[i,1,3], -s_proj[i,1,2], \
-    #                         -s_proj[i,1,2], -s_proj[i,1,3] ], [2, 2] )
-
-    #     u1v1 = [ u1[i], v1[i] ]
-    #     u0v0[:, i] = np.matmul( np.matmul(inv(matL), matR), u1v1 )
-    #     #u0v0[:,i] = (inv(matL) @ matR) @ u1v1
-
-    # # return velocity at halo cells 
-    # u0 = u0v0[0, :]
-    # v0 = u0v0[1, :]
 
     Qwall[:, 0, 0] = pwall / (gas.R * Twall)
     Qwall[:, 0, 1] = u0 * Qwall[:, 0, 0]

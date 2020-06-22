@@ -29,6 +29,9 @@ def AUSM( domain, mesh, parameters, state, gas ):
     F_hat_bot = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
     F_hat_top = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
 
+    state.residual = np.zeros( [domain.M, domain.N, 4], dtype='float', order='F' )
+    state.res = np.zeros( parameters.iterations + 1 )
+
 
     while n <= parameters.iterations: # and state.res(n+1) > parameters.tolerance: 
 
@@ -124,7 +127,6 @@ def AUSM( domain, mesh, parameters, state, gas ):
         flux.face_flux( mdot_half_zeta, mdot_half_eta, Phi, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
 
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
-        state.residual = np.zeros( [domain.M, domain.N, 4], dtype='float', order='F' )
 #        state.residual = -state.dt[1:-1, 1:-1] * ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
 #                                                   - E_hat_left * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) ) + \
 #                                                   ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
@@ -134,27 +136,20 @@ def AUSM( domain, mesh, parameters, state, gas ):
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / np.dstack([mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1]])
 
         # L_inf-norm residual
-        #state.res = *( state.res np.log10())
-
-        #tic()
+        state.res[n-1] = ( np.log10( np.max(state.residual) ) )
 
         # update cell temperatures and pressures
         state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], state.u, state.v, gas.gamma )
         state.T = state.p / (gas.R * state.Q[:,:,0])
-
-        #toc()
 
         # update covariant velocities
         state = covariant(mesh, state)
         #soln_vars.calc_covariant(mesh.s_proj, state.u, state.v, state.U, state.V, domain.M+2, domain.N+2)
 
         # enforce boundary conditions
-        #tic()
         state = enforce_bc(domain, mesh, state, gas)
 
-
-        #toc()
-
+    # post processing variables
     state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma )
     state.p0 = (1+((gas.gamma-1)/2)*state.Mach**2)**(gas.gamma/(gas.gamma-1)) * state.p
 
