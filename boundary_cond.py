@@ -2,15 +2,22 @@
 
 # set boundary conditions (inviscid walls at bottom, outlet at top and right)
 
-def enforce_bc(domain, mesh, state, gas):
+def enforce_bc(domain, mesh, parameters, state, gas):
 
     import numpy as np
     from helper import thermo
+
+    # enforce inlet condition
+    state.Q[0,:,0] = parameters.p_in / (gas.R * parameters.T_in)
+    state.Q[0,:,1] = state.Q[0,:,0] * parameters.M_in * np.sqrt(gas.gamma*parameters.p_in/state.Q[0,:,0])
+    state.Q[0,:,2] = state.Q[0,:,0] * 0
+    state.Q[0,:,3] = thermo.calc_rho_et(parameters.p_in, state.Q[0,:,0], state.Q[0,:,1]/state.Q[0,:,0], state.Q[0,:,2]/state.Q[0,:,0], gas.gamma)
 
     wedge_i = abs(mesh.yy[:,1]) > 0.0000001
     wedge_i = wedge_i[0]
 
     state.p[:, 0] = state.p[:, 1]
+    state.T[0:wedge_i-1,0] = state.T[0:wedge_i-1,1]
     state.T[wedge_i:, 0] = 300
     state.Q[:, 0:2, :] = invisc_wall(state.Q[:, 0:2, :], state.p[:, 0], state.T[:, 0], mesh.s_proj[:, 0:2, :], domain.M+2, gas)
 

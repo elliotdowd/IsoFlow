@@ -147,7 +147,7 @@ def AUSM( domain, mesh, parameters, state, gas ):
         #soln_vars.calc_covariant(mesh.s_proj, state.u, state.v, state.U, state.V, domain.M+2, domain.N+2)
 
         # enforce boundary conditions
-        state = enforce_bc(domain, mesh, state, gas)
+        state = enforce_bc(domain, mesh, parameters, state, gas)
 
     # post processing variables
     state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma )
