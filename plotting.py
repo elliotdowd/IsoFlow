@@ -35,6 +35,7 @@ def plot_contour(domain, mesh, state):
 
     # colorbar settings
     CB = fig.colorbar(cont, shrink=0.6, extend='both')
+    CB.set_label('Mach Number', rotation=90)
 
     # plot labeling 
     plt.xlabel('x-coordinate (m)')
