@@ -72,6 +72,20 @@ class split:
         P3split = -(2-M)*split.M2p(M)
         return P3split
 
+    # fifth degree pressure splitting polynomials
+    def P5m( M ):
+        import numpy as np
+        a = 3/16
+        P5split = np.double(abs(M)>=1)*split.M1m(M)/M + \
+                  np.double(abs(M)<1)*(split.M2m(M)*((-2-M)-(16*a*M*split.M2m(M))))
+        return P5split
+    def P5p( M ):
+        import numpy as np
+        a = 3/16
+        P5split = np.double(abs(M)>=1)*split.M1p(M)/M + \
+                  np.double(abs(M)<1)*(split.M2p(M)*((2-M)+(16*a*M*split.M2p(M))))
+        return P5split
+
 
 
 # matrix functions
