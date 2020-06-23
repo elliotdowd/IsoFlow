@@ -39,7 +39,6 @@ def init_state(domain, mesh, parameters, gas):
     Q[:,:,2] = Q[:,:,0] * 0
     Q[:,:,3] = thermo.calc_rho_et(parameters.p_in, Q[:,:,0], Q[:,:,1]/Q[:,:,0], Q[:,:,2]/Q[:,:,0], gas.gamma)
 
-
     class state:
         pass
 
