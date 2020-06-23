@@ -6,6 +6,7 @@ def AUSM( domain, mesh, parameters, state, gas ):
     from timestepping import local_timestep
     import soln_vars
     import flux
+    import splitf
 
     n = 0
 
@@ -29,7 +30,7 @@ def AUSM( domain, mesh, parameters, state, gas ):
     F_hat_top = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
 
     state.residual = np.zeros( [domain.M, domain.N, 4], dtype='float', order='F' )
-    state.res = np.zeros( [parameters.iterations + 1, 4] )
+    state.res = np.ones( [parameters.iterations + 1, 4] )
 
     mesh.dV4 = np.dstack([mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1]])
 
@@ -75,17 +76,12 @@ def AUSM( domain, mesh, parameters, state, gas ):
         M_U = state.V[:,1:] / c_half_eta
 
         # split interface Mach numbers in the zeta and eta directions
-        M_half_zeta = split.Mp( M_L ) + split.Mm( M_R )
-        M_half_eta = split.Mp( M_D ) + split.Mm( M_U )
+        M_half_zeta = split.M4p( M_L ) + split.M4m( M_R )
+        M_half_eta = split.M4p( M_D ) + split.M4m( M_U )
 
         # calculate mass flux at cell interfaces
         mdot_half_zeta = c_half_zeta * M_half_zeta * ( np.double(M_half_zeta>0) * state.Q[0:-1,:,0] + np.double(M_half_zeta<=0) * state.Q[1:,:,0] )
         mdot_half_eta =  c_half_eta  * M_half_eta  * ( np.double(M_half_eta>0)  * state.Q[:,0:-1,0] + np.double(M_half_eta<=0)  * state.Q[:,1:,0] )
-
-        # if mdot_half_zeta.ndim < 3 :
-        #       mdot_half_zeta = np.dstack( [ mdot_half_zeta, mdot_half_zeta, mdot_half_zeta, mdot_half_zeta ] )
-        #       mdot_half_eta = np.dstack( [ mdot_half_eta, mdot_half_eta, mdot_half_eta, mdot_half_eta ] )
-
 
         cr = 1e-60
         # calculate pressure flux at cell interfaces

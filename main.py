@@ -3,8 +3,8 @@ import numpy as np
 
 class domain:
     name = 'wedge'
-    M = 48
-    N = 42
+    M = 72
+    N = 60
     obj_start = 0.5
     obj_end = 1.5
     length = 1.5
@@ -21,12 +21,12 @@ mesh = cellmetrics(xx, yy, domain)
 
 # initialize state vector, simulation parameters and fluid properties
 class parameters:
-    M_in = 3
+    M_in = 1.5
     p_in = 101325
     T_in = 300
-    iterations = 1000
+    iterations = 8000
     tolerance = 1e-6
-    CFL = 0.2
+    CFL = 0.1
 class gas:
     gamma = 1.4
     Cp = 1006
