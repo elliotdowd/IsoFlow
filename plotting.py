@@ -39,7 +39,7 @@ def plot_contour(domain, mesh, state):
     #ax1.set_facecolor( (0.3, 0.3, 0.3) )
 
     # contour plotting
-    cont = ax1.contourf(mesh.xxc[1:-1,1:-1], mesh.yyc[1:-1,1:-1], state.Mach[1:-1,1:-1], 200, cmap=cm.jet)
+    cont = ax1.contourf(mesh.xxc[1:-1,1:-1], mesh.yyc[1:-1,1:-1], state.p[1:-1,1:-1], 200, cmap=cm.jet)
     ax1.axis('equal')
     ax1.set_xlim(np.min(mesh.xxc[1:-2,:]), np.max(mesh.xxc[1:-2,:]))
     ax1.set_ylim(np.min(mesh.yyc[:,1:-2]), np.max(mesh.yyc[:,1:-2]))
