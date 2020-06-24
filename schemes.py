@@ -6,11 +6,12 @@ def AUSM( domain, mesh, parameters, state, gas ):
     from timestepping import local_timestep
     import soln_vars
     import flux
-    import splitf
+    from pytictoc import TicToc
+    t = TicToc() #create instance of class
 
     n = 0
 
-    tic()
+    t.tic()
 
     # initialize phi and p state vectors
     Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
@@ -157,7 +158,7 @@ def AUSM( domain, mesh, parameters, state, gas ):
     state.p0 = (1+((gas.gamma-1)/2)*state.Mach**2)**(gas.gamma/(gas.gamma-1)) * state.p
 
 
-    toc()
+    t.toc('Simulation time:')
 
     return state
 
@@ -170,11 +171,12 @@ def AUSMplusup( domain, mesh, parameters, state, gas ):
     from timestepping import local_timestep
     import soln_vars
     import flux
-    import splitf
+    from pytictoc import TicToc
+    t = TicToc() #create instance of class
 
     n = 0
 
-    tic()
+    t.tic()
 
     # initialize phi and p state vectors
     Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
@@ -309,7 +311,7 @@ def AUSMplusup( domain, mesh, parameters, state, gas ):
     state.p0 = (1+((gas.gamma-1)/2)*state.Mach**2)**(gas.gamma/(gas.gamma-1)) * state.p
 
 
-    toc()
+    t.toc('Simulation time:')
 
     return state
 
@@ -322,11 +324,12 @@ def AUSMDV( domain, mesh, parameters, state, gas ):
     from timestepping import local_timestep
     import soln_vars
     import flux
-    import splitf
+    from pytictoc import TicToc
+    t = TicToc() #create instance of class
 
     n = 0
 
-    tic()
+    t.tic()
 
     # initialize phi and p state vectors
     Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
@@ -427,25 +430,8 @@ def AUSMDV( domain, mesh, parameters, state, gas ):
         P_eta[:,:,1] = p_half_eta * mesh.s_proj[:,0:-1,2] / mesh.s_proj[:,0:-1,5]
         P_eta[:,:,2] = p_half_eta * mesh.s_proj[:,0:-1,3] / mesh.s_proj[:,0:-1,5]
 
-        #toc()
-
-        # dissipative term (Liou_JCP_160_2000)
-        #Dm_zeta = np.abs( mdot_half_zeta )
-        #Dm_eta  = np.abs( mdot_half_eta )
-
         # flux vector reconstruction
-        # E_hat_left = (1/2) * mdot_half_zeta[0:-1,1:-1] * ( Phi[0:-2,1:-1,:] + Phi[1:-1,1:-1,:] ) \
-        #             -(1/2) * Dm_zeta[0:-1,1:-1] * ( Phi[1:-1,1:-1,:] - Phi[0:-2,1:-1,:] ) \
-        #                    + P_zeta[0:-1,1:-1,:]
-        # E_hat_right= (1/2) * mdot_half_zeta[1:,1:-1] * ( Phi[1:-1,1:-1,:] + Phi[2:,1:-1,:] ) \
-        #             -(1/2) * Dm_zeta[1:,1:-1] * ( Phi[2:,1:-1,:] - Phi[1:-1,1:-1,:] ) \
-        #                    + P_zeta[1:,1:-1,:]
-        # F_hat_bot =  (1/2) * mdot_half_eta[1:-1,0:-1] * ( Phi[1:-1,0:-2,:] + Phi[1:-1,1:-1,:] ) \
-        #             -(1/2) * Dm_eta[1:-1,0:-1] * ( Phi[1:-1,1:-1,:] - Phi[1:-1,0:-2,:] ) \
-        #                    + P_eta[1:-1,0:-1,:]
-        # F_hat_top =  (1/2) * mdot_half_eta[1:-1,1:] * ( Phi[1:-1,1:-1,:] + Phi[1:-1,2:,:] ) \
-        #             -(1/2) * Dm_eta[1:-1,1:] * ( Phi[1:-1,2:,:] - Phi[1:-1,1:-1,:] ) \
-        #                    + P_eta[1:-1,1:,:]
+
         flux.face_flux( mdot_half_zeta, mdot_half_eta, Phi, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
 
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
@@ -482,31 +468,7 @@ def AUSMDV( domain, mesh, parameters, state, gas ):
     state.p0 = (1+((gas.gamma-1)/2)*state.Mach**2)**(gas.gamma/(gas.gamma-1)) * state.p
 
 
-    toc()
+    t.toc('Simulation time:')
 
     return state
 
-
-
-def TicTocGenerator():
-    # Generator that returns time differences
-    import time
-    ti = 0           # initial time
-    tf = time.time() # final time
-    while True:
-        ti = tf
-        tf = time.time()
-        yield tf-ti # returns the time difference
-
-TicToc = TicTocGenerator() # create an instance of the TicTocGen generator
-
-# This will be the main function through which we define both tic() and toc()
-def toc(tempBool=True):
-    # Prints the time difference yielded by generator instance TicToc
-    tempTimeInterval = next(TicToc)
-    if tempBool:
-        print( "simulation time: %f seconds.\n" %tempTimeInterval )
-
-def tic():
-    # Records a time in TicToc, marks the beginning of a time interval
-    toc(False)

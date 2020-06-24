@@ -21,10 +21,10 @@ mesh = cellmetrics(xx, yy, domain)
 
 # initialize state vector, simulation parameters and fluid properties
 class parameters:
-    M_in = 1.8
+    M_in = 2.2
     p_in = 101325
     T_in = 300
-    iterations = 5000
+    iterations = 2000
     tolerance = 1e-6
     CFL = 0.4
 class gas:
