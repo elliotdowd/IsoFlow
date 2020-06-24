@@ -48,8 +48,7 @@ def plot_contour(domain, mesh, state):
     #plt.xlabel('x-coordinate (m)')
     #plt.ylabel('y-coordinate (m)')
 
-
-    ax2.plot(np.arange(1, len(state.res), 1), state.res[1:], linewidth=1)
+    ax2.plot(np.arange(1, len(state.res[0:state.n]), 1), state.res[1:state.n], linewidth=1)
     ax2.set_xlabel('Iterations')
     ax2.set_ylabel('Residual') 
     ax2.get_lines()[0].set_color("black")
