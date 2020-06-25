@@ -1,11 +1,4 @@
-from PyQt5 import uic
-from PyQt5.QtWidgets import QApplication
+import wx
 
-Form, Window = uic.loadUiType("dialog.ui")
-
-app = QApplication([])
-window = Window()
-form = Form()
-form.setupUi(window)
-window.show()
-app.exec_()
+app = wx.App(clearSigInt=True)
+frame = wx.Frame(parent=None)

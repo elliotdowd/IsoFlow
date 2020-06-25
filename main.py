@@ -3,8 +3,8 @@ import numpy as np
 
 class domain:
     name = 'wedge'
-    M = 36
-    N = 32
+    M = 72
+    N = 60
     obj_start = 1.1
     obj_end = 1.5
     length = 1.5
@@ -24,9 +24,9 @@ class parameters:
     M_in = 1.4
     p_in = 101325
     T_in = 300
-    iterations = 5000
-    tolerance = -6
-    CFL = 0.4
+    iterations = 10000
+    tolerance = -4
+    CFL = 0.5
 class gas:
     gamma = 1.4
     Cp = 1006
