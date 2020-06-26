@@ -103,7 +103,7 @@
                     <property name="border">5</property>
                     <property name="colspan">1</property>
                     <property name="column">0</property>
-                    <property name="flag">wxALL</property>
+                    <property name="flag">wxALL|wxEXPAND</property>
                     <property name="row">1</property>
                     <property name="rowspan">1</property>
                     <object class="wxGrid" expanded="0">
@@ -335,7 +335,7 @@
                     <property name="border">5</property>
                     <property name="colspan">3</property>
                     <property name="column">2</property>
-                    <property name="flag">wxEXPAND | wxALL</property>
+                    <property name="flag">wxALL|wxEXPAND</property>
                     <property name="row">1</property>
                     <property name="rowspan">1</property>
                     <object class="wxPanel" expanded="0">
@@ -418,7 +418,7 @@
                     <property name="border">5</property>
                     <property name="colspan">1</property>
                     <property name="column">0</property>
-                    <property name="flag">wxALL</property>
+                    <property name="flag">wxALL|wxEXPAND</property>
                     <property name="row">3</property>
                     <property name="rowspan">1</property>
                     <object class="wxButton" expanded="0">
@@ -509,7 +509,7 @@
                     <property name="border">5</property>
                     <property name="colspan">1</property>
                     <property name="column">0</property>
-                    <property name="flag">wxALL</property>
+                    <property name="flag">wxALL|wxALIGN_RIGHT|wxEXPAND</property>
                     <property name="row">2</property>
                     <property name="rowspan">1</property>
                     <object class="wxListBox" expanded="1">
@@ -526,7 +526,7 @@
                         <property name="caption"></property>
                         <property name="caption_visible">1</property>
                         <property name="center_pane">0</property>
-                        <property name="choices"></property>
+                        <property name="choices">&quot;Wedge&quot; &quot;Airfoil&quot;</property>
                         <property name="close_button">1</property>
                         <property name="context_help"></property>
                         <property name="context_menu">1</property>
@@ -548,7 +548,7 @@
                         <property name="minimize_button">0</property>
                         <property name="minimum_size"></property>
                         <property name="moveable">1</property>
-                        <property name="name">m_listBox1</property>
+                        <property name="name">meshType</property>
                         <property name="pane_border">1</property>
                         <property name="pane_position"></property>
                         <property name="pane_size"></property>
