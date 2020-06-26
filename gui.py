@@ -25,19 +25,31 @@ class MyPanel(wx.Panel):
     def __init__(self, parent):
         super(MyPanel, self).__init__(parent)
 
+        # domain table sizer
+        domainSizer = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(domainSizer)
+
+        # add text
+        self.domainLabel = wx.StaticText(self, label = "Geometry Definition")
+        #domainGrid.SetCellFont(0, 0, wx.Font(12, wx.ROMAN, wx.ITALIC, wx.NORMAL))
+        self.domainLabel.SetFont(wx.Font(10, wx.SWISS, wx.NORMAL, wx.BOLD))
+        domainSizer.Add(self.domainLabel)
+
         # geometry table
         domainGrid = grid.Grid(self)
         domainGrid.CreateGrid(6, 1)
 
         # set row and column values in domain table
         #domainGrid.SetCellFont(0, 0, wx.Font(12, wx.ROMAN, wx.ITALIC, wx.NORMAL))
-        domainGrid.SetColLabelValue(0, "Input")
+        domainGrid.SetColLabelSize(0)
         domainGrid.SetCellValue(0, 0, "1.5")
         domainGrid.SetCellValue(1, 0, "1.3")
         domainGrid.SetCellValue(2, 0, "0.5")
         domainGrid.SetCellValue(3, 0, "20")
         domainGrid.SetCellValue(4, 0, "30")
         domainGrid.SetCellValue(5, 0, "26")
+
+        domainGrid.SetColSize(0, 46)
 
         # set cell editors for M and N
         #domainGrid.SetCellEditor(4, 0, grid.GridCellNumberEditor(4, 0))
@@ -51,13 +63,8 @@ class MyPanel(wx.Panel):
         domainGrid.SetRowLabelValue(4, "M")
         domainGrid.SetRowLabelValue(5, "N")
 
-
-
-
-
-        domainSizer = wx.BoxSizer(wx.VERTICAL)
         domainSizer.Add(domainGrid, 1, wx.EXPAND)
-        self.SetSizer(domainSizer)
+
 
 
     #     # add text
