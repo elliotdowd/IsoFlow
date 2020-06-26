@@ -1,5 +1,7 @@
 import wx
 import wx.grid as grid
+from wx.lib.plot import PolyLine, PlotCanvas, PlotGraphics
+
 class MyApp(wx.App):
     def __init__(self):
         super().__init__(clearSigInt=True)
@@ -14,7 +16,7 @@ class MyApp(wx.App):
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, title, pos):
-        super(MyFrame, self).__init__(parent=parent, title=title, pos=pos, size=(300,200))
+        super(MyFrame, self).__init__(parent=parent, title=title, pos=pos, size=(600,480))
         self.OnInit()
 
     def OnInit(self):
@@ -63,8 +65,12 @@ class MyPanel(wx.Panel):
         domainGrid.SetRowLabelValue(4, "M")
         domainGrid.SetRowLabelValue(5, "N")
 
-        domainSizer.Add(domainGrid, 1, wx.EXPAND)
+        domainSizer.Add(domainGrid, wx.EXPAND, border=20)
 
+
+        # add graph region
+        #self.contour = PlotCanvas(MyPanel)
+        #self.contour.Draw(self.createPlotGraphics())
 
 
     #     # add text
