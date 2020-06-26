@@ -4,7 +4,7 @@ import numpy as np
 class domain:
     name = 'wedge'
     M = 120
-    N = 112
+    N = 110
     obj_start = 1.1
     obj_end = 1.5
     length = 1.5

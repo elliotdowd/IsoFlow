@@ -1,6 +1,5 @@
 import wx
-import webbrowser
-
+import wx.grid as grid
 class MyApp(wx.App):
     def __init__(self):
         super().__init__(clearSigInt=True)
@@ -26,13 +25,78 @@ class MyPanel(wx.Panel):
     def __init__(self, parent):
         super(MyPanel, self).__init__(parent)
 
-        gridSizer = wx.GridSizer(4, 4, 5, 5)
+        # geometry table
+        domainGrid = grid.Grid(self)
+        domainGrid.CreateGrid(6, 1)
 
-        for i in range(1, 17):
-            btn = "Button" + str(i)
+        # set row and column values in domain table
+        #domainGrid.SetCellFont(0, 0, wx.Font(12, wx.ROMAN, wx.ITALIC, wx.NORMAL))
+        domainGrid.SetColLabelValue(0, "Input")
+        domainGrid.SetCellValue(0, 0, "1.5")
+        domainGrid.SetCellValue(1, 0, "1.3")
+        domainGrid.SetCellValue(2, 0, "0.5")
+        domainGrid.SetCellValue(3, 0, "20")
+        domainGrid.SetCellValue(4, 0, "30")
+        domainGrid.SetCellValue(5, 0, "26")
 
-            gridSizer.Add(wx.Button(self,label=btn), 0, wx.EXPAND)
-            self.SetSizer(gridSizer)
+        # set cell editors for M and N
+        #domainGrid.SetCellEditor(4, 0, grid.GridCellNumberEditor(4, 0))
+        #domainGrid.SetCellEditor(5, 0, grid.GridCellNumberEditor(5, 0))
+
+        # set rownames
+        domainGrid.SetRowLabelValue(0, "Length")
+        domainGrid.SetRowLabelValue(1, "Height")
+        domainGrid.SetRowLabelValue(2, "Wedge Start")
+        domainGrid.SetRowLabelValue(3, "Wedge Angle")
+        domainGrid.SetRowLabelValue(4, "M")
+        domainGrid.SetRowLabelValue(5, "N")
+
+
+
+
+
+        domainSizer = wx.BoxSizer(wx.VERTICAL)
+        domainSizer.Add(domainGrid, 1, wx.EXPAND)
+        self.SetSizer(domainSizer)
+
+
+    #     # add text
+    #     sizer = wx.BoxSizer(wx.HORIZONTAL)
+    #     self.label = wx.StaticText(self, label = "Hello")
+    #     sizer.Add(self.label, 1, wx.EXPAND)
+
+
+    #     # add button
+    #     self.btn = wx.Button(self, label = "Click Here")
+    #     self.btn.Bind(wx.EVT_BUTTON, self.onClick)
+    #     sizer.Add(self.btn, 1)
+
+    #     self.SetSizer(sizer)
+
+
+    #     # add checkbox
+    #     self.check1 = wx.CheckBox(self, label = 'Checc')
+    #     self.Bind(wx.EVT_CHECKBOX, self.onCheck)
+    #     sizer.Add(self.check1)
+
+
+    # def onCheck(self, event):
+    #     cb = event.GetEventObject()
+    #     self.label.SetLabelText("Selected" + cb.GetLabel())
+        
+        
+
+    # def onClick(self, event):
+    #     self.label.SetLabelText("Text has been changed")
+
+
+        # gridSizer = wx.GridSizer(4, 4, 5, 5)
+
+        # for i in range(1, 17):
+        #     btn = "Button" + str(i)
+
+        #     gridSizer.Add(wx.Button(self,label=btn), 0, wx.EXPAND)
+        #     self.SetSizer(gridSizer)
 
         # # box sizer
         # vbox = wx.BoxSizer(wx.VERTICAL)
@@ -55,9 +119,9 @@ class MyPanel(wx.Panel):
         # button.Bind(event=wx.EVT_BUTTON, handler=self.onSubmit)
 
 
-    def onSubmit(self, event):
-        # add button action
-        webbrowser.open('https://google.com')
+    # def onSubmit(self, event):
+    #     # add button action
+    #     webbrowser.open('https://google.com')
 
 if __name__== "__main__":
     app = MyApp()
