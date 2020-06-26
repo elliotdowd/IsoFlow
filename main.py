@@ -3,13 +3,13 @@ import numpy as np
 
 class domain:
     name = 'wedge'
-    M = 120
-    N = 110
-    obj_start = 1
+    M = 240
+    N = 220
+    obj_start = 0.5
     obj_end = 1.5
     length = 1.5
     height = 1.2
-    theta = np.deg2rad(40)
+    theta = np.deg2rad(35)
 
 # calculate wedge grid coordinates
 from gen_grid import mesh_wedge
@@ -21,12 +21,12 @@ mesh = cellmetrics(xx, yy, domain)
 
 # initialize state vector, simulation parameters and fluid properties
 class parameters:
-    M_in = 3
+    M_in = 2
     p_in = 101325
     T_in = 300
     iterations = 5000
     tolerance = -6
-    CFL = 0.4
+    CFL = 0.2
 class gas:
     gamma = 1.4
     Cp = 1006
