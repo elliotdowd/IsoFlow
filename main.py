@@ -3,13 +3,13 @@ import numpy as np
 
 class domain:
     name = 'wedge'
-    M = 124
-    N = 48
-    obj_start = 1
-    obj_end = 1.75
+    M = 120
+    N = 36
+    obj_start = 1.25
+    obj_end = 2.1
     length = 3
-    height = 1
-    theta = np.deg2rad(20)
+    height = 2.2
+    theta = np.deg2rad(64)
 
 # calculate wedge grid coordinates
 from gen_grid import mesh_wedge, mesh_airfoil
@@ -28,7 +28,7 @@ mesh = cellmetrics(xx, yy, domain)
 
 # initialize state vector, simulation parameters and fluid properties
 class parameters:
-    M_in = 3
+    M_in = 2.4
     p_in = 101325
     T_in = 300
     iterations = 5000
@@ -44,7 +44,7 @@ state = init_state(domain, mesh, parameters, gas)
 
 # run AUSM scheme
 from schemes import AUSM, AUSMplusup, AUSMDV
-state = AUSMDV( domain, mesh, parameters, state, gas )
+state = AUSM( domain, mesh, parameters, state, gas )
 
 # call plotting functions
 from plotting import plot_mesh, plot_contour
