@@ -64,9 +64,6 @@ def mesh_airfoil(domain):
     else:
         h = np.min(yy1[:,1])
 
-    # determine second half angle
-    theta2 = np.arctan(h/(length/2-(length-af_end)))
-
     # mesh right side of domain
 
     x2 = np.linspace(0, length/2, M+3) + np.max(xx1)
@@ -76,7 +73,10 @@ def mesh_airfoil(domain):
     xx2 = np.transpose(xx2)
     yy2 = np.transpose(yy2)
 
-    meshing.mod2wedge(xx2, yy2, height, theta2, (length-af_end)+length/2, M, N)
+    # determine second half angle
+    theta2 = np.arctan(h/((np.max(xx2)-np.min(xx2))-(length-af_end)))
+
+    meshing.mod2wedge(xx2, yy2, height, theta2, (length-af_end)+np.max(xx1), M, N)
     yy2 = np.flipud(yy2)
     yy2 = np.fliplr(yy2)
     yy2[:,-1] = height*(1+(1/(N)))
