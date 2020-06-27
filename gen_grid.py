@@ -81,8 +81,6 @@ def mesh_airfoil(domain):
     xx = np.vstack((xx1[1:-1,:], xx2[0:-1,:]))
     yy = np.vstack((yy1[1:-1,:], yy2[0:-1,:]))
 
-
     domain.M = M*2
-
 
     return xx, yy

@@ -3,13 +3,13 @@ import numpy as np
 
 class domain:
     name = 'wedge'
-    M = 80
-    N = 72
-    obj_start = 1.25
+    M = 112
+    N = 90
+    obj_start = 1.2
     obj_end = 2
     length = 3
     height = 1
-    theta = np.deg2rad(10)
+    theta = np.deg2rad(15)
 
 # calculate wedge grid coordinates
 from gen_grid import mesh_wedge, mesh_airfoil
@@ -28,7 +28,7 @@ mesh = cellmetrics(xx, yy, domain)
 
 # initialize state vector, simulation parameters and fluid properties
 class parameters:
-    M_in = 2.5
+    M_in = 2
     p_in = 101325
     T_in = 300
     iterations = 5000
