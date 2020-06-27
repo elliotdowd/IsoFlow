@@ -10,14 +10,14 @@ def plot_mesh(mesh):
     ax = fig.gca(projection='3d')
 
     ax.plot_wireframe(mesh.xx, mesh.yy, mesh.xx*0, color='green')
-    ax.plot(mesh.xxc, mesh.yyc, 'b+')
+    #ax.plot(mesh.xxc, mesh.yyc, 'b+')
     ax.view_init(-90, 90)
     ax.set_proj_type('ortho')
 
     plt.xlabel('x-coordinate (m)')
     plt.ylabel('y-coordinate (m)')
 
-    #plt.show()
+    plt.show()
 
 # contour plotting
 def plot_contour(domain, mesh, state):
