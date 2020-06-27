@@ -59,7 +59,10 @@ def mesh_airfoil(domain):
     yy1[:,-1] = height*(1+(1/(N)))
 
     # determine airfoil height
-    h = np.max(yy1[:,1])
+    if np.sign(theta1) == 1:
+        h = np.max(yy1[:,1])
+    else:
+        h = np.min(yy1[:,1])
 
     # determine second half angle
     theta2 = np.arctan(h/(length/2-(length-af_end)))
