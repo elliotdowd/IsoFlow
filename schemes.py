@@ -6,12 +6,8 @@ def AUSM( domain, mesh, parameters, state, gas ):
     from timestepping import local_timestep
     import soln_vars
     import flux
-    from pytictoc import TicToc
-    t = TicToc() #create instance of class
 
     n = 0
-
-    t.tic()
 
     # initialize phi and p state vectors
     Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
@@ -87,8 +83,6 @@ def AUSM( domain, mesh, parameters, state, gas ):
         p_half_zeta = split.P1p( M_L+cr )*state.p[0:-1,:] + split.P1m( M_R+cr )*state.p[1:,:]
         p_half_eta =  split.P1p( M_D+cr )*state.p[:,0:-1] + split.P1m( M_U+cr )*state.p[:,1:]
 
-        #tic()
-
         # initialize Phi vector components
         Phi[:,:,1] = state.u
         Phi[:,:,2] = state.v
@@ -100,8 +94,6 @@ def AUSM( domain, mesh, parameters, state, gas ):
 
         P_eta[:,:,1] = p_half_eta * mesh.s_proj[:,0:-1,2] / mesh.s_proj[:,0:-1,5]
         P_eta[:,:,2] = p_half_eta * mesh.s_proj[:,0:-1,3] / mesh.s_proj[:,0:-1,5]
-
-        #toc()
 
         # dissipative term (Liou_JCP_160_2000)
         #Dm_zeta = np.abs( mdot_half_zeta )
@@ -156,8 +148,6 @@ def AUSM( domain, mesh, parameters, state, gas ):
     state.p0 = (1+((gas.gamma-1)/2)*state.Mach**2)**(gas.gamma/(gas.gamma-1)) * state.p
     state.n = n
 
-    t.toc('Simulation time:')
-
     return state
 
 
@@ -169,12 +159,8 @@ def AUSMplusup( domain, mesh, parameters, state, gas ):
     from timestepping import local_timestep
     import soln_vars
     import flux
-    from pytictoc import TicToc
-    t = TicToc() #create instance of class
 
     n = 0
-
-    t.tic()
 
     # initialize phi and p state vectors
     Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
@@ -307,9 +293,6 @@ def AUSMplusup( domain, mesh, parameters, state, gas ):
     state.p0 = (1+((gas.gamma-1)/2)*state.Mach**2)**(gas.gamma/(gas.gamma-1)) * state.p
     state.n = n
 
-
-    t.toc('Simulation time:')
-
     return state
 
 
@@ -321,12 +304,8 @@ def AUSMDV( domain, mesh, parameters, state, gas ):
     from timestepping import local_timestep
     import soln_vars
     import flux
-    from pytictoc import TicToc
-    t = TicToc() #create instance of class
 
     n = 0
-
-    t.tic()
 
     # initialize phi and p state vectors
     Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
@@ -454,8 +433,6 @@ def AUSMDV( domain, mesh, parameters, state, gas ):
     state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma )
     state.p0 = (1+((gas.gamma-1)/2)*state.Mach**2)**(gas.gamma/(gas.gamma-1)) * state.p
     state.n = n
-
-    t.toc('Simulation time:')
-
+    
     return state
 

@@ -3,7 +3,7 @@ import wx
 # import the newly created GUI file 
 import gui1
 class MainFrame(gui1.MainFrame): 
-   def __init__(self,parent): 
+   def __init__(self, parent): 
       gui1.MainFrame.__init__(self,parent)
 		
         

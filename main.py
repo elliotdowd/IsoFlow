@@ -1,10 +1,13 @@
 # import matplotlib and numpy modules
 import numpy as np
+from pytictoc import TicToc
+
+t = TicToc()
 
 class domain:
     name = 'wedge'
-    M = 144
-    N = 72
+    M = 160
+    N = 84
     obj_start = 1.75
     obj_end = 2.6
     length = 4
@@ -12,6 +15,7 @@ class domain:
     theta = np.deg2rad(68)
 
 # calculate wedge grid coordinates
+t.tic()
 from gen_grid import mesh_wedge, mesh_airfoil
 xx, yy = mesh_airfoil(domain)
 
@@ -25,6 +29,9 @@ from plotting import plot_mesh
 # determine cell metrics for grid
 from calc_cell_metrics import cellmetrics
 mesh = cellmetrics(xx, yy, domain)
+
+print('------------------------------------------------------------------')
+t.toc('meshing time:')
 
 # initialize state vector, simulation parameters and fluid properties
 class parameters:
@@ -40,12 +47,16 @@ class gas:
     R = 287
 
 # initialize state vector, thermodynamic variables
+t.tic()
 from initialize import init_state
 state = init_state(domain, mesh, parameters, gas)
+t.toc('initialize time:')
 
 # run AUSM scheme
+t.tic()
 from schemes import AUSM, AUSMplusup, AUSMDV
 state = AUSMDV( domain, mesh, parameters, state, gas )
+t.toc('simulation time:')
 
 # call plotting functions
 from plotting import plot_mesh, plot_contour

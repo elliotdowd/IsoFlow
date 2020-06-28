@@ -3,7 +3,7 @@ subroutine inv_metrics(xx, xy_inv, M, N)
 ! calculates inverse grid metrics
 ! xy_inv = [y_eta(i+.5,j) x_eta(i+.5,j) y_zeta(i,j+.5) x_zeta(i,j+.5)]
     implicit none
-    real :: start, finish
+    !real :: start, finish
 
     integer :: i, j
     integer, intent(in) :: M
@@ -11,7 +11,7 @@ subroutine inv_metrics(xx, xy_inv, M, N)
     real(kind=8), intent(in) :: xx(M+1, N+1, 2)
     real(kind=8), intent(inout) :: xy_inv(M, N, 4)
 
-    call cpu_time(start)
+    !call cpu_time(start)
 
     do i = 1, M
         
@@ -26,8 +26,8 @@ subroutine inv_metrics(xx, xy_inv, M, N)
 
     end do
 
-    call cpu_time(finish)
-    print '("inv_metrics time = ",f12.9," seconds.")',finish-start
+    !call cpu_time(finish)
+    !print '("inv_metrics time = ",f12.9," seconds.")',finish-start
 
 end subroutine
 
@@ -37,7 +37,7 @@ subroutine face_areas(xy_inv, s_proj, M, N)
 ! projected cell face areas
 ! S_proj = [S_zeta.x, S_zeta.y, S_eta.x, S_eta.y S_zeta, S_eta]
     implicit none
-    real :: start, finish
+    !real :: start, finish
 
     integer :: i, j
     integer, intent(in) :: M
@@ -46,7 +46,7 @@ subroutine face_areas(xy_inv, s_proj, M, N)
     real(kind=8), intent(in) :: xy_inv(M, N, 4)
     real(kind=8), intent(inout) :: s_proj(M, N, 6)
 
-    call cpu_time(start)
+    !call cpu_time(start)
 
     do i = 1, M
         
@@ -64,8 +64,8 @@ subroutine face_areas(xy_inv, s_proj, M, N)
 
     end do
 
-    call cpu_time(finish)
-    print '("face_areas time = ",f12.9," seconds.")',finish-start
+    !call cpu_time(finish)
+    !print '("face_areas time = ",f12.9," seconds.")',finish-start
 
 end subroutine
 
@@ -76,7 +76,7 @@ subroutine calc_cellCentroids(xx, yy, ccx, ccy, area, M, N)
     ! returns ccx, ccy centroid locations in arrays
     implicit none
 
-    real :: start, finish
+    !real :: start, finish
 
     integer, parameter:: dp=kind(0.d0)
     integer, parameter :: sides = 4
@@ -92,7 +92,7 @@ subroutine calc_cellCentroids(xx, yy, ccx, ccy, area, M, N)
     real(kind=8), intent(inout) :: ccx(M, N)
     real(kind=8), intent(inout) :: ccy(M, N)
 
-    call cpu_time(start)
+    !call cpu_time(start)
 
     do i = 1, M
 
@@ -113,8 +113,8 @@ subroutine calc_cellCentroids(xx, yy, ccx, ccy, area, M, N)
                     
     end do        
 
-    call cpu_time(finish)
-    print '("calc_cellcentroids time = ",f12.9," seconds.")',finish-start
+    !call cpu_time(finish)
+    !print '("calc_cellcentroids time = ",f12.9," seconds.")',finish-start
 
 end subroutine
 
@@ -125,7 +125,7 @@ subroutine calc_cellArea(sides, xx, yy, area, M, N)
 
     implicit none
     integer, parameter:: dp=kind(0.d0)
-    real :: start, finish
+    !real :: start, finish
 
     integer :: i, j, k
     integer, intent(in) :: sides
@@ -137,7 +137,7 @@ subroutine calc_cellArea(sides, xx, yy, area, M, N)
     real(kind=8), intent(in) :: yy(M+1, N+1)
     real(kind=8), intent(inout) :: area(M, N)
 
-    call cpu_time(start)
+    !call cpu_time(start)
 
     do i = 1, M
 
@@ -157,7 +157,7 @@ subroutine calc_cellArea(sides, xx, yy, area, M, N)
     
     end do
 
-    call cpu_time(finish)
-    print '("calc_cellarea time = ",f12.9," seconds.")',finish-start
+    !call cpu_time(finish)
+    !print '("calc_cellarea time = ",f12.9," seconds.")',finish-start
 
 end subroutine

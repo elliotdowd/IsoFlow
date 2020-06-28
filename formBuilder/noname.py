@@ -18,7 +18,7 @@ import wx.grid
 class MainFrame ( wx.Frame ):
 	
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( 100,100 ), size = wx.Size( 800,850 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( 100,100 ), size = wx.Size( 800,900 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
 		
 		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
 		self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INACTIVEBORDER ) )
@@ -67,6 +67,8 @@ class MainFrame ( wx.Frame ):
 		MainSizer.Add( self.contourPanel, wx.GBPosition( 2, 2 ), wx.GBSpan( 6, 54 ), wx.ALL|wx.EXPAND, 5 )
 		
 		self.m_toolBar1 = wx.ToolBar( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL ) 
+		self.m_tool1 = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.NullBitmap, wx.NullBitmap, wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None ) 
+		
 		self.m_toolBar1.Realize() 
 		
 		MainSizer.Add( self.m_toolBar1, wx.GBPosition( 0, 0 ), wx.GBSpan( 1, 62 ), wx.EXPAND, 5 )
@@ -99,14 +101,9 @@ class MainFrame ( wx.Frame ):
 		self.parameterGrid.SetRowLabelValue( 1, u"Inlet Pres. (Pa)" )
 		self.parameterGrid.SetRowLabelValue( 2, u"Inlet Temp. (K)" )
 		self.parameterGrid.SetRowLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
-
-		# set initial row values
-		self.parameterGrid.SetCellValue( 0, 0, "3.0")
-		self.parameterGrid.SetCellValue( 1, 0, "101325")
-		self.parameterGrid.SetCellValue( 2, 0, "300")
-
+		
 		# Label Appearance
-
+		
 		# Cell Defaults
 		self.parameterGrid.SetDefaultCellAlignment( wx.ALIGN_LEFT, wx.ALIGN_TOP )
 		MainSizer.Add( self.parameterGrid, wx.GBPosition( 7, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
@@ -136,14 +133,6 @@ class MainFrame ( wx.Frame ):
 		self.simGrid.SetRowLabelValue( 3, u"Iterations" )
 		self.simGrid.SetRowLabelValue( 4, wx.EmptyString )
 		self.simGrid.SetRowLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
-
-		# set initial row values
-		self.domainGrid.SetCellValue( 0, 0, "1.5")
-		self.domainGrid.SetCellValue( 1, 0, "1.3")
-		self.domainGrid.SetCellValue( 2, 0, "0.5")
-		self.domainGrid.SetCellValue( 3, 0, "20")
-		self.domainGrid.SetCellValue( 4, 0, "30")
-		self.domainGrid.SetCellValue( 5, 0, "26")
 		
 		# Label Appearance
 		
