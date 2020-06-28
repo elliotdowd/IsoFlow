@@ -3,13 +3,13 @@ import numpy as np
 
 class domain:
     name = 'wedge'
-    M = 120
-    N = 40
-    obj_start = 0.75
-    obj_end = 2.75
+    M = 144
+    N = 72
+    obj_start = 1.75
+    obj_end = 2.6
     length = 4
     height = 2.4
-    theta = np.deg2rad(10)
+    theta = np.deg2rad(68)
 
 # calculate wedge grid coordinates
 from gen_grid import mesh_wedge, mesh_airfoil
