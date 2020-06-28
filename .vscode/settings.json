@@ -15,5 +15,6 @@
     "explorer.sortOrder": "type",
     "files.exclude": {
         "**/.pyd": true
-    }
+    },
+    "python.pythonPath": "C:\\Users\\Elliot\\AppData\\Local\\Programs\\Python\\Python38\\python.exe"
 }
