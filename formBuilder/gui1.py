@@ -11,10 +11,6 @@ import wx
 import wx.xrc
 import wx.grid
 
-import matplotlib as plt
-from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
-
 ###########################################################################
 ## Class MainFrame
 ###########################################################################
@@ -22,7 +18,7 @@ from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as Navigat
 class MainFrame ( wx.Frame ):
 	
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( -1,-1 ), size = wx.Size( 800,850 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( 100,100 ), size = wx.Size( 800,850 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
 		
 		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
 		self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INACTIVEBORDER ) )
@@ -42,7 +38,7 @@ class MainFrame ( wx.Frame ):
 		self.domainGrid.SetMargins( 0, 0 )
 		
 		# Columns
-		self.domainGrid.SetColSize( 0, 72 )
+		self.domainGrid.SetColSize( 0, 32 )
 		self.domainGrid.EnableDragColMove( False )
 		self.domainGrid.EnableDragColSize( True )
 		self.domainGrid.SetColLabelSize( 0 )
@@ -50,12 +46,12 @@ class MainFrame ( wx.Frame ):
 		
 		# Rows
 		self.domainGrid.EnableDragRowSize( True )
-		self.domainGrid.SetRowLabelSize( 102 )
+		self.domainGrid.SetRowLabelSize( 112 )
 		self.domainGrid.SetRowLabelValue( 0, u"Length" )
 		self.domainGrid.SetRowLabelValue( 1, u"Height" )
 		self.domainGrid.SetRowLabelValue( 2, u"Wedge Start" )
 		self.domainGrid.SetRowLabelValue( 3, u"Wedge Angle" )
-		self.domainGrid.SetRowLabelValue( 4, u"Horiz. Cells" )
+		self.domainGrid.SetRowLabelValue( 4, u"Horizontal Cells" )
 		self.domainGrid.SetRowLabelValue( 5, u"Vertical Cells" )
 		self.domainGrid.SetRowLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
@@ -66,10 +62,9 @@ class MainFrame ( wx.Frame ):
 		MainSizer.Add( self.domainGrid, wx.GBPosition( 2, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
 		
 		self.contourPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-		self.contourPanel.SetBackgroundColour( wx.Colour( 255, 255, 255 ) )
+		self.contourPanel.SetBackgroundColour( wx.Colour( 149, 149, 149 ) )
 		
-		MainSizer.Add( self.contourPanel, wx.GBPosition( 2, 2 ), wx.GBSpan( 6, 54 ), wx.ALL|wx.EXPAND, 5 )
-
+		MainSizer.Add( self.contourPanel, wx.GBPosition( 2, 2 ), wx.GBSpan( 7, 54 ), wx.ALL|wx.EXPAND, 5 )
 		
 		self.m_toolBar1 = wx.ToolBar( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL ) 
 		self.m_toolBar1.Realize() 
@@ -91,7 +86,7 @@ class MainFrame ( wx.Frame ):
 		self.parameterGrid.SetMargins( 0, 0 )
 		
 		# Columns
-		self.parameterGrid.SetColSize( 0, 54 )
+		self.parameterGrid.SetColSize( 0, 44 )
 		self.parameterGrid.EnableDragColMove( False )
 		self.parameterGrid.EnableDragColSize( True )
 		self.parameterGrid.SetColLabelSize( 0 )
@@ -99,19 +94,14 @@ class MainFrame ( wx.Frame ):
 		
 		# Rows
 		self.parameterGrid.EnableDragRowSize( True )
-		self.parameterGrid.SetRowLabelSize( 120 )
+		self.parameterGrid.SetRowLabelSize( 100 )
 		self.parameterGrid.SetRowLabelValue( 0, u"Inlet Mach #" )
 		self.parameterGrid.SetRowLabelValue( 1, u"Inlet Pres. (Pa)" )
 		self.parameterGrid.SetRowLabelValue( 2, u"Inlet Temp. (K)" )
 		self.parameterGrid.SetRowLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
-
-		# set initial row values
-		self.parameterGrid.SetCellValue( 0, 0, "3.0")
-		self.parameterGrid.SetCellValue( 1, 0, "101325")
-		self.parameterGrid.SetCellValue( 2, 0, "300")
-
+		
 		# Label Appearance
-
+		
 		# Cell Defaults
 		self.parameterGrid.SetDefaultCellAlignment( wx.ALIGN_LEFT, wx.ALIGN_TOP )
 		MainSizer.Add( self.parameterGrid, wx.GBPosition( 7, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
@@ -126,7 +116,7 @@ class MainFrame ( wx.Frame ):
 		self.simGrid.SetMargins( 0, 0 )
 		
 		# Columns
-		self.simGrid.SetColSize( 0, 54 )
+		self.simGrid.SetColSize( 0, 44 )
 		self.simGrid.EnableDragColMove( False )
 		self.simGrid.EnableDragColSize( True )
 		self.simGrid.SetColLabelSize( 0 )
@@ -134,21 +124,13 @@ class MainFrame ( wx.Frame ):
 		
 		# Rows
 		self.simGrid.EnableDragRowSize( True )
-		self.simGrid.SetRowLabelSize( 120 )
+		self.simGrid.SetRowLabelSize( 100 )
 		self.simGrid.SetRowLabelValue( 0, u"Max. CFL" )
 		self.simGrid.SetRowLabelValue( 1, u"Inlet Pres. (Pa)" )
 		self.simGrid.SetRowLabelValue( 2, u"Residual Tol." )
 		self.simGrid.SetRowLabelValue( 3, u"Iterations" )
 		self.simGrid.SetRowLabelValue( 4, wx.EmptyString )
 		self.simGrid.SetRowLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
-
-		# set initial row values
-		self.domainGrid.SetCellValue( 0, 0, "1.5")
-		self.domainGrid.SetCellValue( 1, 0, "1.3")
-		self.domainGrid.SetCellValue( 2, 0, "0.5")
-		self.domainGrid.SetCellValue( 3, 0, "20")
-		self.domainGrid.SetCellValue( 4, 0, "30")
-		self.domainGrid.SetCellValue( 5, 0, "26")
 		
 		# Label Appearance
 		
@@ -187,11 +169,11 @@ class MainFrame ( wx.Frame ):
 		self.initButton = wx.Button( self, wx.ID_ANY, u"Initialize", wx.DefaultPosition, wx.DefaultSize, 0 )
 		MainSizer.Add( self.initButton, wx.GBPosition( 8, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
 		
-		self.m_staticText1 = wx.StaticText( self, wx.ID_ANY, u"Geometry Parameters", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
+		self.m_staticText1 = wx.StaticText( self, wx.ID_ANY, u"Domain Parameters", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
 		self.m_staticText1.Wrap( -1 )
 		self.m_staticText1.SetFont( wx.Font( 10, 74, 90, 92, False, "Arial" ) )
 		
-		MainSizer.Add( self.m_staticText1, wx.GBPosition( 1, 0 ), wx.GBSpan( 1, 1 ), wx.ALL, 5 )
+		MainSizer.Add( self.m_staticText1, wx.GBPosition( 1, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
 		self.m_staticline1 = wx.StaticLine( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
 		MainSizer.Add( self.m_staticline1, wx.GBPosition( 5, 0 ), wx.GBSpan( 1, 1 ), wx.EXPAND |wx.ALL, 5 )
@@ -204,7 +186,24 @@ class MainFrame ( wx.Frame ):
 		self.Layout()
 		
 		self.Centre( wx.BOTH )
+		
+		# Connect Events
+		self.m_button3.Bind( wx.EVT_BUTTON, self.call_scheme )
+		self.gridButton.Bind( wx.EVT_BUTTON, self.call_grid )
+		self.initButton.Bind( wx.EVT_BUTTON, self.call_init )
 	
 	def __del__( self ):
 		pass
+	
+	
+	# Virtual event handlers, overide them in your derived class
+	def call_scheme( self, event ):
+		event.Skip()
+	
+	def call_grid( self, event ):
+		event.Skip()
+	
+	def call_init( self, event ):
+		event.Skip()
+	
 

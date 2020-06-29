@@ -133,7 +133,7 @@
                         <property name="col_label_values"></property>
                         <property name="col_label_vert_alignment">wxALIGN_CENTRE</property>
                         <property name="cols">1</property>
-                        <property name="column_sizes">72</property>
+                        <property name="column_sizes">32</property>
                         <property name="context_help"></property>
                         <property name="context_menu">1</property>
                         <property name="default_pane">0</property>
@@ -175,8 +175,8 @@
                         <property name="pos"></property>
                         <property name="resize">Resizable</property>
                         <property name="row_label_horiz_alignment">wxALIGN_CENTRE</property>
-                        <property name="row_label_size">102</property>
-                        <property name="row_label_values">&quot;Length&quot; &quot;Height&quot; &quot;Wedge Start&quot; &quot;Wedge Angle&quot; &quot;Horiz. Cells&quot; &quot;Vertical Cells&quot;</property>
+                        <property name="row_label_size">112</property>
+                        <property name="row_label_values">&quot;Length&quot; &quot;Height&quot; &quot;Wedge Start&quot; &quot;Wedge Angle&quot; &quot;Horizontal Cells&quot; &quot;Vertical Cells&quot;</property>
                         <property name="row_label_vert_alignment">wxALIGN_CENTRE</property>
                         <property name="row_sizes"></property>
                         <property name="rows">6</property>
@@ -251,7 +251,7 @@
                     <property name="column">2</property>
                     <property name="flag">wxALL|wxEXPAND</property>
                     <property name="row">2</property>
-                    <property name="rowspan">6</property>
+                    <property name="rowspan">7</property>
                     <object class="wxPanel" expanded="0">
                         <property name="BottomDockable">1</property>
                         <property name="LeftDockable">1</property>
@@ -262,7 +262,7 @@
                         <property name="aui_position"></property>
                         <property name="aui_row"></property>
                         <property name="best_size"></property>
-                        <property name="bg">255,255,255</property>
+                        <property name="bg">149,149,149</property>
                         <property name="caption"></property>
                         <property name="caption_visible">1</property>
                         <property name="center_pane">0</property>
@@ -533,7 +533,7 @@
                         <property name="col_label_values"></property>
                         <property name="col_label_vert_alignment">wxALIGN_CENTRE</property>
                         <property name="cols">1</property>
-                        <property name="column_sizes">54</property>
+                        <property name="column_sizes">44</property>
                         <property name="context_help"></property>
                         <property name="context_menu">1</property>
                         <property name="default_pane">0</property>
@@ -575,7 +575,7 @@
                         <property name="pos"></property>
                         <property name="resize">Resizable</property>
                         <property name="row_label_horiz_alignment">wxALIGN_CENTRE</property>
-                        <property name="row_label_size">120</property>
+                        <property name="row_label_size">100</property>
                         <property name="row_label_values">&quot;Inlet Mach #&quot; &quot;Inlet Pres. (Pa)&quot; &quot;Inlet Temp. (K)&quot;</property>
                         <property name="row_label_vert_alignment">wxALIGN_CENTRE</property>
                         <property name="row_sizes"></property>
@@ -679,7 +679,7 @@
                         <property name="col_label_values"></property>
                         <property name="col_label_vert_alignment">wxALIGN_CENTRE</property>
                         <property name="cols">1</property>
-                        <property name="column_sizes">54</property>
+                        <property name="column_sizes">44</property>
                         <property name="context_help"></property>
                         <property name="context_menu">1</property>
                         <property name="default_pane">0</property>
@@ -721,7 +721,7 @@
                         <property name="pos"></property>
                         <property name="resize">Resizable</property>
                         <property name="row_label_horiz_alignment">wxALIGN_CENTRE</property>
-                        <property name="row_label_size">120</property>
+                        <property name="row_label_size">100</property>
                         <property name="row_label_values">&quot;Max. CFL&quot; &quot;Inlet Pres. (Pa)&quot; &quot;Residual Tol.&quot; &quot;Iterations&quot; &quot;&quot;</property>
                         <property name="row_label_vert_alignment">wxALIGN_CENTRE</property>
                         <property name="row_sizes"></property>
@@ -1422,7 +1422,7 @@
                     <property name="border">5</property>
                     <property name="colspan">1</property>
                     <property name="column">0</property>
-                    <property name="flag">wxALL</property>
+                    <property name="flag">wxALL|wxALIGN_CENTER_HORIZONTAL</property>
                     <property name="row">1</property>
                     <property name="rowspan">1</property>
                     <object class="wxStaticText" expanded="0">
@@ -1453,7 +1453,7 @@
                         <property name="gripper">0</property>
                         <property name="hidden">0</property>
                         <property name="id">wxID_ANY</property>
-                        <property name="label">Geometry Parameters</property>
+                        <property name="label">Domain Parameters</property>
                         <property name="max_size"></property>
                         <property name="maximize_button">0</property>
                         <property name="maximum_size"></property>
