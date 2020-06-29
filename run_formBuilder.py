@@ -21,9 +21,10 @@ frame.Show(True)
 frame.domainGrid.SetCellValue( 0, 0, "1.5")
 frame.domainGrid.SetCellValue( 1, 0, "1.3")
 frame.domainGrid.SetCellValue( 2, 0, "0.5")
-frame.domainGrid.SetCellValue( 3, 0, "20")
-frame.domainGrid.SetCellValue( 4, 0, "30")
-frame.domainGrid.SetCellValue( 5, 0, "26")
+frame.domainGrid.SetCellValue( 3, 0, "1.1")
+frame.domainGrid.SetCellValue( 4, 0, "20")
+frame.domainGrid.SetCellValue( 5, 0, "36")
+frame.domainGrid.SetCellValue( 6, 0, "32")
 
 # set initialization row values
 frame.parameterGrid.SetCellValue( 0, 0, "3.0")

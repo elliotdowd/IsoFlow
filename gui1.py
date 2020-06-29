@@ -31,7 +31,7 @@ class MainFrame ( wx.Frame ):
 		self.domainGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
 		
 		# Grid
-		self.domainGrid.CreateGrid( 6, 1 )
+		self.domainGrid.CreateGrid( 7, 1 )
 		self.domainGrid.EnableEditing( True )
 		self.domainGrid.EnableGridLines( True )
 		self.domainGrid.EnableDragGridSize( False )
@@ -50,9 +50,10 @@ class MainFrame ( wx.Frame ):
 		self.domainGrid.SetRowLabelValue( 0, u"Length" )
 		self.domainGrid.SetRowLabelValue( 1, u"Height" )
 		self.domainGrid.SetRowLabelValue( 2, u"Wedge Start" )
-		self.domainGrid.SetRowLabelValue( 3, u"Wedge Angle" )
-		self.domainGrid.SetRowLabelValue( 4, u"Horizontal Cells" )
-		self.domainGrid.SetRowLabelValue( 5, u"Vertical Cells" )
+		self.domainGrid.SetRowLabelValue( 3, u"Wedge End" )
+		self.domainGrid.SetRowLabelValue( 4, u"Wedge Angle" )
+		self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
+		self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
 		self.domainGrid.SetRowLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
 		# Label Appearance
@@ -202,18 +203,17 @@ class MainFrame ( wx.Frame ):
 	
 	def call_grid( self, event ):
 		import numpy as np
-		from .compressible_wedge.gen_grid import mesh_airfoil, mesh_wedge
-		import gen_grid
+		from python.mesh.grid.gen_grid import mesh_wedge, mesh_airfoil
 
 		class domain:
 			name = self.gridChoice.Strings[self.gridChoice.Selection]
-			M = int(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0))
-			N = int(wx.grid.Grid.GetCellValue(self.domainGrid, 5, 0))
+			M = int(wx.grid.Grid.GetCellValue(self.domainGrid, 5, 0))
+			N = int(wx.grid.Grid.GetCellValue(self.domainGrid, 6, 0))
 			obj_start = float(wx.grid.Grid.GetCellValue(self.domainGrid, 2, 0))
-			#obj_end = 30000
+			obj_end = float(wx.grid.Grid.GetCellValue(self.domainGrid, 3, 0))
 			length = float(wx.grid.Grid.GetCellValue(self.domainGrid, 0, 0))
 			height = float(wx.grid.Grid.GetCellValue(self.domainGrid, 1, 0))
-			theta = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 3, 0)))
+			theta = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)))
 
 		xx, yy = mesh_airfoil(domain)
 

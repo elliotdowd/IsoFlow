@@ -176,10 +176,10 @@
                         <property name="resize">Resizable</property>
                         <property name="row_label_horiz_alignment">wxALIGN_CENTRE</property>
                         <property name="row_label_size">112</property>
-                        <property name="row_label_values">&quot;Length&quot; &quot;Height&quot; &quot;Wedge Start&quot; &quot;Wedge Angle&quot; &quot;Horizontal Cells&quot; &quot;Vertical Cells&quot;</property>
+                        <property name="row_label_values">&quot;Length&quot; &quot;Height&quot; &quot;Wedge Start&quot; &quot;Wedge End&quot; &quot;Wedge Angle&quot; &quot;Horizontal Cells&quot; &quot;Vertical Cells&quot;</property>
                         <property name="row_label_vert_alignment">wxALIGN_CENTRE</property>
                         <property name="row_sizes"></property>
-                        <property name="rows">6</property>
+                        <property name="rows">7</property>
                         <property name="show">1</property>
                         <property name="size"></property>
                         <property name="subclass"></property>
@@ -1119,7 +1119,7 @@
                         <property name="window_extra_style"></property>
                         <property name="window_name"></property>
                         <property name="window_style"></property>
-                        <event name="OnButtonClick"></event>
+                        <event name="OnButtonClick">call_scheme</event>
                         <event name="OnChar"></event>
                         <event name="OnEnterWindow"></event>
                         <event name="OnEraseBackground"></event>
@@ -1301,7 +1301,7 @@
                         <property name="window_extra_style"></property>
                         <property name="window_name"></property>
                         <property name="window_style"></property>
-                        <event name="OnButtonClick"></event>
+                        <event name="OnButtonClick">call_grid</event>
                         <event name="OnChar"></event>
                         <event name="OnEnterWindow"></event>
                         <event name="OnEraseBackground"></event>
@@ -1392,7 +1392,7 @@
                         <property name="window_extra_style"></property>
                         <property name="window_name"></property>
                         <property name="window_style"></property>
-                        <event name="OnButtonClick"></event>
+                        <event name="OnButtonClick">call_init</event>
                         <event name="OnChar"></event>
                         <event name="OnEnterWindow"></event>
                         <event name="OnEraseBackground"></event>
