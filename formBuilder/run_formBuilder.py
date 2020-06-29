@@ -48,7 +48,7 @@ plt.ylabel('y-coordinate (m)')
 frame.contourPanel.canvas = FigureCanvas(frame.contourPanel, -1, frame.contourPanel.figure)
 
 
-frame.iterPanel.figure = mpl.figure.Figure( dpi=100, figsize=(5.4, 1) )
+frame.iterPanel.figure = mpl.figure.Figure( dpi=100, figsize=(5.4, 0.9) )
 frame.iterPanel.iax = frame.iterPanel.figure.add_subplot()
 frame.iterPanel.iax.plot( [1, 2, 3], [0, -1, -3] )
 frame.contourPanel.canvas = FigureCanvas(frame.iterPanel, -1, frame.iterPanel.figure)

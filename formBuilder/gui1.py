@@ -20,7 +20,7 @@ class MainFrame ( wx.Frame ):
 	def __init__( self, parent ):
 		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( 100,100 ), size = wx.Size( 800,850 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
 		
-		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
+		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 		self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INACTIVEBORDER ) )
 		self.SetBackgroundColour( wx.Colour( 149, 149, 149 ) )
 		
@@ -201,6 +201,21 @@ class MainFrame ( wx.Frame ):
 		event.Skip()
 	
 	def call_grid( self, event ):
+		import numpy as np
+		import gen_grid
+
+		class domain:
+			name = self.gridChoice.Strings[self.gridChoice.Selection]
+			M = int(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0))
+			N = int(wx.grid.Grid.GetCellValue(self.domainGrid, 5, 0))
+			obj_start = float(wx.grid.Grid.GetCellValue(self.domainGrid, 2, 0))
+			#obj_end = 30000
+			length = float(wx.grid.Grid.GetCellValue(self.domainGrid, 0, 0))
+			height = float(wx.grid.Grid.GetCellValue(self.domainGrid, 1, 0))
+			theta = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 3, 0)))
+
+		xx, yy = mesh_airfoil(domain)
+
 		event.Skip()
 	
 	def call_init( self, event ):
