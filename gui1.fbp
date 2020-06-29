@@ -250,8 +250,8 @@
                     <property name="colspan">54</property>
                     <property name="column">2</property>
                     <property name="flag">wxALL|wxEXPAND</property>
-                    <property name="row">2</property>
-                    <property name="rowspan">7</property>
+                    <property name="row">1</property>
+                    <property name="rowspan">8</property>
                     <object class="wxPanel" expanded="0">
                         <property name="BottomDockable">1</property>
                         <property name="LeftDockable">1</property>
@@ -421,8 +421,8 @@
                     <property name="colspan">54</property>
                     <property name="column">2</property>
                     <property name="flag">wxALL|wxEXPAND</property>
-                    <property name="row">11</property>
-                    <property name="rowspan">3</property>
+                    <property name="row">10</property>
+                    <property name="rowspan">4</property>
                     <object class="wxPanel" expanded="1">
                         <property name="BottomDockable">1</property>
                         <property name="LeftDockable">1</property>
@@ -722,7 +722,7 @@
                         <property name="resize">Resizable</property>
                         <property name="row_label_horiz_alignment">wxALIGN_CENTRE</property>
                         <property name="row_label_size">100</property>
-                        <property name="row_label_values">&quot;Max. CFL&quot; &quot;Inlet Pres. (Pa)&quot; &quot;Residual Tol.&quot; &quot;Iterations&quot; &quot;&quot;</property>
+                        <property name="row_label_values">&quot;Max. CFL&quot; &quot;Residual Tol.&quot; &quot;Iterations&quot; &quot;&quot;</property>
                         <property name="row_label_vert_alignment">wxALIGN_CENTRE</property>
                         <property name="row_sizes"></property>
                         <property name="rows">3</property>

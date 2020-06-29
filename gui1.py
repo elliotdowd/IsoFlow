@@ -65,7 +65,7 @@ class MainFrame ( wx.Frame ):
 		self.contourPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.contourPanel.SetBackgroundColour( wx.Colour( 149, 149, 149 ) )
 		
-		MainSizer.Add( self.contourPanel, wx.GBPosition( 2, 2 ), wx.GBSpan( 7, 54 ), wx.ALL|wx.EXPAND, 5 )
+		MainSizer.Add( self.contourPanel, wx.GBPosition( 1, 2 ), wx.GBSpan( 8, 68 ), wx.ALL|wx.EXPAND, 5 )
 		
 		self.m_toolBar1 = wx.ToolBar( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL ) 
 		self.m_toolBar1.Realize() 
@@ -75,7 +75,7 @@ class MainFrame ( wx.Frame ):
 		self.iterPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.iterPanel.SetBackgroundColour( wx.Colour( 255, 255, 255 ) )
 		
-		MainSizer.Add( self.iterPanel, wx.GBPosition( 11, 2 ), wx.GBSpan( 3, 54 ), wx.ALL|wx.EXPAND, 5 )
+		MainSizer.Add( self.iterPanel, wx.GBPosition( 10, 2 ), wx.GBSpan( 4, 54 ), wx.ALL|wx.EXPAND, 5 )
 		
 		self.parameterGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
 		
@@ -223,17 +223,23 @@ class MainFrame ( wx.Frame ):
 			xx, yy = mesh_wedge(domain)
 		elif domain.name == "Airfoil":
 			xx, yy = mesh_airfoil(domain)
-		mesh = cellmetrics(xx, yy, domain)
+		self.mesh = cellmetrics(xx, yy, domain)
+
+		self.domain = domain
 
 		# mesh plotting
 		mpl.axes.Axes.clear(self.contourPanel.cax)
-		self.contourPanel.cax.plot_wireframe(mesh.xx, mesh.yy, mesh.xx*0, color='green')
-		self.contourPanel.cax.set_zticks([])
-		self.contourPanel.cax.view_init(-90, 90)
-		self.contourPanel.cax.set_proj_type('ortho')
-		self.contourPanel.cax.set_aspect('auto')
+		self.contourPanel.cax.plot(self.mesh.xx, self.mesh.yy, color='blue')
+		self.contourPanel.cax.plot(np.transpose(self.mesh.xx), np.transpose(self.mesh.yy), color='blue')
+		self.contourPanel.cax.plot(self.mesh.xxc, self.mesh.yyc, 'g+', linewidth=0.1)
+
+		self.contourPanel.cax.set_xlim([np.min(self.mesh.xx[0,:]), np.max(self.mesh.xx[-1,:])])
+		self.contourPanel.cax.set_ylim([np.min(self.mesh.yy[0,:]), domain.height])
+
+		#self.contourPanel.cax.xaxis.tick_bottom()
 		self.contourPanel.cax.set_xlabel('x-coordinate (m)')
 		self.contourPanel.cax.set_ylabel('y-coordinate (m)')
+		self.contourPanel.cax.axis('tight')
 		self.contourPanel.canvas = FigureCanvas(self.contourPanel, -1, self.contourPanel.figure)
 
 		sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -244,6 +250,48 @@ class MainFrame ( wx.Frame ):
 
 	
 	def call_init( self, event ):
+		import numpy as np
+		from python.mesh.grid.gen_grid import mesh_wedge, mesh_airfoil
+		from python.mesh.metrics.calc_cell_metrics import cellmetrics
+		import matplotlib as mpl
+		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+		from matplotlib import cm
+		from pytictoc import TicToc
+
+		t = TicToc()
+
+		# initialize state vector, simulation parameters and fluid properties
+		class parameters:
+			M_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 0, 0))
+			p_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 1, 0))
+			T_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 2, 0))
+			iterations = int(wx.grid.Grid.GetCellValue(self.simGrid, 1, 0))
+			tolerance = float(wx.grid.Grid.GetCellValue(self.simGrid, 2, 0))
+			CFL = float(wx.grid.Grid.GetCellValue(self.simGrid, 0, 0))
+		class gas:
+			gamma = 1.4
+			Cp = 1006
+			R = 287
+
+		self.parameters = parameters
+		self.gas = gas
+
+		# initialize state vector, thermodynamic variables
+		t.tic()
+		from python.boundary.initialize import init_state
+		self.state = init_state(self.domain, self.mesh, self.parameters, self.gas)
+		t.toc('initialize time:')
+
+		mpl.axes.Axes.clear(self.contourPanel.cax)
+		cont = self.contourPanel.cax.contourf(self.mesh.xxc[1:-1,0:-1], self.mesh.yyc[1:-1,0:-1], \
+							    		      self.state.Mach[1:-1,0:-1], 250, cmap=cm.jet)
+		self.contourPanel.cax.axis('tight')
+		# self.contourPanel.cax.set_xlim(np.min(self.mesh.xxc[1:-2,:]), np.max(self.mesh.xxc[1:-2,:]))
+		# self.contourPanel.cax.set_ylim(np.min(self.mesh.yyc[:,1:-2]), np.max(self.mesh.yyc[:,1:-2]))
+		self.contourPanel.cax.set_xlabel('x-coordinate (m)')
+		self.contourPanel.cax.set_ylabel('y-coordinate (m)')
+		self.contourPanel.canvas = FigureCanvas(self.contourPanel, -1, self.contourPanel.figure)
+
 		event.Skip()
 	
 
