@@ -48,7 +48,7 @@ class gas:
 
 # initialize state vector, thermodynamic variables
 t.tic()
-from initialize import init_state
+from boundary.initialize import init_state
 state = init_state(domain, mesh, parameters, gas)
 t.toc('initialize time:')
 
@@ -60,5 +60,4 @@ t.toc('simulation time:')
 
 # call plotting functions
 from plotting import plot_mesh, plot_contour
-#plot_mesh(mesh)
 plot_contour(domain, mesh, state)

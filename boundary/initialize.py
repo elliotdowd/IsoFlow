@@ -27,7 +27,7 @@ def init_state(domain, mesh, parameters, gas):
 
     # boundary conditions
 
-    from boundary_cond import enforce_bc, covariant
+    from boundary.boundary_cond import enforce_bc, covariant
     state = enforce_bc(domain, mesh, parameters, state, gas)
 
     state = covariant(mesh, state)

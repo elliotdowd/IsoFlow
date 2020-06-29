@@ -1,7 +1,7 @@
 # module importation
 import numpy as np
 from finite_volume.helper import thermo, split
-from boundary_cond import enforce_bc, covariant
+from boundary.boundary_cond import enforce_bc, covariant
 from finite_volume.timestepping import local_timestep
 import finite_volume.soln_vars as soln_vars
 import finite_volume.AUSM.flux as flux

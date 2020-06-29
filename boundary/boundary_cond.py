@@ -43,7 +43,7 @@ def invisc_wall(Qwall, pwall, Twall, s_proj, M, gas):
     import numpy as np
 
     from finite_volume.helper import thermo
-    import boundary
+    import boundary.boundary as boundary
 
     u1 = Qwall[:, 1, 1] / Qwall[:, 1, 0]
     v1 = Qwall[:, 1, 2] / Qwall[:, 1, 0]
