@@ -19,6 +19,8 @@ def plot_mesh(mesh):
 
     plt.show()
 
+
+
 # contour plotting
 def plot_contour(domain, mesh, state):
     import matplotlib.pyplot as plt

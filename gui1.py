@@ -200,10 +200,13 @@ class MainFrame ( wx.Frame ):
 	# Virtual event handlers, overide them in your derived class
 	def call_scheme( self, event ):
 		event.Skip()
+
 	
 	def call_grid( self, event ):
 		import numpy as np
 		from python.mesh.grid.gen_grid import mesh_wedge, mesh_airfoil
+		from python.mesh.metrics.calc_cell_metrics import cellmetrics
+		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 
 		class domain:
 			name = self.gridChoice.Strings[self.gridChoice.Selection]
@@ -215,9 +218,21 @@ class MainFrame ( wx.Frame ):
 			height = float(wx.grid.Grid.GetCellValue(self.domainGrid, 1, 0))
 			theta = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)))
 
-		xx, yy = mesh_airfoil(domain)
+		if domain.name == "Wedge":
+			xx, yy = mesh_wedge(domain)
+		elif domain.name == "Airfoil":
+			xx, yy = mesh_airfoil(domain)
+		mesh = cellmetrics(xx, yy, domain)
+
+		# mesh plotting
+		self.contourPanel.cax.plot_wireframe(mesh.xx, mesh.yy, mesh.xx*0, color='green')
+		self.contourPanel.cax.view_init(-90, 90)
+		self.contourPanel.cax.set_proj_type('ortho')
+		self.contourPanel.canvas = FigureCanvas(self.contourPanel, -1, self.contourPanel.figure)
+
 
 		event.Skip()
+
 	
 	def call_init( self, event ):
 		event.Skip()
