@@ -6,7 +6,7 @@ t = TicToc()
 
 class domain:
     name = 'wedge'
-    M = 144
+    M = 120
     N = 72
     obj_start = 1
     obj_end = 30000
@@ -16,7 +16,7 @@ class domain:
 
 # calculate wedge grid coordinates
 t.tic()
-from gen_grid import mesh_wedge, mesh_airfoil
+from mesh.grid.gen_grid import mesh_wedge, mesh_airfoil
 xx, yy = mesh_airfoil(domain)
 
 # from plotting import plot_mesh
@@ -27,7 +27,7 @@ xx, yy = mesh_airfoil(domain)
 # plot_mesh(mesh)
 
 # determine cell metrics for grid
-from calc_cell_metrics import cellmetrics
+from mesh.metrics.calc_cell_metrics import cellmetrics
 mesh = cellmetrics(xx, yy, domain)
 
 print('------------------------------------------------------------------')
@@ -54,7 +54,7 @@ t.toc('initialize time:')
 
 # run AUSM scheme
 t.tic()
-from schemes import AUSM, AUSMplusup, AUSMDV
+from finite_volume.AUSM.schemes import AUSM, AUSMplusup, AUSMDV
 state = AUSMDV( domain, mesh, parameters, state, gas )
 t.toc('simulation time:')
 

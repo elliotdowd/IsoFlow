@@ -1,11 +1,13 @@
+# module importation
+import numpy as np
+from finite_volume.helper import thermo, split
+from boundary_cond import enforce_bc, covariant
+from finite_volume.timestepping import local_timestep
+import finite_volume.soln_vars as soln_vars
+import finite_volume.AUSM.flux as flux
+
 # AUSM flux vector splitting scheme 
 def AUSM( domain, mesh, parameters, state, gas ):
-    import numpy as np
-    from helper import thermo, split
-    from boundary_cond import enforce_bc, covariant
-    from timestepping import local_timestep
-    import soln_vars
-    import flux
 
     n = 0
 
@@ -153,12 +155,6 @@ def AUSM( domain, mesh, parameters, state, gas ):
 
 # AUSM+up flux vector splitting scheme
 def AUSMplusup( domain, mesh, parameters, state, gas ):
-    import numpy as np
-    from helper import thermo, split
-    from boundary_cond import enforce_bc, covariant
-    from timestepping import local_timestep
-    import soln_vars
-    import flux
 
     n = 0
 
@@ -298,12 +294,6 @@ def AUSMplusup( domain, mesh, parameters, state, gas ):
 
 # AUSMDV flux vector splitting scheme 
 def AUSMDV( domain, mesh, parameters, state, gas ):
-    import numpy as np
-    from helper import thermo, split
-    from boundary_cond import enforce_bc, covariant
-    from timestepping import local_timestep
-    import soln_vars
-    import flux
 
     n = 0
 

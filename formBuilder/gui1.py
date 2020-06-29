@@ -202,6 +202,7 @@ class MainFrame ( wx.Frame ):
 	
 	def call_grid( self, event ):
 		import numpy as np
+		from .compressible_wedge.gen_grid import mesh_airfoil, mesh_wedge
 		import gen_grid
 
 		class domain:

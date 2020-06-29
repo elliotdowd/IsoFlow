@@ -4,7 +4,7 @@
 def init_state(domain, mesh, parameters, gas):
 
     import numpy as np
-    from helper import thermo
+    from finite_volume.helper import thermo
 
     # initialize Q state vector at each point
     Q = np.zeros((domain.M+2, domain.N+2, 4), dtype='float', order='F')

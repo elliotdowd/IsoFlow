@@ -3,6 +3,7 @@ def mesh_wedge(domain):
 
     # import numpy
     import numpy as np
+    import mesh.grid.meshing as meshing
 
     # import domain values
     M = domain.M
@@ -19,8 +20,6 @@ def mesh_wedge(domain):
     xx = np.transpose(xx)
     yy = np.transpose(yy)
 
-    import meshing
-
     meshing.mod2wedge(xx, yy, height, theta, wedge_start, M, N)
 
     yy = np.fliplr(yy)
@@ -33,7 +32,7 @@ def mesh_airfoil(domain):
 
     # import numpy
     import numpy as np
-    import meshing
+    import mesh.grid.meshing as meshing
 
     # import domain values
     M = int(domain.M/2)
