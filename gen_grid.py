@@ -15,7 +15,7 @@ def mesh_wedge(domain):
     x = np.linspace(-(1/M)*length, length*(1+(1/M)), M+3)
     y = np.linspace(-(1/N)*height, height*(1+(1/N)), N+3)
 
-    xx, yy = np.meshgrid(x,y)
+    xx, yy = np.meshgrid(x, y)
     xx = np.transpose(xx)
     yy = np.transpose(yy)
 
@@ -87,3 +87,4 @@ def mesh_airfoil(domain):
     domain.M = M*2
 
     return xx, yy
+

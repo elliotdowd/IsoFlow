@@ -11,6 +11,10 @@ import wx
 import wx.xrc
 import wx.grid
 
+import matplotlib as plt
+from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
+
 ###########################################################################
 ## Class MainFrame
 ###########################################################################
@@ -18,7 +22,7 @@ import wx.grid
 class MainFrame ( wx.Frame ):
 	
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( 100,100 ), size = wx.Size( 800,850 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( -1,-1 ), size = wx.Size( 800,850 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
 		
 		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
 		self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INACTIVEBORDER ) )
@@ -65,6 +69,7 @@ class MainFrame ( wx.Frame ):
 		self.contourPanel.SetBackgroundColour( wx.Colour( 255, 255, 255 ) )
 		
 		MainSizer.Add( self.contourPanel, wx.GBPosition( 2, 2 ), wx.GBSpan( 6, 54 ), wx.ALL|wx.EXPAND, 5 )
+
 		
 		self.m_toolBar1 = wx.ToolBar( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL ) 
 		self.m_toolBar1.Realize() 
@@ -202,5 +207,4 @@ class MainFrame ( wx.Frame ):
 	
 	def __del__( self ):
 		pass
-	
 

@@ -6,20 +6,20 @@ t = TicToc()
 
 class domain:
     name = 'wedge'
-    M = 160
-    N = 84
-    obj_start = 1.75
-    obj_end = 2.6
+    M = 144
+    N = 72
+    obj_start = 1
+    obj_end = 30000
     length = 4
     height = 2.4
-    theta = np.deg2rad(68)
+    theta = np.deg2rad(40)
 
 # calculate wedge grid coordinates
 t.tic()
 from gen_grid import mesh_wedge, mesh_airfoil
 xx, yy = mesh_airfoil(domain)
 
-from plotting import plot_mesh
+# from plotting import plot_mesh
 # class mesh:
 #     pass
 # mesh.xx = xx
@@ -35,7 +35,7 @@ t.toc('meshing time:')
 
 # initialize state vector, simulation parameters and fluid properties
 class parameters:
-    M_in = 2
+    M_in = 2.6
     p_in = 101325
     T_in = 300
     iterations = 2000
