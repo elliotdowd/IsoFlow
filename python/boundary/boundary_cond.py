@@ -5,7 +5,7 @@
 def enforce_bc(domain, mesh, parameters, state, gas):
 
     import numpy as np
-    from finite_volume.helper import thermo
+    from python.finite_volume.helper import thermo
 
     # enforce inlet condition
     state.Q[0,:,0] = parameters.p_in / (gas.R * parameters.T_in)
@@ -42,8 +42,8 @@ def invisc_wall(Qwall, pwall, Twall, s_proj, M, gas):
 
     import numpy as np
 
-    from finite_volume.helper import thermo
-    import boundary.boundary as boundary
+    from python.finite_volume.helper import thermo
+    import python.boundary.boundary as boundary
 
     u1 = Qwall[:, 1, 1] / Qwall[:, 1, 0]
     v1 = Qwall[:, 1, 2] / Qwall[:, 1, 0]
@@ -69,8 +69,7 @@ def visc_wall(Qwall, pwall, Twall, s_proj, M, gas):
 
     import numpy as np
 
-    from helper import thermo
-    import boundary
+    from python.finite_volume.helper import thermo
 
     u1 = Qwall[:, 1, 1] / Qwall[:, 1, 0]
     v1 = Qwall[:, 1, 2] / Qwall[:, 1, 0]

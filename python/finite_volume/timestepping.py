@@ -1,5 +1,5 @@
 import numpy as np   
-from finite_volume.helper import thermo
+from python.finite_volume.helper import thermo
 
 def local_timestep( mesh, state, parameters, gas ):
 

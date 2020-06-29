@@ -3,7 +3,7 @@
 def cellmetrics(xx, yy, domain):
 
     import numpy as np
-    import mesh.metrics.cells as cells
+    import python.mesh.metrics.cells as cells
 
     # format grid variable for input into fortran subroutines
     grid = np.array((xx, yy), dtype='float', order='F')

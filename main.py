@@ -16,7 +16,7 @@ class domain:
 
 # calculate wedge grid coordinates
 t.tic()
-from mesh.grid.gen_grid import mesh_wedge, mesh_airfoil
+from python.mesh.grid.gen_grid import mesh_wedge, mesh_airfoil
 xx, yy = mesh_airfoil(domain)
 
 # from plotting import plot_mesh
@@ -27,7 +27,7 @@ xx, yy = mesh_airfoil(domain)
 # plot_mesh(mesh)
 
 # determine cell metrics for grid
-from mesh.metrics.calc_cell_metrics import cellmetrics
+from python.mesh.metrics.calc_cell_metrics import cellmetrics
 mesh = cellmetrics(xx, yy, domain)
 
 print('------------------------------------------------------------------')
@@ -48,16 +48,16 @@ class gas:
 
 # initialize state vector, thermodynamic variables
 t.tic()
-from boundary.initialize import init_state
+from python.boundary.initialize import init_state
 state = init_state(domain, mesh, parameters, gas)
 t.toc('initialize time:')
 
 # run AUSM scheme
 t.tic()
-from finite_volume.AUSM.schemes import AUSM, AUSMplusup, AUSMDV
+from python.finite_volume.AUSM.schemes import AUSM, AUSMplusup, AUSMDV
 state = AUSMDV( domain, mesh, parameters, state, gas )
 t.toc('simulation time:')
 
 # call plotting functions
-from plotting import plot_mesh, plot_contour
+from python.postprocessing.plotting import plot_mesh, plot_contour
 plot_contour(domain, mesh, state)

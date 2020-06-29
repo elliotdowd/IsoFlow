@@ -4,7 +4,7 @@
 def init_state(domain, mesh, parameters, gas):
 
     import numpy as np
-    from finite_volume.helper import thermo
+    from python.finite_volume.helper import thermo
 
     # initialize Q state vector at each point
     Q = np.zeros((domain.M+2, domain.N+2, 4), dtype='float', order='F')
@@ -27,7 +27,7 @@ def init_state(domain, mesh, parameters, gas):
 
     # boundary conditions
 
-    from boundary.boundary_cond import enforce_bc, covariant
+    from python.boundary.boundary_cond import enforce_bc, covariant
     state = enforce_bc(domain, mesh, parameters, state, gas)
 
     state = covariant(mesh, state)
