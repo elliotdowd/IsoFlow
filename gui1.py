@@ -206,6 +206,7 @@ class MainFrame ( wx.Frame ):
 		import numpy as np
 		from python.mesh.grid.gen_grid import mesh_wedge, mesh_airfoil
 		from python.mesh.metrics.calc_cell_metrics import cellmetrics
+		import matplotlib as mpl
 		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 
 		class domain:
@@ -225,11 +226,19 @@ class MainFrame ( wx.Frame ):
 		mesh = cellmetrics(xx, yy, domain)
 
 		# mesh plotting
+		mpl.axes.Axes.clear(self.contourPanel.cax)
 		self.contourPanel.cax.plot_wireframe(mesh.xx, mesh.yy, mesh.xx*0, color='green')
+		self.contourPanel.cax.set_zticks([])
 		self.contourPanel.cax.view_init(-90, 90)
 		self.contourPanel.cax.set_proj_type('ortho')
+		self.contourPanel.cax.set_aspect('auto')
+		self.contourPanel.cax.set_xlabel('x-coordinate (m)')
+		self.contourPanel.cax.set_ylabel('y-coordinate (m)')
 		self.contourPanel.canvas = FigureCanvas(self.contourPanel, -1, self.contourPanel.figure)
 
+		sizer = wx.BoxSizer(wx.HORIZONTAL)
+		sizer.Add(self.contourPanel.canvas, proportion=1, flag=wx.LEFT | wx.TOP | wx.GROW)
+		self.SetSizer(sizer)
 
 		event.Skip()
 
