@@ -11,7 +11,6 @@ import wx
 import wx.xrc
 import wx.grid
 
-import subprocess
 import sys
 
 ###########################################################################
@@ -66,21 +65,19 @@ class MainFrame ( wx.Frame ):
 		MainSizer.Add( self.domainGrid, wx.GBPosition( 2, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
 		
 		self.contourPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-		self.contourPanel.SetBackgroundColour( wx.Colour( 222, 222, 222 ) )
-		MainSizer.Add( self.contourPanel, wx.GBPosition( 1, 2 ), wx.GBSpan( 8, 68 ), wx.ALL|wx.EXPAND, 5 )
-
+		self.contourPanel.SetBackgroundColour( wx.Colour( 149, 149, 149 ) )
+		MainSizer.Add( self.contourPanel, wx.GBPosition( 1, 2 ), wx.GBSpan( 8, 54 ), wx.ALL|wx.EXPAND, 5 )
+		
 		self.consolePanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.consolePanel.SetBackgroundColour( wx.Colour( 222, 222, 222 ) )
 		MainSizer.Add( self.consolePanel, wx.GBPosition( 14, 0 ), wx.GBSpan( 5, 60 ), wx.ALL|wx.EXPAND, 5 )
 
-		# TERMINAL COMMANDS
+		# console redirecting
 		self.consolePanel.command = wx.TextCtrl(self.consolePanel)
 		self.consolePanel.result = wx.TextCtrl(self.consolePanel, style=wx.TE_MULTILINE)
 		self.consolePanel.text = wx.TextCtrl(self.consolePanel, -1, style=wx.TE_MULTILINE|wx.TE_READONLY, size=(714, 60))
-
 		redir=RedirectText(self.consolePanel.text)
 		sys.stdout=redir
-
 		
 		self.iterPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.iterPanel.SetBackgroundColour( wx.Colour( 222, 222, 222 ) )
@@ -151,14 +148,14 @@ class MainFrame ( wx.Frame ):
 		self.m_staticText11.Wrap( -1 )
 		self.m_staticText11.SetFont( wx.Font( 10, 74, 90, 92, False, "Arial" ) )
 		self.m_staticText11.SetForegroundColour(wx.Colour(0, 0, 0))
-		
+
 		MainSizer.Add( self.m_staticText11, wx.GBPosition( 6, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
 		self.m_staticText111 = wx.StaticText( self, wx.ID_ANY, u"Simulation Options", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
 		self.m_staticText111.Wrap( -1 )
 		self.m_staticText111.SetFont( wx.Font( 10, 74, 90, 92, False, "Arial" ) )
 		self.m_staticText111.SetForegroundColour(wx.Colour(0, 0, 0))
-
+		
 		MainSizer.Add( self.m_staticText111, wx.GBPosition( 10, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
 		gridChoiceChoices = [ u"Wedge", u"Airfoil" ]
@@ -193,7 +190,7 @@ class MainFrame ( wx.Frame ):
 		self.m_staticline11 = wx.StaticLine( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
 		MainSizer.Add( self.m_staticline11, wx.GBPosition( 9, 0 ), wx.GBSpan( 1, 1 ), wx.EXPAND |wx.ALL, 5 )
 		
-
+		
 		self.SetSizer( MainSizer )
 		self.Layout()
 		self.menuBar = wx.MenuBar( 0 )
@@ -201,23 +198,33 @@ class MainFrame ( wx.Frame ):
 		
 		self.plotOptions = wx.Menu()
 		self.contOptions = wx.Menu()
-		self.mach = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Mach Number", wx.EmptyString, wx.ITEM_NORMAL )
-		self.contOptions.Append( self.mach )
+		self.mach_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Mach Number", wx.EmptyString, wx.ITEM_NORMAL )
+		self.contOptions.AppendItem( self.mach_change )
 		
-		self.pressure = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Pressure", wx.EmptyString, wx.ITEM_NORMAL )
-		self.contOptions.Append( self.pressure )
+		self.contOptions.AppendSeparator()
 		
-		self.stagpressure = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Stagnation Pressure", wx.EmptyString, wx.ITEM_NORMAL )
-		self.contOptions.Append( self.stagpressure )
+		self.pressure_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Pressure", wx.EmptyString, wx.ITEM_NORMAL )
+		self.contOptions.AppendItem( self.pressure_change )
+		
+		self.stagpressure_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Stagnation Pressure", wx.EmptyString, wx.ITEM_NORMAL )
+		self.contOptions.AppendItem( self.stagpressure_change )
+		
+		self.contOptions.AppendSeparator()
+		
+		self.temp_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Temperature", wx.EmptyString, wx.ITEM_NORMAL )
+		self.contOptions.AppendItem( self.temp_change )
+		
+		self.stagtemp_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"MyMenuItem", wx.EmptyString, wx.ITEM_NORMAL )
+		self.contOptions.AppendItem( self.stagtemp_change )
 		
 		self.plotOptions.AppendSubMenu( self.contOptions, u"Contour" )
 		
 		self.cmOptions = wx.Menu()
 		self.jet = wx.MenuItem( self.cmOptions, wx.ID_ANY, u"Jet", wx.EmptyString, wx.ITEM_NORMAL )
-		self.cmOptions.Append( self.jet )
+		self.cmOptions.AppendItem( self.jet )
 		
 		self.gray = wx.MenuItem( self.cmOptions, wx.ID_ANY, u"Greyscale", wx.EmptyString, wx.ITEM_NORMAL )
-		self.cmOptions.Append( self.gray )
+		self.cmOptions.AppendItem( self.gray )
 		
 		self.plotOptions.AppendSubMenu( self.cmOptions, u"Colormap" )
 		
@@ -225,18 +232,15 @@ class MainFrame ( wx.Frame ):
 		
 		self.unitOptions = wx.Menu()
 		self.metric2 = wx.MenuItem( self.unitOptions, wx.ID_ANY, u"Metric (kg-m-s-C)", wx.EmptyString, wx.ITEM_NORMAL )
-		self.unitOptions.Append( self.metric2 )
+		self.unitOptions.AppendItem( self.metric2 )
 		
 		self.metric1 = wx.MenuItem( self.unitOptions, wx.ID_ANY, u"Metric (kg-m-s-K)", wx.EmptyString, wx.ITEM_NORMAL )
-		self.unitOptions.Append( self.metric1 )
+		self.unitOptions.AppendItem( self.metric1 )
 		
 		self.menuBar.Append( self.unitOptions, u"Units" ) 
 		
 		self.SetMenuBar( self.menuBar )
-
 		
-		self.SetSizer( MainSizer )
-		self.Layout()
 		
 		self.Centre( wx.BOTH )
 		
@@ -244,10 +248,17 @@ class MainFrame ( wx.Frame ):
 		self.m_button3.Bind( wx.EVT_BUTTON, self.call_scheme )
 		self.gridButton.Bind( wx.EVT_BUTTON, self.call_grid )
 		self.initButton.Bind( wx.EVT_BUTTON, self.call_init )
+		self.Bind( wx.EVT_MENU, self.mach, id = self.mach_change.GetId() )
+		self.Bind( wx.EVT_MENU, self.pressure, id = self.pressure_change.GetId() )
+		self.Bind( wx.EVT_MENU, self.stagp, id = self.stagpressure_change.GetId() )
+		self.Bind( wx.EVT_MENU, self.temp, id = self.temp_change.GetId() )
+		self.Bind( wx.EVT_MENU, self.stagtemp, id = self.stagtemp_change.GetId() )
 
 		# initialize grid values
 		self.init_grids()
-		self.init_axes()
+		self.contQuantity = 'Mach'
+
+
 
 	def __del__( self ):
 		pass
@@ -272,21 +283,6 @@ class MainFrame ( wx.Frame ):
 		self.simGrid.SetCellValue( 0, 0, "0.4")
 		self.simGrid.SetCellValue( 1, 0, "1000")
 		self.simGrid.SetCellValue( 2, 0, "-6")
-
-
-	# initialize canvas figures and axes
-	def init_axes( self ):
-		import matplotlib as mpl
-		import matplotlib.pyplot as plt
-		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-		from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
-
-		self.contourPanel.figure = plt.figure( dpi=100, figsize=(5.5, 3.8), facecolor=(222/256,222/256,222/256) )
-		self.contourPanel.cax = self.contourPanel.figure.gca()
-		self.contourPanel.cax.set_position([0.1, 0.18, 0.84, 0.82])
-
-		self.iterPanel.figure = plt.figure( dpi=100, figsize=(5, 1), facecolor=(222/256,222/256,222/256) )
-		self.iterPanel.iax = self.iterPanel.figure.gca()
 
 
 	# Virtual event handlers, overide them in your derived class
@@ -423,18 +419,45 @@ class MainFrame ( wx.Frame ):
 		self.contourPanel.figure.clf()
 		self.contourPanel.cax = self.contourPanel.figure.gca()
 		self.contourPanel.cax.set_position([0.12, 0.2, 0.84, 0.82])
-		cont = self.contourPanel.cax.contourf(self.mesh.xxc[1:-2,1:-1], self.mesh.yyc[1:-2,1:-1], \
-							    		      self.state.Mach[1:-2,1:-1], 250, cmap=cm.jet)
+
+		if self.contQuantity == 'Mach':
+			cont = self.contourPanel.cax.contourf(self.mesh.xxc[1:-2,1:-1], self.mesh.yyc[1:-2,1:-1], \
+							    		      	  self.state.Mach[1:-2,1:-1], 250, cmap=cm.jet)
+			# colorbar settings
+			ticks = np.linspace(round(np.min(self.state.Mach),2), round(np.max(self.state.Mach),2), 6)
+			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
+												shrink=0.8, extend='both', ax=self.contourPanel.cax)
+			CB.set_label(self.contQuantity, rotation=90)
+		elif self.contQuantity == 'Pressure':
+			cont = self.contourPanel.cax.contourf(self.mesh.xxc[1:-2,1:-1], self.mesh.yyc[1:-2,1:-1], \
+							    		      	  self.state.p[1:-2,1:-1], 250, cmap=cm.jet)
+			# colorbar settings
+			ticks = np.linspace(round(np.min(self.state.p),2), round(np.max(self.state.p),2), 6)
+			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
+												shrink=0.8, extend='both', ax=self.contourPanel.cax)
+			CB.set_label(self.contQuantity, rotation=90)
+		elif self.contQuantity == 'Stagnation Pressure':
+			cont = self.contourPanel.cax.contourf(self.mesh.xxc[1:-2,1:-1], self.mesh.yyc[1:-2,1:-1], \
+							    		      	  self.state.p0[1:-2,1:-1], 250, cmap=cm.jet)
+			# colorbar settings
+			ticks = np.linspace(round(np.min(self.state.p0),2), round(np.max(self.state.p0),2), 6)
+			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
+												shrink=0.8, extend='both', ax=self.contourPanel.cax)
+			CB.set_label(self.contQuantity, rotation=90)
+		elif self.contQuantity == 'Temperature':
+			cont = self.contourPanel.cax.contourf(self.mesh.xxc[1:-2,1:-1], self.mesh.yyc[1:-2,1:-1], \
+							    		      	  self.state.T[1:-2,1:-1], 250, cmap=cm.jet)
+			# colorbar settings
+			ticks = np.linspace(round(np.min(self.state.T),2), round(np.max(self.state.T),2), 6)
+			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
+												shrink=0.8, extend='both', ax=self.contourPanel.cax)
+			CB.set_label(self.contQuantity, rotation=90)
+
 		self.contourPanel.cax.axis('equal')
 		self.contourPanel.cax.set_xlabel('x-coordinate (m)')
 		self.contourPanel.cax.set_ylabel('y-coordinate (m)')
 		self.contourPanel.canvas = FigureCanvas(self.contourPanel, -1, self.contourPanel.figure)
 
-		# colorbar settings
-		ticks = np.linspace(round(np.min(self.state.Mach),2), round(np.max(self.state.Mach),2), 6)
-		CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
-											   shrink=0.8, extend='both', ax=self.contourPanel.cax)
-		CB.set_label('Mach Number', rotation=90)
 
 
 	def call_resplot(self):
@@ -459,6 +482,38 @@ class MainFrame ( wx.Frame ):
 		self.iterPanel.iax.legend([r"$\dot{m}$", 'u', 'v', r"$h_{t}$"], loc='center left', bbox_to_anchor=(1.025, 0.5), framealpha=0.0)
 		self.iterPanel.canvas = FigureCanvas(self.iterPanel, -1, self.iterPanel.figure)
 
+
+	def mach( self, event ):
+		self.contQuantity = 'Mach'
+		if hasattr(self, 'state'):
+			self.call_contplot()
+		event.Skip()
+	
+	def pressure( self, event ):
+		self.contQuantity = 'Pressure'
+		if hasattr(self, 'state'):
+			self.call_contplot()
+		event.Skip()
+	
+	def stagp( self, event ):
+		self.contQuantity = 'Stagnation Pressure'
+		if hasattr(self, 'state'):
+			self.call_contplot()
+		event.Skip()
+
+	def temp( self, event ):
+		self.contQuantity = 'Temperature'
+		if hasattr(self, 'state'):
+			self.call_contplot()
+		event.Skip()
+	
+	def stagtemp( self, event ):
+		self.contQuantity = 'Stagnation Temperature'
+		if hasattr(self, 'state'):
+			self.call_contplot()
+		event.Skip()
+
+
 class RedirectText:
 	def __init__(self,aWxTextCtrl):
 		self.out=aWxTextCtrl
@@ -466,3 +521,6 @@ class RedirectText:
 	def write(self,string):
 		self.out.WriteText(string)
 
+
+		# redir=RedirectText(self.consolePanel.text)
+		# sys.stdout=redir
