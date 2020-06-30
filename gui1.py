@@ -22,7 +22,7 @@ class MainFrame ( wx.Frame ):
 		
 		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 		self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INACTIVEBORDER ) )
-		self.SetBackgroundColour( wx.Colour( 149, 149, 149 ) )
+		self.SetBackgroundColour( wx.Colour( 222, 222, 222 ) )
 		
 		MainSizer = wx.GridBagSizer( 0, 0 )
 		MainSizer.SetFlexibleDirection( wx.BOTH )
@@ -63,7 +63,7 @@ class MainFrame ( wx.Frame ):
 		MainSizer.Add( self.domainGrid, wx.GBPosition( 2, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
 		
 		self.contourPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-		self.contourPanel.SetBackgroundColour( wx.Colour( 149, 149, 149 ) )
+		self.contourPanel.SetBackgroundColour( wx.Colour( 222, 222, 222 ) )
 		
 		MainSizer.Add( self.contourPanel, wx.GBPosition( 1, 2 ), wx.GBSpan( 8, 68 ), wx.ALL|wx.EXPAND, 5 )
 		
@@ -142,13 +142,15 @@ class MainFrame ( wx.Frame ):
 		self.m_staticText11 = wx.StaticText( self, wx.ID_ANY, u"Inlet Parameters", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
 		self.m_staticText11.Wrap( -1 )
 		self.m_staticText11.SetFont( wx.Font( 10, 74, 90, 92, False, "Arial" ) )
+		self.m_staticText11.SetForegroundColour(wx.Colour(0, 0, 0))
 		
 		MainSizer.Add( self.m_staticText11, wx.GBPosition( 6, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
 		self.m_staticText111 = wx.StaticText( self, wx.ID_ANY, u"Simulation Options", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
 		self.m_staticText111.Wrap( -1 )
 		self.m_staticText111.SetFont( wx.Font( 10, 74, 90, 92, False, "Arial" ) )
-		
+		self.m_staticText111.SetForegroundColour(wx.Colour(0, 0, 0))
+
 		MainSizer.Add( self.m_staticText111, wx.GBPosition( 10, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
 		gridChoiceChoices = [ u"Wedge", u"Airfoil" ]
@@ -173,6 +175,7 @@ class MainFrame ( wx.Frame ):
 		self.m_staticText1 = wx.StaticText( self, wx.ID_ANY, u"Domain Parameters", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
 		self.m_staticText1.Wrap( -1 )
 		self.m_staticText1.SetFont( wx.Font( 10, 74, 90, 92, False, "Arial" ) )
+		self.m_staticText1.SetForegroundColour(wx.Colour(0, 0, 0))
 		
 		MainSizer.Add( self.m_staticText1, wx.GBPosition( 1, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
@@ -199,6 +202,58 @@ class MainFrame ( wx.Frame ):
 	
 	# Virtual event handlers, overide them in your derived class
 	def call_scheme( self, event ):
+
+		import numpy as np
+		from pytictoc import TicToc
+		from python.finite_volume.AUSM.schemes import AUSM, AUSMplusup, AUSMDV
+		import matplotlib.pyplot as plt
+		from matplotlib import cm
+		import matplotlib as mpl
+		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+
+		t = TicToc()
+
+		# run AUSM family scheme
+		t.tic()
+		scheme = self.schemeChoice.Strings[self.schemeChoice.Selection]
+		
+		if scheme == 'AUSM':
+			self.state = AUSM( self.domain, self.mesh, self.parameters, self.state, self.gas )
+		elif scheme == 'AUSM+up':
+			self.state = AUSMplusup( self.domain, self.mesh, self.parameters, self.state, self.gas )
+		elif scheme == 'AUSMDV':
+			self.state = AUSMDV( self.domain, self.mesh, self.parameters, self.state, self.gas )
+		t.toc('simulation time:')
+
+		# post processing
+		self.contourPanel.figure.clf()
+		self.contourPanel.cax = self.contourPanel.figure.gca()
+		plt.gca().xaxis.tick_bottom()
+		self.contourPanel.cax.set_position([0.1, 0.16, 0.84, 0.82])
+		#mpl.axes.Axes.clear(self.contourPanel.cax)
+		cont = self.contourPanel.cax.contourf(self.mesh.xxc[1:-2,0:-1], self.mesh.yyc[1:-2,0:-1], \
+							    		      self.state.Mach[1:-2,0:-1], 250, cmap=cm.jet)
+		self.contourPanel.cax.axis('tight')
+		self.contourPanel.cax.set_xlabel('x-coordinate (m)')
+		self.contourPanel.cax.set_ylabel('y-coordinate (m)')
+		self.contourPanel.canvas = FigureCanvas(self.contourPanel, -1, self.contourPanel.figure)
+
+		# colorbar settings
+		CB = self.contourPanel.figure.colorbar(cont, shrink=0.8, extend='both', ax=self.contourPanel.cax)
+		CB.set_label('Mach Number', rotation=90)
+
+		# residual plotting
+		self.iterPanel.iax.plot(np.arange(1, len(self.state.res[0:self.state.n]), 1), self.state.res[1:self.state.n], linewidth=1)
+		self.iterPanel.iax.set_xlabel('Iterations')
+		self.iterPanel.iax.set_ylabel('Residual') 
+		self.iterPanel.iax.get_lines()[0].set_color("black")
+		self.iterPanel.iax.get_lines()[1].set_color("blue")
+		self.iterPanel.iax.get_lines()[2].set_color("green")
+		self.iterPanel.iax.get_lines()[3].set_color("red")
+		self.iterPanel.iax.legend(['mdot', 'u', 'v', 'energy'], loc='center left', bbox_to_anchor=(1.05, 0.5))
+		self.iterPanel.canvas = FigureCanvas(self.iterPanel, -1, self.iterPanel.figure)
+
+
 		event.Skip()
 
 	
@@ -229,9 +284,9 @@ class MainFrame ( wx.Frame ):
 
 		# mesh plotting
 		mpl.axes.Axes.clear(self.contourPanel.cax)
-		self.contourPanel.cax.plot(self.mesh.xx, self.mesh.yy, color='blue')
-		self.contourPanel.cax.plot(np.transpose(self.mesh.xx), np.transpose(self.mesh.yy), color='blue')
-		self.contourPanel.cax.plot(self.mesh.xxc, self.mesh.yyc, 'g+', linewidth=0.1)
+		self.contourPanel.cax.plot(self.mesh.xx, self.mesh.yy, color='blue', linewidth=0.5)
+		self.contourPanel.cax.plot(np.transpose(self.mesh.xx), np.transpose(self.mesh.yy), color='blue', linewidth=0.5)
+		self.contourPanel.cax.plot(self.mesh.xxc, self.mesh.yyc, 'gx', markersize=2)
 
 		self.contourPanel.cax.set_xlim([np.min(self.mesh.xx[0,:]), np.max(self.mesh.xx[-1,:])])
 		self.contourPanel.cax.set_ylim([np.min(self.mesh.yy[0,:]), domain.height])
@@ -284,7 +339,7 @@ class MainFrame ( wx.Frame ):
 
 		mpl.axes.Axes.clear(self.contourPanel.cax)
 		cont = self.contourPanel.cax.contourf(self.mesh.xxc[1:-1,0:-1], self.mesh.yyc[1:-1,0:-1], \
-							    		      self.state.Mach[1:-1,0:-1], 250, cmap=cm.jet)
+							    		      self.state.V[1:-1,0:-1], 250, cmap=cm.jet)
 		self.contourPanel.cax.axis('tight')
 		# self.contourPanel.cax.set_xlim(np.min(self.mesh.xxc[1:-2,:]), np.max(self.mesh.xxc[1:-2,:]))
 		# self.contourPanel.cax.set_ylim(np.min(self.mesh.yyc[:,1:-2]), np.max(self.mesh.yyc[:,1:-2]))
