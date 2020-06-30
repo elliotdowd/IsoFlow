@@ -202,22 +202,22 @@ class MainFrame ( wx.Frame ):
 		self.plotOptions = wx.Menu()
 		self.contOptions = wx.Menu()
 		self.mach = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Mach Number", wx.EmptyString, wx.ITEM_NORMAL )
-		self.contOptions.AppendItem( self.mach )
+		self.contOptions.Append( self.mach )
 		
 		self.pressure = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Pressure", wx.EmptyString, wx.ITEM_NORMAL )
-		self.contOptions.AppendItem( self.pressure )
+		self.contOptions.Append( self.pressure )
 		
 		self.stagpressure = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Stagnation Pressure", wx.EmptyString, wx.ITEM_NORMAL )
-		self.contOptions.AppendItem( self.stagpressure )
+		self.contOptions.Append( self.stagpressure )
 		
 		self.plotOptions.AppendSubMenu( self.contOptions, u"Contour" )
 		
 		self.cmOptions = wx.Menu()
 		self.jet = wx.MenuItem( self.cmOptions, wx.ID_ANY, u"Jet", wx.EmptyString, wx.ITEM_NORMAL )
-		self.cmOptions.AppendItem( self.jet )
+		self.cmOptions.Append( self.jet )
 		
 		self.gray = wx.MenuItem( self.cmOptions, wx.ID_ANY, u"Greyscale", wx.EmptyString, wx.ITEM_NORMAL )
-		self.cmOptions.AppendItem( self.gray )
+		self.cmOptions.Append( self.gray )
 		
 		self.plotOptions.AppendSubMenu( self.cmOptions, u"Colormap" )
 		
@@ -225,10 +225,10 @@ class MainFrame ( wx.Frame ):
 		
 		self.unitOptions = wx.Menu()
 		self.metric2 = wx.MenuItem( self.unitOptions, wx.ID_ANY, u"Metric (kg-m-s-C)", wx.EmptyString, wx.ITEM_NORMAL )
-		self.unitOptions.AppendItem( self.metric2 )
+		self.unitOptions.Append( self.metric2 )
 		
 		self.metric1 = wx.MenuItem( self.unitOptions, wx.ID_ANY, u"Metric (kg-m-s-K)", wx.EmptyString, wx.ITEM_NORMAL )
-		self.unitOptions.AppendItem( self.metric1 )
+		self.unitOptions.Append( self.metric1 )
 		
 		self.menuBar.Append( self.unitOptions, u"Units" ) 
 		
@@ -247,6 +247,7 @@ class MainFrame ( wx.Frame ):
 
 		# initialize grid values
 		self.init_grids()
+		self.init_axes()
 
 	def __del__( self ):
 		pass
@@ -271,6 +272,22 @@ class MainFrame ( wx.Frame ):
 		self.simGrid.SetCellValue( 0, 0, "0.4")
 		self.simGrid.SetCellValue( 1, 0, "1000")
 		self.simGrid.SetCellValue( 2, 0, "-6")
+
+
+	# initialize canvas figures and axes
+	def init_axes( self ):
+		import matplotlib as mpl
+		import matplotlib.pyplot as plt
+		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+		from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
+
+		self.contourPanel.figure = plt.figure( dpi=100, figsize=(5.5, 3.8), facecolor=(222/256,222/256,222/256) )
+		self.contourPanel.cax = self.contourPanel.figure.gca()
+		self.contourPanel.cax.set_position([0.1, 0.18, 0.84, 0.82])
+
+		self.iterPanel.figure = plt.figure( dpi=100, figsize=(5, 1), facecolor=(222/256,222/256,222/256) )
+		self.iterPanel.iax = self.iterPanel.figure.gca()
+
 
 	# Virtual event handlers, overide them in your derived class
 	def call_grid( self, event ):
@@ -448,3 +465,4 @@ class RedirectText:
 
 	def write(self,string):
 		self.out.WriteText(string)
+
