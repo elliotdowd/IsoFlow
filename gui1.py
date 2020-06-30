@@ -18,7 +18,7 @@ import wx.grid
 class MainFrame ( wx.Frame ):
 	
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( 100,100 ), size = wx.Size( 800,850 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( 100,100 ), size = wx.Size( 740,850 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
 		
 		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 		self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INACTIVEBORDER ) )
@@ -64,8 +64,11 @@ class MainFrame ( wx.Frame ):
 		
 		self.contourPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.contourPanel.SetBackgroundColour( wx.Colour( 222, 222, 222 ) )
-		
 		MainSizer.Add( self.contourPanel, wx.GBPosition( 1, 2 ), wx.GBSpan( 8, 68 ), wx.ALL|wx.EXPAND, 5 )
+
+		self.consolePanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		self.consolePanel.SetBackgroundColour( wx.Colour( 242, 242, 242 ) )
+		MainSizer.Add( self.consolePanel, wx.GBPosition( 14, 0 ), wx.GBSpan( 5, 60 ), wx.ALL|wx.EXPAND, 5 )
 		
 		self.m_toolBar1 = wx.ToolBar( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL ) 
 		self.m_toolBar1.Realize() 
@@ -127,10 +130,8 @@ class MainFrame ( wx.Frame ):
 		self.simGrid.EnableDragRowSize( True )
 		self.simGrid.SetRowLabelSize( 100 )
 		self.simGrid.SetRowLabelValue( 0, u"Max. CFL" )
-		self.simGrid.SetRowLabelValue( 1, u"Inlet Pres. (Pa)" )
+		self.simGrid.SetRowLabelValue( 1, u"Iterations" )
 		self.simGrid.SetRowLabelValue( 2, u"Residual Tol." )
-		self.simGrid.SetRowLabelValue( 3, u"Iterations" )
-		self.simGrid.SetRowLabelValue( 4, wx.EmptyString )
 		self.simGrid.SetRowLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
 		# Label Appearance
@@ -343,6 +344,9 @@ class MainFrame ( wx.Frame ):
 		CB.set_label('Mach Number', rotation=90)
 
 		# residual plotting
+		self.iterPanel.figure.clf()
+		self.iterPanel.iax = self.iterPanel.figure.gca()
+		self.iterPanel.iax.set_position([0.14, 0.06, 0.64, 0.72])
 		self.iterPanel.iax.plot(np.arange(1, len(self.state.res[0:self.state.n]), 1), self.state.res[1:self.state.n], linewidth=1)
 		self.iterPanel.iax.set_xlabel('Iterations')
 		self.iterPanel.iax.set_ylabel('Residual') 
@@ -350,8 +354,9 @@ class MainFrame ( wx.Frame ):
 		self.iterPanel.iax.get_lines()[1].set_color("blue")
 		self.iterPanel.iax.get_lines()[2].set_color("green")
 		self.iterPanel.iax.get_lines()[3].set_color("red")
-		self.iterPanel.iax.legend(['mdot', 'u', 'v', 'energy'], loc='center left', bbox_to_anchor=(1.05, 0.5))
+		self.iterPanel.iax.legend(['mdot', 'u', 'v', 'energy'], loc='center left', bbox_to_anchor=(1.025, 0.5))
 		self.iterPanel.canvas = FigureCanvas(self.iterPanel, -1, self.iterPanel.figure)
 
 
 		event.Skip()
+
