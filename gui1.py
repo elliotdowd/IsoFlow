@@ -11,6 +11,9 @@ import wx
 import wx.xrc
 import wx.grid
 
+import subprocess
+import sys
+
 ###########################################################################
 ## Class MainFrame
 ###########################################################################
@@ -67,11 +70,21 @@ class MainFrame ( wx.Frame ):
 		MainSizer.Add( self.contourPanel, wx.GBPosition( 1, 2 ), wx.GBSpan( 8, 68 ), wx.ALL|wx.EXPAND, 5 )
 
 		self.consolePanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-		self.consolePanel.SetBackgroundColour( wx.Colour( 242, 242, 242 ) )
+		self.consolePanel.SetBackgroundColour( wx.Colour( 222, 222, 222 ) )
 		MainSizer.Add( self.consolePanel, wx.GBPosition( 14, 0 ), wx.GBSpan( 5, 60 ), wx.ALL|wx.EXPAND, 5 )
+
+		# TERMINAL COMMANDS
+		self.consolePanel.command = wx.TextCtrl(self.consolePanel)
+		self.consolePanel.result = wx.TextCtrl(self.consolePanel, style=wx.TE_MULTILINE)
+		self.consolePanel.text = wx.TextCtrl(self.consolePanel, -1, style=wx.TE_MULTILINE|wx.TE_READONLY, size=(714, 90))
+
+		redir=RedirectText(self.consolePanel.text)
+		sys.stdout=redir
+
 		
+
 		self.m_toolBar1 = wx.ToolBar( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL ) 
-		self.m_toolBar1.Realize() 
+		self.m_toolBar1.Realize()
 		
 		MainSizer.Add( self.m_toolBar1, wx.GBPosition( 0, 0 ), wx.GBSpan( 1, 62 ), wx.EXPAND, 5 )
 		
@@ -196,11 +209,13 @@ class MainFrame ( wx.Frame ):
 		self.m_button3.Bind( wx.EVT_BUTTON, self.call_scheme )
 		self.gridButton.Bind( wx.EVT_BUTTON, self.call_grid )
 		self.initButton.Bind( wx.EVT_BUTTON, self.call_init )
+
 	
 	def __del__( self ):
 		pass
-	
-	
+
+
+
 	# Virtual event handlers, overide them in your derived class
 	
 	def call_grid( self, event ):
@@ -331,7 +346,7 @@ class MainFrame ( wx.Frame ):
 		# post processing
 		self.contourPanel.figure.clf()
 		self.contourPanel.cax = self.contourPanel.figure.gca()
-		self.contourPanel.cax.set_position([0.1, 0.2, 0.84, 0.82])
+		self.contourPanel.cax.set_position([0.12, 0.2, 0.84, 0.82])
 		cont = self.contourPanel.cax.contourf(self.mesh.xxc[1:-2,1:-1], self.mesh.yyc[1:-2,1:-1], \
 							    		      self.state.Mach[1:-2,1:-1], 250, cmap=cm.jet)
 		self.contourPanel.cax.axis('equal')
@@ -346,7 +361,7 @@ class MainFrame ( wx.Frame ):
 		# residual plotting
 		self.iterPanel.figure.clf()
 		self.iterPanel.iax = self.iterPanel.figure.gca()
-		self.iterPanel.iax.set_position([0.14, 0.06, 0.64, 0.72])
+		self.iterPanel.iax.set_position([0.12, 0.06, 0.64, 0.72])
 		self.iterPanel.iax.plot(np.arange(1, len(self.state.res[0:self.state.n]), 1), self.state.res[1:self.state.n], linewidth=1)
 		self.iterPanel.iax.set_xlabel('Iterations')
 		self.iterPanel.iax.set_ylabel('Residual') 
@@ -354,9 +369,16 @@ class MainFrame ( wx.Frame ):
 		self.iterPanel.iax.get_lines()[1].set_color("blue")
 		self.iterPanel.iax.get_lines()[2].set_color("green")
 		self.iterPanel.iax.get_lines()[3].set_color("red")
-		self.iterPanel.iax.legend(['mdot', 'u', 'v', 'energy'], loc='center left', bbox_to_anchor=(1.025, 0.5))
+		self.iterPanel.iax.legend([r"$\dot{m}$", 'u', 'v', r"$h_{t}$"], loc='center left', bbox_to_anchor=(1.025, 0.5), framealpha=0.0)
 		self.iterPanel.canvas = FigureCanvas(self.iterPanel, -1, self.iterPanel.figure)
 
 
 		event.Skip()
 
+
+class RedirectText:
+	def __init__(self,aWxTextCtrl):
+		self.out=aWxTextCtrl
+
+	def write(self,string):
+		self.out.WriteText(string)
