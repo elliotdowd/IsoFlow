@@ -21,7 +21,7 @@ import sys
 class MainFrame ( wx.Frame ):
 	
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( 100,100 ), size = wx.Size( 740,850 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( 100,100 ), size = wx.Size( 740,800 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
 		
 		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 		self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INACTIVEBORDER ) )
@@ -76,17 +76,11 @@ class MainFrame ( wx.Frame ):
 		# TERMINAL COMMANDS
 		self.consolePanel.command = wx.TextCtrl(self.consolePanel)
 		self.consolePanel.result = wx.TextCtrl(self.consolePanel, style=wx.TE_MULTILINE)
-		self.consolePanel.text = wx.TextCtrl(self.consolePanel, -1, style=wx.TE_MULTILINE|wx.TE_READONLY, size=(714, 90))
+		self.consolePanel.text = wx.TextCtrl(self.consolePanel, -1, style=wx.TE_MULTILINE|wx.TE_READONLY, size=(714, 60))
 
 		redir=RedirectText(self.consolePanel.text)
 		sys.stdout=redir
 
-		
-
-		self.m_toolBar1 = wx.ToolBar( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL ) 
-		self.m_toolBar1.Realize()
-		
-		MainSizer.Add( self.m_toolBar1, wx.GBPosition( 0, 0 ), wx.GBSpan( 1, 62 ), wx.EXPAND, 5 )
 		
 		self.iterPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.iterPanel.SetBackgroundColour( wx.Colour( 222, 222, 222 ) )
@@ -199,6 +193,47 @@ class MainFrame ( wx.Frame ):
 		self.m_staticline11 = wx.StaticLine( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
 		MainSizer.Add( self.m_staticline11, wx.GBPosition( 9, 0 ), wx.GBSpan( 1, 1 ), wx.EXPAND |wx.ALL, 5 )
 		
+
+		self.SetSizer( MainSizer )
+		self.Layout()
+		self.menuBar = wx.MenuBar( 0 )
+		self.menuBar.SetFont( wx.Font( 12, 74, 90, 90, False, "Arial" ) )
+		
+		self.plotOptions = wx.Menu()
+		self.contOptions = wx.Menu()
+		self.mach = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Mach Number", wx.EmptyString, wx.ITEM_NORMAL )
+		self.contOptions.AppendItem( self.mach )
+		
+		self.pressure = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Pressure", wx.EmptyString, wx.ITEM_NORMAL )
+		self.contOptions.AppendItem( self.pressure )
+		
+		self.stagpressure = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Stagnation Pressure", wx.EmptyString, wx.ITEM_NORMAL )
+		self.contOptions.AppendItem( self.stagpressure )
+		
+		self.plotOptions.AppendSubMenu( self.contOptions, u"Contour" )
+		
+		self.cmOptions = wx.Menu()
+		self.jet = wx.MenuItem( self.cmOptions, wx.ID_ANY, u"Jet", wx.EmptyString, wx.ITEM_NORMAL )
+		self.cmOptions.AppendItem( self.jet )
+		
+		self.gray = wx.MenuItem( self.cmOptions, wx.ID_ANY, u"Greyscale", wx.EmptyString, wx.ITEM_NORMAL )
+		self.cmOptions.AppendItem( self.gray )
+		
+		self.plotOptions.AppendSubMenu( self.cmOptions, u"Colormap" )
+		
+		self.menuBar.Append( self.plotOptions, u"Plot Options" ) 
+		
+		self.unitOptions = wx.Menu()
+		self.metric2 = wx.MenuItem( self.unitOptions, wx.ID_ANY, u"Metric (kg-m-s-C)", wx.EmptyString, wx.ITEM_NORMAL )
+		self.unitOptions.AppendItem( self.metric2 )
+		
+		self.metric1 = wx.MenuItem( self.unitOptions, wx.ID_ANY, u"Metric (kg-m-s-K)", wx.EmptyString, wx.ITEM_NORMAL )
+		self.unitOptions.AppendItem( self.metric1 )
+		
+		self.menuBar.Append( self.unitOptions, u"Units" ) 
+		
+		self.SetMenuBar( self.menuBar )
+
 		
 		self.SetSizer( MainSizer )
 		self.Layout()
@@ -210,20 +245,44 @@ class MainFrame ( wx.Frame ):
 		self.gridButton.Bind( wx.EVT_BUTTON, self.call_grid )
 		self.initButton.Bind( wx.EVT_BUTTON, self.call_init )
 
-	
+		# initialize grid values
+		self.init_grids()
+
 	def __del__( self ):
 		pass
 
+	# initialize option grid values
+	def init_grids( self ):
+		# set domain row values
+		self.domainGrid.SetCellValue( 0, 0, "1.5")
+		self.domainGrid.SetCellValue( 1, 0, "1.3")
+		self.domainGrid.SetCellValue( 2, 0, "0.5")
+		self.domainGrid.SetCellValue( 3, 0, "1.1")
+		self.domainGrid.SetCellValue( 4, 0, "20")
+		self.domainGrid.SetCellValue( 5, 0, "48")
+		self.domainGrid.SetCellValue( 6, 0, "36")
 
+		# set initialization row values
+		self.parameterGrid.SetCellValue( 0, 0, "3.0")
+		self.parameterGrid.SetCellValue( 1, 0, "101325")
+		self.parameterGrid.SetCellValue( 2, 0, "300")
+
+		# set initialization row values
+		self.simGrid.SetCellValue( 0, 0, "0.4")
+		self.simGrid.SetCellValue( 1, 0, "1000")
+		self.simGrid.SetCellValue( 2, 0, "-6")
 
 	# Virtual event handlers, overide them in your derived class
-	
 	def call_grid( self, event ):
 		import numpy as np
 		from python.mesh.grid.gen_grid import mesh_wedge, mesh_airfoil
 		from python.mesh.metrics.calc_cell_metrics import cellmetrics
 		import matplotlib as mpl
 		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+		from pytictoc import TicToc
+
+		t = TicToc()
+		t.tic()
 
 		class domain:
 			name = self.gridChoice.Strings[self.gridChoice.Selection]
@@ -240,8 +299,11 @@ class MainFrame ( wx.Frame ):
 		elif domain.name == "Airfoil":
 			xx, yy = mesh_airfoil(domain)
 		self.mesh = cellmetrics(xx, yy, domain)
-
 		self.domain = domain
+
+		print('________________________________________________________________________________________________________________________________________')
+		print('Mesh elements: ' + str((domain.M+2) * (domain.N*2)))
+		t.toc('Meshing time:')
 
 		# mesh plotting
 		self.contourPanel.figure.clf()
@@ -273,9 +335,7 @@ class MainFrame ( wx.Frame ):
 		import numpy as np
 		from python.mesh.grid.gen_grid import mesh_wedge, mesh_airfoil
 		from python.mesh.metrics.calc_cell_metrics import cellmetrics
-		import matplotlib as mpl
 		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-		from matplotlib import cm
 		from pytictoc import TicToc
 
 		t = TicToc()
@@ -300,34 +360,19 @@ class MainFrame ( wx.Frame ):
 		t.tic()
 		from python.boundary.initialize import init_state
 		self.state = init_state(self.domain, self.mesh, self.parameters, self.gas)
-		t.toc('initialize time:')
 
-		#mpl.axes.Axes.clear(self.contourPanel.cax)
-		self.contourPanel.figure.clf()
-		self.contourPanel.cax = self.contourPanel.figure.gca()
-		self.contourPanel.cax.set_position([0.1, 0.16, 0.84, 0.82])
+		print('________________________________________________________________________________________________________________________________________')
+		t.toc('Initialize time:')
 
-		cont = self.contourPanel.cax.contourf(self.mesh.xxc[1:-1,0:-1], self.mesh.yyc[1:-1,0:-1], \
-							    		      self.state.V[1:-1,0:-1], 250, cmap=cm.jet)
-		self.contourPanel.cax.axis('equal')
-		# self.contourPanel.cax.set_xlim(np.min(self.mesh.xxc[1:-2,:]), np.max(self.mesh.xxc[1:-2,:]))
-		# self.contourPanel.cax.set_ylim(np.min(self.mesh.yyc[:,1:-2]), np.max(self.mesh.yyc[:,1:-2]))
-		self.contourPanel.cax.set_xlabel('x-coordinate (m)')
-		self.contourPanel.cax.set_ylabel('y-coordinate (m)')
-		self.contourPanel.canvas = FigureCanvas(self.contourPanel, -1, self.contourPanel.figure)
+		self.call_contplot()
 
 		event.Skip()
 	
 
 	def call_scheme( self, event ):
 
-		import numpy as np
 		from pytictoc import TicToc
 		from python.finite_volume.AUSM.schemes import AUSM, AUSMplusup, AUSMDV
-		import matplotlib.pyplot as plt
-		from matplotlib import cm
-		import matplotlib as mpl
-		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 
 		t = TicToc()
 
@@ -343,6 +388,20 @@ class MainFrame ( wx.Frame ):
 			self.state = AUSMDV( self.domain, self.mesh, self.parameters, self.state, self.gas )
 		t.toc('simulation time:')
 
+		self.call_contplot()
+		self.call_resplot()
+
+		event.Skip()
+
+
+	def call_contplot(self):
+
+		import numpy as np
+		import matplotlib.pyplot as plt
+		from matplotlib import cm
+		import matplotlib as mpl
+		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+
 		# post processing
 		self.contourPanel.figure.clf()
 		self.contourPanel.cax = self.contourPanel.figure.gca()
@@ -355,8 +414,19 @@ class MainFrame ( wx.Frame ):
 		self.contourPanel.canvas = FigureCanvas(self.contourPanel, -1, self.contourPanel.figure)
 
 		# colorbar settings
-		CB = self.contourPanel.figure.colorbar(cont, shrink=0.8, extend='both', ax=self.contourPanel.cax)
+		ticks = np.linspace(round(np.min(self.state.Mach),2), round(np.max(self.state.Mach),2), 6)
+		CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
+											   shrink=0.8, extend='both', ax=self.contourPanel.cax)
 		CB.set_label('Mach Number', rotation=90)
+
+
+	def call_resplot(self):
+
+		import numpy as np
+		import matplotlib.pyplot as plt
+		from matplotlib import cm
+		import matplotlib as mpl
+		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 
 		# residual plotting
 		self.iterPanel.figure.clf()
@@ -371,10 +441,6 @@ class MainFrame ( wx.Frame ):
 		self.iterPanel.iax.get_lines()[3].set_color("red")
 		self.iterPanel.iax.legend([r"$\dot{m}$", 'u', 'v', r"$h_{t}$"], loc='center left', bbox_to_anchor=(1.025, 0.5), framealpha=0.0)
 		self.iterPanel.canvas = FigureCanvas(self.iterPanel, -1, self.iterPanel.figure)
-
-
-		event.Skip()
-
 
 class RedirectText:
 	def __init__(self,aWxTextCtrl):

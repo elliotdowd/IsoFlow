@@ -26,9 +26,11 @@ def init_state(domain, mesh, parameters, gas):
     state.T = state.p / (gas.R * Q[:,:,0])
     state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma )
     state.p0 = (1+((gas.gamma-1)/2)*state.Mach**2)**(gas.gamma/(gas.gamma-1)) * state.p
+    state.res = np.array([1, 1, 1, 1])
+    state.n = 1
+
 
     # boundary conditions
-
     from python.boundary.boundary_cond import enforce_bc, covariant
     state = enforce_bc(domain, mesh, parameters, state, gas)
 

@@ -5,9 +5,15 @@ from python.boundary.boundary_cond import enforce_bc, covariant
 from python.finite_volume.timestepping import local_timestep
 import python.finite_volume.soln_vars as soln_vars
 import python.finite_volume.AUSM.flux as flux
+from pytictoc import TicToc
 
 # AUSM flux vector splitting scheme 
 def AUSM( domain, mesh, parameters, state, gas ):
+
+    print('AUSM Scheme: ' + 'CFL = ' + str(parameters.CFL))
+    print('________________________________________________________________________________________________________________________________________')
+    print('                          mass          u            v        energy')
+    print('________________________________________________________________________________________________________________________________________')
 
     n = 0
 
@@ -33,8 +39,11 @@ def AUSM( domain, mesh, parameters, state, gas ):
 
     mesh.dV4 = np.dstack([mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1]])
 
+    t = TicToc()
 
     while n <= parameters.iterations and max(state.res[n-1+np.int(n<10),:]) > parameters.tolerance: 
+
+        t.tic()
 
         n = n+1
 
@@ -50,8 +59,8 @@ def AUSM( domain, mesh, parameters, state, gas ):
         state = local_timestep( mesh, state, parameters, gas )
 
         # density at cell interfaces, upwinded
-        rho_half_zeta = ( state.Q[0:-1,:,0] + state.Q[1:,:,0] ) / 2
-        rho_half_eta =  ( state.Q[:,0:-1,0] + state.Q[:,1:,0] ) / 2
+        #rho_half_zeta = ( state.Q[0:-1,:,0] + state.Q[1:,:,0] ) / 2
+        #rho_half_eta =  ( state.Q[:,0:-1,0] + state.Q[:,1:,0] ) / 2
 
         # speed of sound at cell interfaces
         # from Liou 2006 (JCP 214)
@@ -145,6 +154,14 @@ def AUSM( domain, mesh, parameters, state, gas ):
         # enforce boundary conditions
         state = enforce_bc(domain, mesh, parameters, state, gas)
 
+        # print iteration output
+        if n % 10 == 0:
+            print('Iteration: ' + str(n) + '    ' + str(round(state.res[n-1,0],3)) + '    ' + str(round(state.res[n-1,1],3)) + \
+                                           '    ' + str(round(state.res[n-1,2],3)) + '    ' + str(round(state.res[n-1,3],3)) )
+            t.toc('Iteration time:')
+
+    print('________________________________________________________________________________________________________________________________________')
+
     # post processing variables
     state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma )
     state.p0 = (1+((gas.gamma-1)/2)*state.Mach**2)**(gas.gamma/(gas.gamma-1)) * state.p
@@ -155,6 +172,11 @@ def AUSM( domain, mesh, parameters, state, gas ):
 
 # AUSM+up flux vector splitting scheme
 def AUSMplusup( domain, mesh, parameters, state, gas ):
+
+    print('AUSM+up Scheme: ' + 'CFL = ' + str(parameters.CFL))
+    print('________________________________________________________________________________________________________________________________________')
+    print('                          mass          u            v        energy')
+    print('________________________________________________________________________________________________________________________________________')
 
     n = 0
 
@@ -180,8 +202,11 @@ def AUSMplusup( domain, mesh, parameters, state, gas ):
 
     mesh.dV4 = np.dstack([mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1]])
 
+    t = TicToc()
 
     while n <= parameters.iterations and max(state.res[n-1+np.int(n<10),:]) > parameters.tolerance: 
+
+        t.tic()
 
         n = n+1
 
@@ -284,6 +309,14 @@ def AUSMplusup( domain, mesh, parameters, state, gas ):
         # enforce boundary conditions
         state = enforce_bc(domain, mesh, parameters, state, gas)
 
+        # print iteration output
+        if n % 10 == 0:
+            print('Iteration: ' + str(n) + '    ' + str(round(state.res[n-1,0],3)) + '    ' + str(round(state.res[n-1,1],3)) + \
+                                           '    ' + str(round(state.res[n-1,2],3)) + '    ' + str(round(state.res[n-1,3],3)) )
+            t.toc('Iteration time:')
+
+    print('________________________________________________________________________________________________________________________________________')
+
     # post processing variables
     state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma )
     state.p0 = (1+((gas.gamma-1)/2)*state.Mach**2)**(gas.gamma/(gas.gamma-1)) * state.p
@@ -294,6 +327,11 @@ def AUSMplusup( domain, mesh, parameters, state, gas ):
 
 # AUSMDV flux vector splitting scheme 
 def AUSMDV( domain, mesh, parameters, state, gas ):
+
+    print('AUSMDV Scheme: ' + 'CFL = ' + str(parameters.CFL))
+    print('________________________________________________________________________________________________________________________________________')
+    print('                          mass          u            v        energy')
+    print('________________________________________________________________________________________________________________________________________')
 
     n = 0
 
@@ -319,8 +357,12 @@ def AUSMDV( domain, mesh, parameters, state, gas ):
 
     mesh.dV4 = np.dstack([mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1]])
 
+    t = TicToc()
+
 
     while n <= parameters.iterations and max(state.res[n-1+np.int(n<10),:]) > parameters.tolerance: 
+
+        t.tic()
 
         n = n+1
 
@@ -336,8 +378,8 @@ def AUSMDV( domain, mesh, parameters, state, gas ):
         state = local_timestep( mesh, state, parameters, gas )
 
         # density at cell interfaces, upwinded
-        rho_half_zeta = ( state.Q[0:-1,:,0] + state.Q[1:,:,0] ) / 2
-        rho_half_eta =  ( state.Q[:,0:-1,0] + state.Q[:,1:,0] ) / 2
+        #rho_half_zeta = ( state.Q[0:-1,:,0] + state.Q[1:,:,0] ) / 2
+        #rho_half_eta =  ( state.Q[:,0:-1,0] + state.Q[:,1:,0] ) / 2
 
         # speed of sound at cell interfaces
         # from Liou 2006 (JCP 214)
@@ -380,8 +422,6 @@ def AUSMDV( domain, mesh, parameters, state, gas ):
         p_half_zeta = split.P1p( M_L+cr )*state.p[0:-1,:] + split.P1m( M_R+cr )*state.p[1:,:]
         p_half_eta =  split.P1p( M_D+cr )*state.p[:,0:-1] + split.P1m( M_U+cr )*state.p[:,1:]
 
-        #tic()
-
         # initialize Phi vector components
         Phi[:,:,1] = state.u
         Phi[:,:,2] = state.v
@@ -406,8 +446,6 @@ def AUSMDV( domain, mesh, parameters, state, gas ):
         state.res[n-1,2] = np.log10( np.max(state.residual[:,:,2] * mesh.dV[1:-1,1:-1]) )
         state.res[n-1,3] = np.log10( np.max(state.residual[:,:,3] * mesh.dV[1:-1,1:-1]) ) 
 
-        #state.res[n-1] = np.log10( np.max(state.residual * mesh.dV4) ) 
-
         # update cell temperatures and pressures
         state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], state.u, state.v, gas.gamma )
         state.T = state.p / (gas.R * state.Q[:,:,0])
@@ -418,6 +456,15 @@ def AUSMDV( domain, mesh, parameters, state, gas ):
 
         # enforce boundary conditions
         state = enforce_bc(domain, mesh, parameters, state, gas)
+
+        # print iteration output
+        if n % 10 == 0:
+            print('Iteration: ' + str(n) + '    ' + str(round(state.res[n-1,0],3)) + '    ' + str(round(state.res[n-1,1],3)) + \
+                                           '    ' + str(round(state.res[n-1,2],3)) + '    ' + str(round(state.res[n-1,3],3)) )
+            t.toc('Iteration time:')
+
+    print('________________________________________________________________________________________________________________________________________')
+
 
     # post processing variables
     state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma )

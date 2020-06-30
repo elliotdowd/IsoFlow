@@ -20,25 +20,6 @@ frame.SetTitle('Flux Vector Differencing CFD Solver')
 frame.SetPosition(wx.Point(240, 0))
 frame.Show(True)
 
-# set domain row values
-frame.domainGrid.SetCellValue( 0, 0, "1.5")
-frame.domainGrid.SetCellValue( 1, 0, "1.3")
-frame.domainGrid.SetCellValue( 2, 0, "0.5")
-frame.domainGrid.SetCellValue( 3, 0, "1.1")
-frame.domainGrid.SetCellValue( 4, 0, "20")
-frame.domainGrid.SetCellValue( 5, 0, "36")
-frame.domainGrid.SetCellValue( 6, 0, "32")
-
-# set initialization row values
-frame.parameterGrid.SetCellValue( 0, 0, "3.0")
-frame.parameterGrid.SetCellValue( 1, 0, "101325")
-frame.parameterGrid.SetCellValue( 2, 0, "300")
-
-# set initialization row values
-frame.simGrid.SetCellValue( 0, 0, "0.4")
-frame.simGrid.SetCellValue( 1, 0, "1000")
-frame.simGrid.SetCellValue( 2, 0, "-6")
-
 ###########################################################################
 ## Plotting Panels
 ###########################################################################	
