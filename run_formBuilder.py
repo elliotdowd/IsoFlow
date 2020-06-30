@@ -43,14 +43,12 @@ frame.simGrid.SetCellValue( 2, 0, "-6")
 # contour panel plotting
 frame.contourPanel.figure = plt.figure( dpi=100, figsize=(5.5, 3.8), facecolor=(222/256,222/256,222/256) )
 frame.contourPanel.cax = frame.contourPanel.figure.gca()
-plt.gca().xaxis.tick_bottom()
-frame.contourPanel.cax.set_position([0.1, 0.16, 0.84, 0.82])
+frame.contourPanel.cax.set_position([0.1, 0.18, 0.84, 0.82])
 #frame.contourPanel.canvas = FigureCanvas(frame.contourPanel, -1, frame.contourPanel.figure)
 
-
-frame.iterPanel.figure = mpl.figure.Figure( dpi=100, figsize=(5.4, 0.9) )
+frame.iterPanel.figure = mpl.figure.Figure( dpi=100, figsize=(5, 1), facecolor=(222/256,222/256,222/256) )
 frame.iterPanel.iax = frame.iterPanel.figure.add_subplot(111)
-frame.iterPanel.iax.plot( [1, 2, 3], [0, -1, -3] )
+frame.contourPanel.cax.set_position([0.1, 0, 0.4, 0.82])
 frame.contourPanel.canvas = FigureCanvas(frame.iterPanel, -1, frame.iterPanel.figure)
 
 

@@ -73,7 +73,7 @@ class MainFrame ( wx.Frame ):
 		MainSizer.Add( self.m_toolBar1, wx.GBPosition( 0, 0 ), wx.GBSpan( 1, 62 ), wx.EXPAND, 5 )
 		
 		self.iterPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-		self.iterPanel.SetBackgroundColour( wx.Colour( 255, 255, 255 ) )
+		self.iterPanel.SetBackgroundColour( wx.Colour( 222, 222, 222 ) )
 		
 		MainSizer.Add( self.iterPanel, wx.GBPosition( 10, 2 ), wx.GBSpan( 4, 54 ), wx.ALL|wx.EXPAND, 5 )
 		
@@ -201,61 +201,6 @@ class MainFrame ( wx.Frame ):
 	
 	
 	# Virtual event handlers, overide them in your derived class
-	def call_scheme( self, event ):
-
-		import numpy as np
-		from pytictoc import TicToc
-		from python.finite_volume.AUSM.schemes import AUSM, AUSMplusup, AUSMDV
-		import matplotlib.pyplot as plt
-		from matplotlib import cm
-		import matplotlib as mpl
-		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-
-		t = TicToc()
-
-		# run AUSM family scheme
-		t.tic()
-		scheme = self.schemeChoice.Strings[self.schemeChoice.Selection]
-		
-		if scheme == 'AUSM':
-			self.state = AUSM( self.domain, self.mesh, self.parameters, self.state, self.gas )
-		elif scheme == 'AUSM+up':
-			self.state = AUSMplusup( self.domain, self.mesh, self.parameters, self.state, self.gas )
-		elif scheme == 'AUSMDV':
-			self.state = AUSMDV( self.domain, self.mesh, self.parameters, self.state, self.gas )
-		t.toc('simulation time:')
-
-		# post processing
-		self.contourPanel.figure.clf()
-		self.contourPanel.cax = self.contourPanel.figure.gca()
-		plt.gca().xaxis.tick_bottom()
-		self.contourPanel.cax.set_position([0.1, 0.16, 0.84, 0.82])
-		#mpl.axes.Axes.clear(self.contourPanel.cax)
-		cont = self.contourPanel.cax.contourf(self.mesh.xxc[1:-2,0:-1], self.mesh.yyc[1:-2,0:-1], \
-							    		      self.state.Mach[1:-2,0:-1], 250, cmap=cm.jet)
-		self.contourPanel.cax.axis('tight')
-		self.contourPanel.cax.set_xlabel('x-coordinate (m)')
-		self.contourPanel.cax.set_ylabel('y-coordinate (m)')
-		self.contourPanel.canvas = FigureCanvas(self.contourPanel, -1, self.contourPanel.figure)
-
-		# colorbar settings
-		CB = self.contourPanel.figure.colorbar(cont, shrink=0.8, extend='both', ax=self.contourPanel.cax)
-		CB.set_label('Mach Number', rotation=90)
-
-		# residual plotting
-		self.iterPanel.iax.plot(np.arange(1, len(self.state.res[0:self.state.n]), 1), self.state.res[1:self.state.n], linewidth=1)
-		self.iterPanel.iax.set_xlabel('Iterations')
-		self.iterPanel.iax.set_ylabel('Residual') 
-		self.iterPanel.iax.get_lines()[0].set_color("black")
-		self.iterPanel.iax.get_lines()[1].set_color("blue")
-		self.iterPanel.iax.get_lines()[2].set_color("green")
-		self.iterPanel.iax.get_lines()[3].set_color("red")
-		self.iterPanel.iax.legend(['mdot', 'u', 'v', 'energy'], loc='center left', bbox_to_anchor=(1.05, 0.5))
-		self.iterPanel.canvas = FigureCanvas(self.iterPanel, -1, self.iterPanel.figure)
-
-
-		event.Skip()
-
 	
 	def call_grid( self, event ):
 		import numpy as np
@@ -283,7 +228,11 @@ class MainFrame ( wx.Frame ):
 		self.domain = domain
 
 		# mesh plotting
-		mpl.axes.Axes.clear(self.contourPanel.cax)
+		self.contourPanel.figure.clf()
+		self.contourPanel.cax = self.contourPanel.figure.gca()
+		self.contourPanel.cax.set_position([0.1, 0.16, 0.84, 0.82])
+
+		#mpl.axes.Axes.clear(self.contourPanel.cax)
 		self.contourPanel.cax.plot(self.mesh.xx, self.mesh.yy, color='blue', linewidth=0.5)
 		self.contourPanel.cax.plot(np.transpose(self.mesh.xx), np.transpose(self.mesh.yy), color='blue', linewidth=0.5)
 		self.contourPanel.cax.plot(self.mesh.xxc, self.mesh.yyc, 'gx', markersize=2)
@@ -294,7 +243,7 @@ class MainFrame ( wx.Frame ):
 		#self.contourPanel.cax.xaxis.tick_bottom()
 		self.contourPanel.cax.set_xlabel('x-coordinate (m)')
 		self.contourPanel.cax.set_ylabel('y-coordinate (m)')
-		self.contourPanel.cax.axis('tight')
+		self.contourPanel.cax.axis('equal')
 		self.contourPanel.canvas = FigureCanvas(self.contourPanel, -1, self.contourPanel.figure)
 
 		sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -337,10 +286,14 @@ class MainFrame ( wx.Frame ):
 		self.state = init_state(self.domain, self.mesh, self.parameters, self.gas)
 		t.toc('initialize time:')
 
-		mpl.axes.Axes.clear(self.contourPanel.cax)
+		#mpl.axes.Axes.clear(self.contourPanel.cax)
+		self.contourPanel.figure.clf()
+		self.contourPanel.cax = self.contourPanel.figure.gca()
+		self.contourPanel.cax.set_position([0.1, 0.16, 0.84, 0.82])
+
 		cont = self.contourPanel.cax.contourf(self.mesh.xxc[1:-1,0:-1], self.mesh.yyc[1:-1,0:-1], \
 							    		      self.state.V[1:-1,0:-1], 250, cmap=cm.jet)
-		self.contourPanel.cax.axis('tight')
+		self.contourPanel.cax.axis('equal')
 		# self.contourPanel.cax.set_xlim(np.min(self.mesh.xxc[1:-2,:]), np.max(self.mesh.xxc[1:-2,:]))
 		# self.contourPanel.cax.set_ylim(np.min(self.mesh.yyc[:,1:-2]), np.max(self.mesh.yyc[:,1:-2]))
 		self.contourPanel.cax.set_xlabel('x-coordinate (m)')
@@ -350,3 +303,55 @@ class MainFrame ( wx.Frame ):
 		event.Skip()
 	
 
+	def call_scheme( self, event ):
+
+		import numpy as np
+		from pytictoc import TicToc
+		from python.finite_volume.AUSM.schemes import AUSM, AUSMplusup, AUSMDV
+		import matplotlib.pyplot as plt
+		from matplotlib import cm
+		import matplotlib as mpl
+		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+
+		t = TicToc()
+
+		# run AUSM family scheme
+		t.tic()
+		scheme = self.schemeChoice.Strings[self.schemeChoice.Selection]
+		
+		if scheme == 'AUSM':
+			self.state = AUSM( self.domain, self.mesh, self.parameters, self.state, self.gas )
+		elif scheme == 'AUSM+up':
+			self.state = AUSMplusup( self.domain, self.mesh, self.parameters, self.state, self.gas )
+		elif scheme == 'AUSMDV':
+			self.state = AUSMDV( self.domain, self.mesh, self.parameters, self.state, self.gas )
+		t.toc('simulation time:')
+
+		# post processing
+		self.contourPanel.figure.clf()
+		self.contourPanel.cax = self.contourPanel.figure.gca()
+		self.contourPanel.cax.set_position([0.1, 0.2, 0.84, 0.82])
+		cont = self.contourPanel.cax.contourf(self.mesh.xxc[1:-2,1:-1], self.mesh.yyc[1:-2,1:-1], \
+							    		      self.state.Mach[1:-2,1:-1], 250, cmap=cm.jet)
+		self.contourPanel.cax.axis('equal')
+		self.contourPanel.cax.set_xlabel('x-coordinate (m)')
+		self.contourPanel.cax.set_ylabel('y-coordinate (m)')
+		self.contourPanel.canvas = FigureCanvas(self.contourPanel, -1, self.contourPanel.figure)
+
+		# colorbar settings
+		CB = self.contourPanel.figure.colorbar(cont, shrink=0.8, extend='both', ax=self.contourPanel.cax)
+		CB.set_label('Mach Number', rotation=90)
+
+		# residual plotting
+		self.iterPanel.iax.plot(np.arange(1, len(self.state.res[0:self.state.n]), 1), self.state.res[1:self.state.n], linewidth=1)
+		self.iterPanel.iax.set_xlabel('Iterations')
+		self.iterPanel.iax.set_ylabel('Residual') 
+		self.iterPanel.iax.get_lines()[0].set_color("black")
+		self.iterPanel.iax.get_lines()[1].set_color("blue")
+		self.iterPanel.iax.get_lines()[2].set_color("green")
+		self.iterPanel.iax.get_lines()[3].set_color("red")
+		self.iterPanel.iax.legend(['mdot', 'u', 'v', 'energy'], loc='center left', bbox_to_anchor=(1.05, 0.5))
+		self.iterPanel.canvas = FigureCanvas(self.iterPanel, -1, self.iterPanel.figure)
+
+
+		event.Skip()
