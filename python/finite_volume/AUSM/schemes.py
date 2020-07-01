@@ -164,7 +164,9 @@ def AUSM( domain, mesh, parameters, state, gas ):
 
     # post processing variables
     state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma )
+    state.vel = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 )
     state.p0 = (1+((gas.gamma-1)/2)*state.Mach**2)**(gas.gamma/(gas.gamma-1)) * state.p
+    state.T0 = (1+((gas.gamma-1)/2)*state.Mach**2) * state.T
     state.n = n
 
     return state
@@ -319,7 +321,9 @@ def AUSMplusup( domain, mesh, parameters, state, gas ):
 
     # post processing variables
     state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma )
+    state.vel = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 )
     state.p0 = (1+((gas.gamma-1)/2)*state.Mach**2)**(gas.gamma/(gas.gamma-1)) * state.p
+    state.T0 = (1+((gas.gamma-1)/2)*state.Mach**2) * state.T
     state.n = n
 
     return state
@@ -468,7 +472,9 @@ def AUSMDV( domain, mesh, parameters, state, gas ):
 
     # post processing variables
     state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma )
+    state.vel = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 )
     state.p0 = (1+((gas.gamma-1)/2)*state.Mach**2)**(gas.gamma/(gas.gamma-1)) * state.p
+    state.T0 = (1+((gas.gamma-1)/2)*state.Mach**2) * state.T
     state.n = n
     
     return state

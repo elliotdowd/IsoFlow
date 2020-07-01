@@ -1418,7 +1418,7 @@
                     <property name="colspan">1</property>
                     <property name="column">0</property>
                     <property name="flag">wxALL|wxALIGN_CENTER_HORIZONTAL</property>
-                    <property name="row">1</property>
+                    <property name="row">0</property>
                     <property name="rowspan">1</property>
                     <object class="wxStaticText" expanded="0">
                         <property name="BottomDockable">1</property>
@@ -1674,7 +1674,7 @@
                 <property name="context_menu">1</property>
                 <property name="enabled">1</property>
                 <property name="fg"></property>
-                <property name="font">Arial,90,90,10,74,0</property>
+                <property name="font">Arial,90,90,12,74,0</property>
                 <property name="hidden">0</property>
                 <property name="id">wxID_ANY</property>
                 <property name="label">MyMenuBar</property>
@@ -1728,13 +1728,13 @@
                             <property name="enabled">1</property>
                             <property name="help"></property>
                             <property name="id">wxID_ANY</property>
-                            <property name="kind">wxITEM_NORMAL</property>
+                            <property name="kind">wxITEM_RADIO</property>
                             <property name="label">Mach Number</property>
-                            <property name="name">mach</property>
+                            <property name="name">mach_change</property>
                             <property name="permission">none</property>
                             <property name="shortcut"></property>
                             <property name="unchecked_bitmap"></property>
-                            <event name="OnMenuSelection"></event>
+                            <event name="OnMenuSelection">mach</event>
                             <event name="OnUpdateUI"></event>
                         </object>
                         <object class="wxMenuItem" expanded="0">
@@ -1743,13 +1743,13 @@
                             <property name="enabled">1</property>
                             <property name="help"></property>
                             <property name="id">wxID_ANY</property>
-                            <property name="kind">wxITEM_NORMAL</property>
+                            <property name="kind">wxITEM_RADIO</property>
                             <property name="label">Pressure</property>
-                            <property name="name">pressure</property>
+                            <property name="name">pressure_change</property>
                             <property name="permission">none</property>
                             <property name="shortcut"></property>
                             <property name="unchecked_bitmap"></property>
-                            <event name="OnMenuSelection"></event>
+                            <event name="OnMenuSelection">pressure</event>
                             <event name="OnUpdateUI"></event>
                         </object>
                         <object class="wxMenuItem" expanded="1">
@@ -1758,13 +1758,43 @@
                             <property name="enabled">1</property>
                             <property name="help"></property>
                             <property name="id">wxID_ANY</property>
-                            <property name="kind">wxITEM_NORMAL</property>
+                            <property name="kind">wxITEM_RADIO</property>
                             <property name="label">Stagnation Pressure</property>
-                            <property name="name">stagpressure</property>
+                            <property name="name">stagpressure_change</property>
                             <property name="permission">none</property>
                             <property name="shortcut"></property>
                             <property name="unchecked_bitmap"></property>
-                            <event name="OnMenuSelection"></event>
+                            <event name="OnMenuSelection">stagp</event>
+                            <event name="OnUpdateUI"></event>
+                        </object>
+                        <object class="wxMenuItem" expanded="1">
+                            <property name="bitmap"></property>
+                            <property name="checked">0</property>
+                            <property name="enabled">1</property>
+                            <property name="help"></property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_RADIO</property>
+                            <property name="label">Temperature</property>
+                            <property name="name">temp_change</property>
+                            <property name="permission">none</property>
+                            <property name="shortcut"></property>
+                            <property name="unchecked_bitmap"></property>
+                            <event name="OnMenuSelection">temp</event>
+                            <event name="OnUpdateUI"></event>
+                        </object>
+                        <object class="wxMenuItem" expanded="1">
+                            <property name="bitmap"></property>
+                            <property name="checked">0</property>
+                            <property name="enabled">1</property>
+                            <property name="help"></property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_RADIO</property>
+                            <property name="label">Stagnation Temperature</property>
+                            <property name="name">stagtemp_change</property>
+                            <property name="permission">none</property>
+                            <property name="shortcut"></property>
+                            <property name="unchecked_bitmap"></property>
+                            <event name="OnMenuSelection">stagtemp</event>
                             <event name="OnUpdateUI"></event>
                         </object>
                     </object>

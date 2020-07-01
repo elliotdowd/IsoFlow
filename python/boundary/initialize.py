@@ -25,8 +25,10 @@ def init_state(domain, mesh, parameters, gas):
     state.p = thermo.calc_p( Q[:,:,0], Q[:,:,3], Q[:,:,1]/Q[:,:,0], Q[:,:,2]/Q[:,:,0], gas.gamma )
     state.T = state.p / (gas.R * Q[:,:,0])
     state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma )
+    state.vel = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 )
     state.p0 = (1+((gas.gamma-1)/2)*state.Mach**2)**(gas.gamma/(gas.gamma-1)) * state.p
     state.res = np.array([1, 1, 1, 1])
+    state.T0 = (1+((gas.gamma-1)/2)*state.Mach**2) * state.T
     state.n = 1
 
 
