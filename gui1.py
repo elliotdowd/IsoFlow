@@ -204,7 +204,10 @@ class MainFrame ( wx.Frame ):
 
 		self.velocity_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Velocity", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.AppendItem( self.velocity_change )
-		
+
+		self.quiver_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Velocity Streamlines", wx.EmptyString, wx.ITEM_RADIO )
+		self.contOptions.AppendItem( self.quiver_change )
+
 		self.pressure_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Pressure", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.AppendItem( self.pressure_change )
 		
@@ -222,6 +225,9 @@ class MainFrame ( wx.Frame ):
 		self.cmOptions = wx.Menu()
 		self.jet = wx.MenuItem( self.cmOptions, wx.ID_ANY, u"Jet", wx.EmptyString, wx.ITEM_RADIO )
 		self.cmOptions.AppendItem( self.jet )
+
+		self.magma = wx.MenuItem( self.cmOptions, wx.ID_ANY, u"Magma", wx.EmptyString, wx.ITEM_RADIO )
+		self.cmOptions.AppendItem( self.magma )
 		
 		self.gray = wx.MenuItem( self.cmOptions, wx.ID_ANY, u"Greyscale", wx.EmptyString, wx.ITEM_RADIO )
 		self.cmOptions.AppendItem( self.gray )
@@ -250,11 +256,13 @@ class MainFrame ( wx.Frame ):
 		self.initButton.Bind( wx.EVT_BUTTON, self.call_init )
 		self.Bind( wx.EVT_MENU, self.mach, id = self.mach_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.velocity, id = self.velocity_change.GetId() )
+		self.Bind( wx.EVT_MENU, self.quiver, id = self.quiver_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.pressure, id = self.pressure_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.stagp, id = self.stagpressure_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.temp, id = self.temp_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.stagtemp, id = self.stagtemp_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.jet_change, id = self.jet.GetId() )
+		self.Bind( wx.EVT_MENU, self.magma_change, id = self.magma.GetId() )
 		self.Bind( wx.EVT_MENU, self.gray_change, id = self.gray.GetId() )
 
 		# initialize grid values and class attributes
@@ -436,6 +444,15 @@ class MainFrame ( wx.Frame ):
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
 			CB.set_label(self.contQuantity, rotation=90)
+		elif self.contQuantity == 'Velocity Quiver':
+			cont = self.contourPanel.cax.quiver(self.mesh.xxc[0:-1,1:-1], self.mesh.yyc[0:-1,1:-1], \
+								  				self.state.u[0:-1,1:-1], self.state.v[0:-1,1:-1], \
+												self.state.vel[0:-1,1:-1], cmap=self.cmOption)
+			# colorbar settings
+			ticks = np.linspace(round(np.min(self.state.vel),0), round(np.max(self.state.vel),0), 6)
+			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
+												shrink=0.8, extend='both', ax=self.contourPanel.cax)
+			CB.set_label(self.contQuantity, rotation=90)
 		elif self.contQuantity == 'Pressure':
 			cont = self.contourPanel.cax.contourf(self.mesh.xxc[0:-1,1:-1], self.mesh.yyc[0:-1,1:-1], \
 							    		      	  self.state.p[0:-1,1:-1], 250, cmap=self.cmOption)
@@ -509,6 +526,12 @@ class MainFrame ( wx.Frame ):
 		if hasattr(self, 'state'):
 			self.call_contplot()
 		event.Skip()
+
+	def quiver( self, event ):
+		self.contQuantity = 'Velocity Quiver'
+		if hasattr(self, 'state'):
+			self.call_contplot()
+		event.Skip()
 	
 	def pressure( self, event ):
 		self.contQuantity = 'Pressure'
@@ -537,6 +560,13 @@ class MainFrame ( wx.Frame ):
 	def jet_change( self, event ):
 		from matplotlib import cm
 		self.cmOption = cm.jet
+		if hasattr(self, 'state'):
+			self.call_contplot()
+		event.Skip()
+
+	def magma_change( self, event ):
+		from matplotlib import cm
+		self.cmOption = cm.magma
 		if hasattr(self, 'state'):
 			self.call_contplot()
 		event.Skip()
