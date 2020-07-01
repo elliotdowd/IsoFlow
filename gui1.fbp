@@ -1717,7 +1717,7 @@
                     <property name="label">Plot Options</property>
                     <property name="name">plotOptions</property>
                     <property name="permission">protected</property>
-                    <object class="submenu" expanded="1">
+                    <object class="submenu" expanded="0">
                         <property name="bitmap">Load From File; bmp/p1.bmp</property>
                         <property name="label">Contour</property>
                         <property name="name">contOptions</property>
@@ -1752,7 +1752,7 @@
                             <event name="OnMenuSelection">pressure</event>
                             <event name="OnUpdateUI"></event>
                         </object>
-                        <object class="wxMenuItem" expanded="1">
+                        <object class="wxMenuItem" expanded="0">
                             <property name="bitmap"></property>
                             <property name="checked">0</property>
                             <property name="enabled">1</property>
@@ -1767,7 +1767,7 @@
                             <event name="OnMenuSelection">stagp</event>
                             <event name="OnUpdateUI"></event>
                         </object>
-                        <object class="wxMenuItem" expanded="1">
+                        <object class="wxMenuItem" expanded="0">
                             <property name="bitmap"></property>
                             <property name="checked">0</property>
                             <property name="enabled">1</property>
@@ -1782,7 +1782,7 @@
                             <event name="OnMenuSelection">temp</event>
                             <event name="OnUpdateUI"></event>
                         </object>
-                        <object class="wxMenuItem" expanded="1">
+                        <object class="wxMenuItem" expanded="0">
                             <property name="bitmap"></property>
                             <property name="checked">0</property>
                             <property name="enabled">1</property>
@@ -1797,11 +1797,116 @@
                             <event name="OnMenuSelection">stagtemp</event>
                             <event name="OnUpdateUI"></event>
                         </object>
+                        <object class="separator" expanded="1">
+                            <property name="name">cont_separator</property>
+                            <property name="permission">none</property>
+                        </object>
+                        <object class="wxMenuItem" expanded="1">
+                            <property name="bitmap"></property>
+                            <property name="checked">0</property>
+                            <property name="enabled">1</property>
+                            <property name="help"></property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_NORMAL</property>
+                            <property name="label">Coarse</property>
+                            <property name="name">coarse</property>
+                            <property name="permission">none</property>
+                            <property name="shortcut"></property>
+                            <property name="unchecked_bitmap"></property>
+                            <event name="OnMenuSelection">coarse_change</event>
+                            <event name="OnUpdateUI"></event>
+                        </object>
+                        <object class="wxMenuItem" expanded="1">
+                            <property name="bitmap"></property>
+                            <property name="checked">0</property>
+                            <property name="enabled">1</property>
+                            <property name="help"></property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_RADIO</property>
+                            <property name="label">Medium</property>
+                            <property name="name">medium</property>
+                            <property name="permission">none</property>
+                            <property name="shortcut"></property>
+                            <property name="unchecked_bitmap"></property>
+                            <event name="OnMenuSelection">medium_change</event>
+                            <event name="OnUpdateUI"></event>
+                        </object>
+                        <object class="wxMenuItem" expanded="1">
+                            <property name="bitmap"></property>
+                            <property name="checked">0</property>
+                            <property name="enabled">1</property>
+                            <property name="help"></property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_RADIO</property>
+                            <property name="label">Fine</property>
+                            <property name="name">fine</property>
+                            <property name="permission">none</property>
+                            <property name="shortcut"></property>
+                            <property name="unchecked_bitmap"></property>
+                            <event name="OnMenuSelection">fine_change</event>
+                            <event name="OnUpdateUI"></event>
+                        </object>
                     </object>
-                    <object class="submenu" expanded="1">
+                    <object class="submenu" expanded="0">
                         <property name="bitmap">Load From File; bmp/plot.bmp</property>
                         <property name="label">Colormap</property>
                         <property name="name">cmOptions</property>
+                        <property name="permission">protected</property>
+                        <object class="wxMenuItem" expanded="0">
+                            <property name="bitmap"></property>
+                            <property name="checked">0</property>
+                            <property name="enabled">1</property>
+                            <property name="help"></property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_RADIO</property>
+                            <property name="label">Jet</property>
+                            <property name="name">jet</property>
+                            <property name="permission">none</property>
+                            <property name="shortcut"></property>
+                            <property name="unchecked_bitmap"></property>
+                            <event name="OnMenuSelection">jet_change</event>
+                            <event name="OnUpdateUI"></event>
+                        </object>
+                        <object class="wxMenuItem" expanded="0">
+                            <property name="bitmap"></property>
+                            <property name="checked">0</property>
+                            <property name="enabled">1</property>
+                            <property name="help"></property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_RADIO</property>
+                            <property name="label">Greyscale</property>
+                            <property name="name">gray</property>
+                            <property name="permission">none</property>
+                            <property name="shortcut"></property>
+                            <property name="unchecked_bitmap"></property>
+                            <event name="OnMenuSelection">gray_change</event>
+                            <event name="OnUpdateUI"></event>
+                        </object>
+                    </object>
+                </object>
+                <object class="wxMenu" expanded="1">
+                    <property name="label">View</property>
+                    <property name="name">viewOptions</property>
+                    <property name="permission">protected</property>
+                    <object class="wxMenuItem" expanded="1">
+                        <property name="bitmap"></property>
+                        <property name="checked">0</property>
+                        <property name="enabled">1</property>
+                        <property name="help"></property>
+                        <property name="id">wxID_ANY</property>
+                        <property name="kind">wxITEM_NORMAL</property>
+                        <property name="label">Expand Contour Window</property>
+                        <property name="name">expandCont</property>
+                        <property name="permission">none</property>
+                        <property name="shortcut"></property>
+                        <property name="unchecked_bitmap"></property>
+                        <event name="OnMenuSelection">expandWindow</event>
+                        <event name="OnUpdateUI"></event>
+                    </object>
+                    <object class="submenu" expanded="1">
+                        <property name="bitmap"></property>
+                        <property name="label">MyMenu</property>
+                        <property name="name">axisOptions</property>
                         <property name="permission">protected</property>
                         <object class="wxMenuItem" expanded="1">
                             <property name="bitmap"></property>
@@ -1810,12 +1915,12 @@
                             <property name="help"></property>
                             <property name="id">wxID_ANY</property>
                             <property name="kind">wxITEM_NORMAL</property>
-                            <property name="label">Jet</property>
-                            <property name="name">jet</property>
+                            <property name="label">Equal</property>
+                            <property name="name">equal</property>
                             <property name="permission">none</property>
                             <property name="shortcut"></property>
                             <property name="unchecked_bitmap"></property>
-                            <event name="OnMenuSelection"></event>
+                            <event name="OnMenuSelection">equal_change</event>
                             <event name="OnUpdateUI"></event>
                         </object>
                         <object class="wxMenuItem" expanded="1">
@@ -1825,17 +1930,32 @@
                             <property name="help"></property>
                             <property name="id">wxID_ANY</property>
                             <property name="kind">wxITEM_NORMAL</property>
-                            <property name="label">Greyscale</property>
-                            <property name="name">gray</property>
+                            <property name="label">Tight</property>
+                            <property name="name">tight</property>
                             <property name="permission">none</property>
                             <property name="shortcut"></property>
                             <property name="unchecked_bitmap"></property>
-                            <event name="OnMenuSelection"></event>
+                            <event name="OnMenuSelection">tight_change</event>
+                            <event name="OnUpdateUI"></event>
+                        </object>
+                        <object class="wxMenuItem" expanded="1">
+                            <property name="bitmap"></property>
+                            <property name="checked">0</property>
+                            <property name="enabled">1</property>
+                            <property name="help"></property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_NORMAL</property>
+                            <property name="label">Auto</property>
+                            <property name="name">auto</property>
+                            <property name="permission">none</property>
+                            <property name="shortcut"></property>
+                            <property name="unchecked_bitmap"></property>
+                            <event name="OnMenuSelection">auto_change</event>
                             <event name="OnUpdateUI"></event>
                         </object>
                     </object>
                 </object>
-                <object class="wxMenu" expanded="0">
+                <object class="wxMenu" expanded="1">
                     <property name="label">Units</property>
                     <property name="name">unitOptions</property>
                     <property name="permission">protected</property>
@@ -1845,7 +1965,7 @@
                         <property name="enabled">1</property>
                         <property name="help"></property>
                         <property name="id">wxID_ANY</property>
-                        <property name="kind">wxITEM_NORMAL</property>
+                        <property name="kind">wxITEM_RADIO</property>
                         <property name="label">Metric (kg-m-s-C)</property>
                         <property name="name">metric2</property>
                         <property name="permission">none</property>
@@ -1860,7 +1980,7 @@
                         <property name="enabled">1</property>
                         <property name="help"></property>
                         <property name="id">wxID_ANY</property>
-                        <property name="kind">wxITEM_NORMAL</property>
+                        <property name="kind">wxITEM_RADIO</property>
                         <property name="label">Metric (kg-m-s-K)</property>
                         <property name="name">metric1</property>
                         <property name="permission">none</property>

@@ -71,7 +71,7 @@ class MainFrame ( wx.Frame ):
 		
 		self.consolePanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.consolePanel.SetBackgroundColour( wx.Colour( 222, 222, 222 ) )
-		MainSizer.Add( self.consolePanel, wx.GBPosition( 14, 0 ), wx.GBSpan( 5, 60 ), wx.ALL|wx.EXPAND, 5 )
+		MainSizer.Add( self.consolePanel, wx.GBPosition( 14, 0 ), wx.GBSpan( 4, 60 ), wx.ALL|wx.EXPAND, 5 )
 
 		# console redirecting
 		self.consolePanel.command = wx.TextCtrl(self.consolePanel)
@@ -208,6 +208,9 @@ class MainFrame ( wx.Frame ):
 		self.quiver_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Velocity Streamlines", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.AppendItem( self.quiver_change )
 
+		self.rho_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Density", wx.EmptyString, wx.ITEM_RADIO )
+		self.contOptions.AppendItem( self.rho_change )
+
 		self.pressure_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Pressure", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.AppendItem( self.pressure_change )
 		
@@ -219,6 +222,17 @@ class MainFrame ( wx.Frame ):
 		
 		self.stagtemp_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Stagnation Temperature", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.AppendItem( self.stagtemp_change )
+
+		self.contOptions.AppendSeparator()
+
+		self.coarse = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Coarse", wx.EmptyString, wx.ITEM_NORMAL )
+		self.contOptions.AppendItem( self.coarse )
+		
+		self.medium = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Medium", wx.EmptyString, wx.ITEM_RADIO )
+		self.contOptions.AppendItem( self.medium )
+		
+		self.fine = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Fine", wx.EmptyString, wx.ITEM_RADIO )
+		self.contOptions.AppendItem( self.fine )
 		
 		self.plotOptions.AppendSubMenu( self.contOptions, u"Contour" )
 		
@@ -234,20 +248,45 @@ class MainFrame ( wx.Frame ):
 		
 		self.plotOptions.AppendSubMenu( self.cmOptions, u"Colormap" )
 		
-		self.menuBar.Append( self.plotOptions, u"Plot Options" ) 
+		self.menuBar.Append( self.plotOptions, u"Plotting" ) 
+
+
+		self.viewOptions = wx.Menu()
+		self.expandCont = wx.MenuItem( self.viewOptions, wx.ID_ANY, u"Expand Contour Window", wx.EmptyString, wx.ITEM_NORMAL )
+		self.viewOptions.AppendItem( self.expandCont )
+
+		self.axisOptions = wx.Menu()
+		self.equal = wx.MenuItem( self.axisOptions, wx.ID_ANY, u"Equal", wx.EmptyString, wx.ITEM_RADIO )
+		self.axisOptions.AppendItem( self.equal )
+		
+		self.tight = wx.MenuItem( self.axisOptions, wx.ID_ANY, u"Tight", wx.EmptyString, wx.ITEM_RADIO )
+		self.axisOptions.AppendItem( self.tight )
+		
+		self.auto = wx.MenuItem( self.axisOptions, wx.ID_ANY, u"Auto", wx.EmptyString, wx.ITEM_RADIO )
+		self.axisOptions.AppendItem( self.auto )
+		
+		self.viewOptions.AppendSubMenu( self.axisOptions, u"Axis Options" )
+		
+		self.menuBar.Append( self.viewOptions, u"View" ) 
+
 		
 		self.unitOptions = wx.Menu()
-		self.metric2 = wx.MenuItem( self.unitOptions, wx.ID_ANY, u"Metric (kg-m-s-C)", wx.EmptyString, wx.ITEM_RADIO )
-		self.unitOptions.AppendItem( self.metric2 )
 		
 		self.metric1 = wx.MenuItem( self.unitOptions, wx.ID_ANY, u"Metric (kg-m-s-K)", wx.EmptyString, wx.ITEM_RADIO )
 		self.unitOptions.AppendItem( self.metric1 )
+
+		self.metric2 = wx.MenuItem( self.unitOptions, wx.ID_ANY, u"Metric (kg-m-s-°C)", wx.EmptyString, wx.ITEM_RADIO )
+		self.unitOptions.AppendItem( self.metric2 )
+
+		self.imperial1 = wx.MenuItem( self.unitOptions, wx.ID_ANY, u"Imperial (lbm-ft-s-°F)", wx.EmptyString, wx.ITEM_RADIO )
+		self.unitOptions.AppendItem( self.imperial1 )
+
+		self.imperial2 = wx.MenuItem( self.unitOptions, wx.ID_ANY, u"Imperial (slug-in-s-°R)", wx.EmptyString, wx.ITEM_RADIO )
+		self.unitOptions.AppendItem( self.imperial2 )
 		
 		self.menuBar.Append( self.unitOptions, u"Units" ) 
 		
 		self.SetMenuBar( self.menuBar )
-		
-		
 		self.Centre( wx.BOTH )
 		
 		# Connect Events
@@ -257,18 +296,55 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.mach, id = self.mach_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.velocity, id = self.velocity_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.quiver, id = self.quiver_change.GetId() )
+		self.Bind( wx.EVT_MENU, self.rho, id = self.rho_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.pressure, id = self.pressure_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.stagp, id = self.stagpressure_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.temp, id = self.temp_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.stagtemp, id = self.stagtemp_change.GetId() )
+		self.Bind( wx.EVT_MENU, self.coarse_change, id = self.coarse.GetId() )
+		self.Bind( wx.EVT_MENU, self.medium_change, id = self.medium.GetId() )
+		self.Bind( wx.EVT_MENU, self.fine_change, id = self.fine.GetId() )
 		self.Bind( wx.EVT_MENU, self.jet_change, id = self.jet.GetId() )
 		self.Bind( wx.EVT_MENU, self.magma_change, id = self.magma.GetId() )
 		self.Bind( wx.EVT_MENU, self.gray_change, id = self.gray.GetId() )
+		self.Bind( wx.EVT_MENU, self.metric1_change, id = self.metric1.GetId())
+		self.Bind( wx.EVT_MENU, self.metric2_change, id = self.metric2.GetId())
+		self.Bind( wx.EVT_MENU, self.imperial1_change, id = self.imperial1.GetId())
+		self.Bind( wx.EVT_MENU, self.imperial2_change, id = self.imperial2.GetId())
+		self.Bind( wx.EVT_MENU, self.expandWindow, id = self.expandCont.GetId() )
+		self.Bind( wx.EVT_MENU, self.equal_change, id = self.equal.GetId() )
+		self.Bind( wx.EVT_MENU, self.tight_change, id = self.tight.GetId() )
+		self.Bind( wx.EVT_MENU, self.auto_change, id = self.auto.GetId() )
+
 
 		# initialize grid values and class attributes
 		self.init_grids()
 		self.contQuantity = 'Mach'
 		self.cmOption = cm.jet
+		class units:
+			mass = 'kg'
+			def conv_mass(m):
+				conv = m
+				return conv
+			length = 'm'
+			def conv_length(l):
+				conv = l
+				return conv
+			time = 's'
+			def conv_time(t):
+				conv = t
+				return conv
+			temp = 'K'
+			def conv_temp(T):
+				conv = T
+				return conv
+			press = 'kPa'
+			def conv_press(p):
+				conv = p / 1000
+				return conv
+		self.units = units
+		self.axisOption = 'equal'
+		self.contGrad = 200
 
 
 	def __del__( self ):
@@ -308,14 +384,17 @@ class MainFrame ( wx.Frame ):
 		t = TicToc()
 		t.tic()
 
+		# length unit conversion
+		cl = self.units.conv_length(1)
+
 		class domain:
 			name = self.gridChoice.Strings[self.gridChoice.Selection]
 			M = int(wx.grid.Grid.GetCellValue(self.domainGrid, 5, 0))
 			N = int(wx.grid.Grid.GetCellValue(self.domainGrid, 6, 0))
-			obj_start = float(wx.grid.Grid.GetCellValue(self.domainGrid, 2, 0))
-			obj_end = float(wx.grid.Grid.GetCellValue(self.domainGrid, 3, 0))
-			length = float(wx.grid.Grid.GetCellValue(self.domainGrid, 0, 0))
-			height = float(wx.grid.Grid.GetCellValue(self.domainGrid, 1, 0))
+			obj_start = float(wx.grid.Grid.GetCellValue(self.domainGrid, 2, 0)) / cl
+			obj_end = float(wx.grid.Grid.GetCellValue(self.domainGrid, 3, 0)) / cl
+			length = float(wx.grid.Grid.GetCellValue(self.domainGrid, 0, 0)) / cl
+			height = float(wx.grid.Grid.GetCellValue(self.domainGrid, 1, 0)) / cl
 			theta = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)))
 
 		if domain.name == "Wedge":
@@ -335,17 +414,17 @@ class MainFrame ( wx.Frame ):
 		self.contourPanel.cax.set_position([0.1, 0.16, 0.84, 0.82])
 
 		#mpl.axes.Axes.clear(self.contourPanel.cax)
-		self.contourPanel.cax.plot(self.mesh.xx, self.mesh.yy, color='blue', linewidth=0.5)
-		self.contourPanel.cax.plot(np.transpose(self.mesh.xx), np.transpose(self.mesh.yy), color='blue', linewidth=0.5)
-		self.contourPanel.cax.plot(self.mesh.xxc, self.mesh.yyc, 'gx', markersize=2)
+		self.contourPanel.cax.plot(self.mesh.xx * cl, self.mesh.yy * cl, color='blue', linewidth=0.5)
+		self.contourPanel.cax.plot(np.transpose(self.mesh.xx) * cl, np.transpose(self.mesh.yy) * cl, color='blue', linewidth=0.5)
+		self.contourPanel.cax.plot(self.mesh.xxc * cl, self.mesh.yyc * cl, 'gx', markersize=2)
 
 		self.contourPanel.cax.set_xlim([np.min(self.mesh.xx[0,:]), np.max(self.mesh.xx[-1,:])])
 		self.contourPanel.cax.set_ylim([np.min(self.mesh.yy[0,:]), domain.height])
 
 		#self.contourPanel.cax.xaxis.tick_bottom()
-		self.contourPanel.cax.set_xlabel('x-coordinate (m)')
-		self.contourPanel.cax.set_ylabel('y-coordinate (m)')
-		self.contourPanel.cax.axis('equal')
+		self.contourPanel.cax.set_xlabel('x-coordinate ' + '(' + self.units.length + ')')
+		self.contourPanel.cax.set_ylabel('y-coordinate ' + '(' + self.units.length + ')')
+		self.contourPanel.cax.axis(self.axisOption)
 		self.contourPanel.canvas = FigureCanvas(self.contourPanel, -1, self.contourPanel.figure)
 
 		sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -401,6 +480,21 @@ class MainFrame ( wx.Frame ):
 		# run AUSM family scheme
 		t.tic()
 		scheme = self.schemeChoice.Strings[self.schemeChoice.Selection]
+
+		class parameters:
+			M_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 0, 0))
+			p_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 1, 0))
+			T_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 2, 0))
+			iterations = int(wx.grid.Grid.GetCellValue(self.simGrid, 1, 0))
+			tolerance = float(wx.grid.Grid.GetCellValue(self.simGrid, 2, 0))
+			CFL = float(wx.grid.Grid.GetCellValue(self.simGrid, 0, 0))
+		class gas:
+			gamma = 1.4
+			Cp = 1006
+			R = 287
+
+		self.parameters = parameters
+		self.gas = gas
 		
 		if scheme == 'AUSM':
 			self.state = AUSM( self.domain, self.mesh, self.parameters, self.state, self.gas )
@@ -426,69 +520,87 @@ class MainFrame ( wx.Frame ):
 		# post processing
 		self.contourPanel.figure.clf()
 		self.contourPanel.cax = self.contourPanel.figure.gca()
+		self.contourPanel.cax.set_facecolor((0.4, 0.4, 0.4))
 		self.contourPanel.cax.set_position([0.12, 0.2, 0.84, 0.82])
 
+		cl = self.units.conv_length(1)
+
 		if self.contQuantity == 'Mach':
-			cont = self.contourPanel.cax.contourf(self.mesh.xxc[0:-1,1:-1], self.mesh.yyc[0:-1,1:-1], \
-							    		      	  self.state.Mach[0:-1,1:-1], 250, cmap=self.cmOption)
+			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
+							    		      	  self.state.Mach[0:-1,1:-1], self.contGrad, cmap=self.cmOption)
 			# colorbar settings
 			ticks = np.linspace(round(np.min(self.state.Mach),2), round(np.max(self.state.Mach),2), 6)
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
 			CB.set_label(self.contQuantity, rotation=90)
 		elif self.contQuantity == 'Velocity':
-			cont = self.contourPanel.cax.contourf(self.mesh.xxc[0:-1,1:-1], self.mesh.yyc[0:-1,1:-1], \
-							    		      	  self.state.vel[0:-1,1:-1], 250, cmap=self.cmOption)
+			velocity = (cl/self.units.conv_time(1)) * self.state.vel[0:-1,1:-1]
+			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
+							    		      	  velocity, self.contGrad, cmap=self.cmOption)
 			# colorbar settings
-			ticks = np.linspace(round(np.min(self.state.vel),0), round(np.max(self.state.vel),0), 6)
+			ticks = np.linspace(round(np.min(velocity),0), round(np.max(velocity),0), 6)
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
-			CB.set_label(self.contQuantity, rotation=90)
+			CB.set_label(self.contQuantity + ' (' + self.units.length + '/' + self.units.time + ')', rotation=90)
 		elif self.contQuantity == 'Velocity Quiver':
-			cont = self.contourPanel.cax.quiver(self.mesh.xxc[0:-1,1:-1], self.mesh.yyc[0:-1,1:-1], \
+			cont = self.contourPanel.cax.quiver(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 								  				self.state.u[0:-1,1:-1], self.state.v[0:-1,1:-1], \
 												self.state.vel[0:-1,1:-1], cmap=self.cmOption)
 			# colorbar settings
 			ticks = np.linspace(round(np.min(self.state.vel),0), round(np.max(self.state.vel),0), 6)
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
-			CB.set_label(self.contQuantity, rotation=90)
+			CB.set_label(self.contQuantity + ' (' + self.units.length + '/' + self.units.time + ')', rotation=90)
+		elif self.contQuantity == 'Density':
+			rho = self.units.conv_mass(1)/self.units.conv_length(1)**3
+			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
+							    		      	  rho*self.state.Q[0:-1,1:-1,0], self.contGrad, cmap=self.cmOption)
+			# colorbar settings
+			ticks = np.linspace(round(np.min(rho*self.state.Q[0:-1,1:-1,0]),9), round(np.max(rho*self.state.Q[0:-1,1:-1,0]),9), 6)
+			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
+												shrink=0.8, extend='both', ax=self.contourPanel.cax)
+			CB.set_label(self.contQuantity + ' (' + self.units.mass + '/' + self.units.length + '$^3$' + ')', rotation=90)
 		elif self.contQuantity == 'Pressure':
-			cont = self.contourPanel.cax.contourf(self.mesh.xxc[0:-1,1:-1], self.mesh.yyc[0:-1,1:-1], \
-							    		      	  self.state.p[0:-1,1:-1], 250, cmap=self.cmOption)
+			pressure = self.units.conv_press(self.state.p[0:-1,1:-1])
+			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
+							    		      	  pressure, self.contGrad, cmap=self.cmOption)
 			# colorbar settings
-			ticks = np.linspace(round(np.min(self.state.p),0), round(np.max(self.state.p),0), 6)
+			ticks = np.linspace(round(np.min(pressure),0), round(np.max(pressure),0), 6)
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
-			CB.set_label(self.contQuantity, rotation=90)
+			CB.set_label(self.contQuantity + ' (' + self.units.press + ')', rotation=90)
 		elif self.contQuantity == 'Stagnation Pressure':
-			cont = self.contourPanel.cax.contourf(self.mesh.xxc[0:-1,1:-1], self.mesh.yyc[0:-1,1:-1], \
-							    		      	  self.state.p0[0:-1,1:-1], 250, cmap=self.cmOption)
+			p0 = self.units.conv_press(self.state.p0[0:-1,1:-1])
+			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
+							    		      	  p0, self.contGrad, cmap=self.cmOption)
 			# colorbar settings
-			ticks = np.linspace(round(np.min(self.state.p0),0), round(np.max(self.state.p0),0), 6)
+			ticks = np.linspace(round(np.min(p0),0), round(np.max(p0),0), 6)
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
-			CB.set_label(self.contQuantity, rotation=90)
+			CB.set_label(self.contQuantity + ' (' + self.units.press + ')', rotation=90)
 		elif self.contQuantity == 'Temperature':
-			cont = self.contourPanel.cax.contourf(self.mesh.xxc[0:-1,1:-1], self.mesh.yyc[0:-1,1:-1], \
-							    		      	  self.state.T[0:-1,1:-1], 250, cmap=self.cmOption)
+			temperature = self.units.conv_temp(self.state.T[0:-1,1:-1])
+			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
+							    		      	  temperature, self.contGrad, cmap=self.cmOption)
 			# colorbar settings
-			ticks = np.linspace(round(np.min(self.state.T),0), round(np.max(self.state.T),0), 6)
+			ticks = np.linspace(round(np.min(temperature),0), round(np.max(temperature),0), 6)
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
-			CB.set_label(self.contQuantity, rotation=90)
+			CB.set_label(self.contQuantity + ' (' + self.units.temp + ')', rotation=90)
 		elif self.contQuantity == 'Stagnation Temperature':
-			cont = self.contourPanel.cax.contourf(self.mesh.xxc[0:-1,1:-1], self.mesh.yyc[0:-1,1:-1], \
-							    		      	  self.state.T0[0:-1,1:-1], 250, cmap=self.cmOption)
+			T0 = self.units.conv_temp(self.state.T0[0:-1,1:-1])
+			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
+							    		      	  T0, self.contGrad, cmap=self.cmOption)
 			# colorbar settings
-			ticks = np.linspace(round(np.min(self.state.T0),0), round(np.max(self.state.T0),0), 6)
+			ticks = np.linspace(round(np.min(T0),0), round(np.max(T0),0), 6)
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
-			CB.set_label(self.contQuantity, rotation=90)
+			CB.set_label(self.contQuantity + ' (' + self.units.temp + ')', rotation=90)
 
-		self.contourPanel.cax.axis('equal')
-		self.contourPanel.cax.set_xlabel('x-coordinate (m)')
-		self.contourPanel.cax.set_ylabel('y-coordinate (m)')
+		self.contourPanel.cax.xaxis.tick_bottom()
+		self.contourPanel.cax.set_xlabel('x-coordinate' + ' (' + self.units.length + ')', fontsize=6)
+		self.contourPanel.cax.set_xlabel('y-coordinate' + ' (' + self.units.length + ')', fontsize=6)
+		self.contourPanel.cax.axis(self.axisOption)
 		self.contourPanel.canvas = FigureCanvas(self.contourPanel, -1, self.contourPanel.figure)
 
 	def call_resplot(self):
@@ -533,6 +645,12 @@ class MainFrame ( wx.Frame ):
 			self.call_contplot()
 		event.Skip()
 	
+	def rho( self, event ):
+		self.contQuantity = 'Density'
+		if hasattr(self, 'state'):
+			self.call_contplot()
+		event.Skip()
+
 	def pressure( self, event ):
 		self.contQuantity = 'Pressure'
 		if hasattr(self, 'state'):
@@ -578,6 +696,152 @@ class MainFrame ( wx.Frame ):
 			self.call_contplot()
 		event.Skip()
 
+	def metric1_change( self, event ):
+		class units:
+			mass = 'kg'
+			def conv_mass(m):
+				conv = m
+				return conv
+			length = 'm'
+			def conv_length(l):
+				conv = l
+				return conv
+			time = 's'
+			def conv_time(t):
+				conv = t
+				return conv
+			temp = 'K'
+			def conv_temp(T):
+				conv = T
+				return conv
+			press = 'kPa'
+			def conv_press(p):
+				conv = p / 1000
+				return conv
+		self.units = units
+		if hasattr(self, 'state'):
+			self.call_contplot()
+
+	def metric2_change( self, event ):
+		class units:
+			mass = 'kg'
+			def conv_mass(m):
+				conv = m
+				return conv
+			length = 'm'
+			def conv_length(l):
+				conv = l
+				return conv
+			time = 's'
+			def conv_time(t):
+				conv = t
+				return conv
+			temp = '°C'
+			def conv_temp(T):
+				conv = T - 272.15
+				return conv
+			press = 'kPa'
+			def conv_press(p):
+				conv = p / 1000
+				return conv
+		self.units = units
+		if hasattr(self, 'state'):
+			self.call_contplot()
+
+	def imperial1_change( self, event ):
+		class units:
+			mass = 'lbm'
+			def conv_mass(m):
+				conv = m * 2.20462
+				return conv
+			length = 'ft'
+			def conv_length(l):
+				conv = l * 3.28084
+				return conv
+			time = 's'
+			def conv_time(t):
+				conv = t
+				return conv
+			temp = '°F'
+			def conv_temp(T):
+				conv = (T - 272.15) * 9/5 + 32
+				return conv
+			press = 'psi'
+			def conv_press(p):
+				conv = p * 0.000145038
+				return conv
+		self.units = units
+		if hasattr(self, 'state'):
+			self.call_contplot()
+
+	def imperial2_change( self, event ):
+		class units:
+			mass = 'slug'
+			def conv_mass(m):
+				conv = m * 0.0685218
+				return conv
+			length = 'in'
+			def conv_length(l):
+				conv = l * 39.3701
+				return conv
+			time = 's'
+			def conv_time(t):
+				conv = t
+				return conv
+			temp = '°R'
+			def conv_temp(T):
+				conv = (T - 272.15) * 9/5 + 32 + 491.67
+				return conv
+			press = 'lbf/ft$^2$'
+			def conv_press(p):
+				conv = p * 0.02088545226628
+				return conv
+		self.units = units
+		if hasattr(self, 'state'):
+			self.call_contplot()
+
+	def equal_change( self, event ):
+		self.axisOption = 'equal'
+		if hasattr(self, 'state'):
+			self.call_contplot()
+		event.Skip()
+	
+	def tight_change( self, event ):
+		self.axisOption = 'tight'
+		if hasattr(self, 'state'):
+			self.call_contplot()
+		event.Skip()
+	
+	def auto_change( self, event ):
+		self.axisOption = 'auto'
+		if hasattr(self, 'state'):
+			self.call_contplot()
+		event.Skip()
+
+	def coarse_change( self, event ):
+		self.contGrad = 8
+		if hasattr(self, 'state'):
+			self.call_contplot()
+		event.Skip()
+	
+	def medium_change( self, event ):
+		self.contGrad = 32
+		if hasattr(self, 'state'):
+			self.call_contplot()
+		event.Skip()
+	
+	def fine_change( self, event ):
+		self.contGrad = 256
+		if hasattr(self, 'state'):
+			self.call_contplot()
+		event.Skip()
+
+	# open contour plot in new window
+	def expandWindow( self, event ):
+		#import matplotlib.pyplot as plt
+		secondWindow = window2()
+		secondWindow.Show()
+		event.Skip()
 
 class RedirectText:
 	def __init__(self,aWxTextCtrl):
