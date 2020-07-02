@@ -920,7 +920,7 @@ class MainFrame ( wx.Frame ):
 	# open contour plot in new window
 	def expandWindow( self, event ):
 		#import matplotlib.pyplot as plt
-		self.new = NewWindow(parent=None, id=-1)
+		self.new = NewWindow(parent=None)
 		self.new.Show()
 		event.Skip()
 
@@ -937,11 +937,12 @@ class RedirectText:
 
 
 class NewWindow(wx.Frame):
-    def __init__(self,parent,id):
-        wx.Frame.__init__( self, parent, id, 'Contour Window', size=(1200,800) )
-        wx.Frame.CenterOnScreen(self)
-		wx.Frame.SetPosition(wx.Point(240, 0))
+	def __init__(self, parent):
+		wx.Frame.__init__( self, parent, title = wx.EmptyString,\
+							pos = wx.Point( 100,100 ), size = wx.Size( 1200,800 ), style=wx.DEFAULT_FRAME_STYLE )
+		wx.Frame.CenterOnScreen(self)
+		wx.Frame.SetPosition(self, wx.Point(240, 0))
 		MainFrame.call_contplot(MainFrame.contourPanel)
 		#self.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
-        #self.new.Show(False)
+		#self.new.Show(False)
 
