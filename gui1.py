@@ -677,70 +677,70 @@ class MainFrame ( wx.Frame ):
 	def mach( self, event ):
 		self.contQuantity = 'Mach'
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 		event.Skip()
 
 	def velocity( self, event ):
 		self.contQuantity = 'Velocity'
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 		event.Skip()
 
 	def quiver( self, event ):
 		self.contQuantity = 'Velocity Quiver'
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 		event.Skip()
 	
 	def rho( self, event ):
 		self.contQuantity = 'Density'
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 		event.Skip()
 
 	def pressure( self, event ):
 		self.contQuantity = 'Pressure'
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 		event.Skip()
 	
 	def stagp( self, event ):
 		self.contQuantity = 'Stagnation Pressure'
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 		event.Skip()
 
 	def temp( self, event ):
 		self.contQuantity = 'Temperature'
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 		event.Skip()
 	
 	def stagtemp( self, event ):
 		self.contQuantity = 'Stagnation Temperature'
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 		event.Skip()
 
 	def jet_change( self, event ):
 		from matplotlib import cm
 		self.cmOption = cm.jet
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 		event.Skip()
 
 	def magma_change( self, event ):
 		from matplotlib import cm
 		self.cmOption = cm.magma
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 		event.Skip()
 
 	def gray_change( self, event ):
 		from matplotlib import cm
 		self.cmOption = cm.gray
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 		event.Skip()
 
 	def metric1_change( self, event ):
@@ -767,7 +767,7 @@ class MainFrame ( wx.Frame ):
 				return conv
 		self.units = units
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 
 	def metric2_change( self, event ):
 		class units:
@@ -793,7 +793,7 @@ class MainFrame ( wx.Frame ):
 				return conv
 		self.units = units
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 
 	def imperial1_change( self, event ):
 		class units:
@@ -819,7 +819,7 @@ class MainFrame ( wx.Frame ):
 				return conv
 		self.units = units
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 
 	def imperial2_change( self, event ):
 		class units:
@@ -845,42 +845,42 @@ class MainFrame ( wx.Frame ):
 				return conv
 		self.units = units
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 
 	def equal_change( self, event ):
 		self.axisOption = 'equal'
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 		event.Skip()
 	
 	def tight_change( self, event ):
 		self.axisOption = 'tight'
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 		event.Skip()
 	
 	def auto_change( self, event ):
 		self.axisOption = 'auto'
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 		event.Skip()
 
 	def coarse_change( self, event ):
 		self.contGrad = 8
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 		event.Skip()
 	
 	def medium_change( self, event ):
 		self.contGrad = 64
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 		event.Skip()
 	
 	def fine_change( self, event ):
 		self.contGrad = 512
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 		event.Skip()
 
 	def label_change( self, event ):
@@ -889,7 +889,7 @@ class MainFrame ( wx.Frame ):
 		else:
 			self.labeled = False
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 		event.Skip()
 
 	def gradient_change( self, event ):
@@ -914,13 +914,14 @@ class MainFrame ( wx.Frame ):
 			wx.MenuBar.Enable(self.menuBar, 8, False)
 
 		if hasattr(self, 'state'):
-			self.call_contplot()
+			self.call_contplot(self.contourPanel)
 		event.Skip()
 
 	# open contour plot in new window
 	def expandWindow( self, event ):
 		#import matplotlib.pyplot as plt
 		self.new = NewWindow(parent=None)
+		self.call_contplot(self.new.contourPanel)
 		self.new.Show()
 		event.Skip()
 
@@ -938,11 +939,20 @@ class RedirectText:
 
 class NewWindow(wx.Frame):
 	def __init__(self, parent):
+		import matplotlib.pyplot as plt
+		import numpy as np
 		wx.Frame.__init__( self, parent, title = wx.EmptyString,\
-							pos = wx.Point( 100,100 ), size = wx.Size( 1200,800 ), style=wx.DEFAULT_FRAME_STYLE )
-		wx.Frame.CenterOnScreen(self)
-		wx.Frame.SetPosition(self, wx.Point(240, 0))
-		MainFrame.call_contplot(MainFrame.contourPanel)
-		#self.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
-		#self.new.Show(False)
+						   size = wx.Size( 1200,800 ), style=wx.DEFAULT_FRAME_STYLE )
+
+		self.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
+
+		self.contourPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		self.contourPanel.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
+
+		
+
+		self.contourPanel.figure = plt.figure( dpi=100, figsize=(9, 9/1.4473))
+		self.contourPanel.cax = self.contourPanel.figure.gca()
+		self.contourPanel.cax.set_facecolor((0.4, 0.4, 0.4))
+		self.contourPanel.cax.set_position([0.12, 0.2, 0.84, 0.82])
 
