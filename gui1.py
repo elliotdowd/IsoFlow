@@ -233,6 +233,11 @@ class MainFrame ( wx.Frame ):
 		
 		self.fine = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Fine", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.AppendItem( self.fine )
+
+		self.contOptions.AppendSeparator()
+		
+		self.label = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Contour Labels", wx.EmptyString, wx.ITEM_CHECK )
+		self.contOptions.AppendItem( self.label )
 		
 		self.plotOptions.AppendSubMenu( self.contOptions, u"Contour" )
 		
@@ -304,6 +309,7 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.coarse_change, id = self.coarse.GetId() )
 		self.Bind( wx.EVT_MENU, self.medium_change, id = self.medium.GetId() )
 		self.Bind( wx.EVT_MENU, self.fine_change, id = self.fine.GetId() )
+		self.Bind( wx.EVT_MENU, self.label_change, id = self.label.GetId() )
 		self.Bind( wx.EVT_MENU, self.jet_change, id = self.jet.GetId() )
 		self.Bind( wx.EVT_MENU, self.magma_change, id = self.magma.GetId() )
 		self.Bind( wx.EVT_MENU, self.gray_change, id = self.gray.GetId() )
@@ -344,7 +350,8 @@ class MainFrame ( wx.Frame ):
 				return conv
 		self.units = units
 		self.axisOption = 'equal'
-		self.contGrad = 256
+		self.contGrad = 8
+		self.labeled = False
 
 
 	def __del__( self ):
@@ -545,7 +552,8 @@ class MainFrame ( wx.Frame ):
 		elif self.contQuantity == 'Velocity Quiver':
 			cont = self.contourPanel.cax.quiver(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 								  				self.state.u[0:-1,1:-1], self.state.v[0:-1,1:-1], \
-												self.state.vel[0:-1,1:-1], cmap=self.cmOption)
+												self.state.vel[0:-1,1:-1], cmap=self.cmOption, pivot='tip', \
+												angles='uv', scale_units='width', scale=0.7*self.domain.M*np.max(self.state.vel[0:-1,1:-1]))
 			# colorbar settings
 			ticks = np.linspace(round(np.min(self.state.vel),0), round(np.max(self.state.vel),0), 6)
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
@@ -597,6 +605,14 @@ class MainFrame ( wx.Frame ):
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
 			CB.set_label(self.contQuantity + ' (' + self.units.temp + ')', rotation=90)
 
+		# set up contour labels
+		if self.contQuantity is not 'Velocity Quiver':
+			if self.labeled:
+				if len(cont.levels) > self.contGrad**(1/3):
+					self.contourPanel.cax.clabel(cont, cont.levels[0:self.contGrad:int(self.contGrad*0.5/self.contGrad**(1/3))], fmt='%2.3f', colors='w', fontsize=8)
+				else:
+					self.contourPanel.cax.clabel(cont, fmt='%2.3f', colors='w', fontsize=8)
+
 		# plot settings
 		self.contourPanel.cax.xaxis.tick_bottom()
 		self.contourPanel.cax.set_xlabel('x-coordinate' + ' (' + self.units.length + ')')
@@ -616,7 +632,7 @@ class MainFrame ( wx.Frame ):
 		self.iterPanel.figure.clf()
 		self.iterPanel.iax = self.iterPanel.figure.gca()
 		self.iterPanel.iax.set_position([0.14, 0.06, 0.68, 0.72])
-		self.iterPanel.iax.plot(np.arange(1, len(self.state.res[0:self.state.n]), 1), self.state.res[1:self.state.n], linewidth=1)
+		self.iterPanel.iax.plot(np.arange(1, len(self.state.res[0:self.state.n]), 1), self.state.res[1:self.state.n], linewidth=0.8)
 		self.iterPanel.iax.set_xlabel('Iterations')
 		self.iterPanel.iax.set_ylabel('Residual') 
 		self.iterPanel.iax.get_lines()[0].set_color("black")
@@ -826,13 +842,22 @@ class MainFrame ( wx.Frame ):
 		event.Skip()
 	
 	def medium_change( self, event ):
-		self.contGrad = 32
+		self.contGrad = 64
 		if hasattr(self, 'state'):
 			self.call_contplot()
 		event.Skip()
 	
 	def fine_change( self, event ):
-		self.contGrad = 256
+		self.contGrad = 512
+		if hasattr(self, 'state'):
+			self.call_contplot()
+		event.Skip()
+
+	def label_change( self, event ):
+		if self.labeled == False:
+			self.labeled = True
+		else:
+			self.labeled = False
 		if hasattr(self, 'state'):
 			self.call_contplot()
 		event.Skip()
