@@ -200,56 +200,59 @@ class MainFrame ( wx.Frame ):
 		self.plotOptions = wx.Menu()
 		self.contOptions = wx.Menu()
 		self.mach_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Mach Number", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.AppendItem( self.mach_change )
+		self.contOptions.Append( self.mach_change )
 
 		self.velocity_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Velocity", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.AppendItem( self.velocity_change )
+		self.contOptions.Append( self.velocity_change )
 
 		self.quiver_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Velocity Streamlines", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.AppendItem( self.quiver_change )
+		self.contOptions.Append( self.quiver_change )
 
 		self.rho_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Density", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.AppendItem( self.rho_change )
+		self.contOptions.Append( self.rho_change )
+
+		self.rhograd_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Density Gradient", wx.EmptyString, wx.ITEM_RADIO )
+		self.contOptions.Append( self.rhograd_change )
 
 		self.pressure_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Pressure", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.AppendItem( self.pressure_change )
+		self.contOptions.Append( self.pressure_change )
 		
 		self.stagpressure_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Stagnation Pressure", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.AppendItem( self.stagpressure_change )
+		self.contOptions.Append( self.stagpressure_change )
 		
 		self.temp_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Temperature", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.AppendItem( self.temp_change )
+		self.contOptions.Append( self.temp_change )
 		
 		self.stagtemp_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Stagnation Temperature", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.AppendItem( self.stagtemp_change )
+		self.contOptions.Append( self.stagtemp_change )
 
 		self.contOptions.AppendSeparator()
 
 		self.coarse = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Coarse", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.AppendItem( self.coarse )
+		self.contOptions.Append( self.coarse )
 		
 		self.medium = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Medium", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.AppendItem( self.medium )
+		self.contOptions.Append( self.medium )
 		
 		self.fine = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Fine", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.AppendItem( self.fine )
+		self.contOptions.Append( self.fine )
 
 		self.contOptions.AppendSeparator()
 		
 		self.label = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Contour Labels", wx.EmptyString, wx.ITEM_CHECK )
-		self.contOptions.AppendItem( self.label )
+		self.contOptions.Append( self.label )
 		
-		self.plotOptions.AppendSubMenu( self.contOptions, u"Contour" )
+		self.plotOptions.AppendSubMenu( self.contOptions, u"Contour Options" )
 		
 		self.cmOptions = wx.Menu()
 		self.jet = wx.MenuItem( self.cmOptions, wx.ID_ANY, u"Jet", wx.EmptyString, wx.ITEM_RADIO )
-		self.cmOptions.AppendItem( self.jet )
+		self.cmOptions.Append( self.jet )
 
 		self.magma = wx.MenuItem( self.cmOptions, wx.ID_ANY, u"Magma", wx.EmptyString, wx.ITEM_RADIO )
-		self.cmOptions.AppendItem( self.magma )
+		self.cmOptions.Append( self.magma )
 		
 		self.gray = wx.MenuItem( self.cmOptions, wx.ID_ANY, u"Greyscale", wx.EmptyString, wx.ITEM_RADIO )
-		self.cmOptions.AppendItem( self.gray )
+		self.cmOptions.Append( self.gray )
 		
 		self.plotOptions.AppendSubMenu( self.cmOptions, u"Colormap" )
 		
@@ -258,17 +261,17 @@ class MainFrame ( wx.Frame ):
 
 		self.viewOptions = wx.Menu()
 		self.expandCont = wx.MenuItem( self.viewOptions, wx.ID_ANY, u"Expand Contour Window", wx.EmptyString, wx.ITEM_NORMAL )
-		self.viewOptions.AppendItem( self.expandCont )
+		self.viewOptions.Append( self.expandCont )
 
 		self.axisOptions = wx.Menu()
 		self.equal = wx.MenuItem( self.axisOptions, wx.ID_ANY, u"Equal", wx.EmptyString, wx.ITEM_RADIO )
-		self.axisOptions.AppendItem( self.equal )
+		self.axisOptions.Append( self.equal )
 		
 		self.tight = wx.MenuItem( self.axisOptions, wx.ID_ANY, u"Tight", wx.EmptyString, wx.ITEM_RADIO )
-		self.axisOptions.AppendItem( self.tight )
+		self.axisOptions.Append( self.tight )
 		
 		self.auto = wx.MenuItem( self.axisOptions, wx.ID_ANY, u"Auto", wx.EmptyString, wx.ITEM_RADIO )
-		self.axisOptions.AppendItem( self.auto )
+		self.axisOptions.Append( self.auto )
 		
 		self.viewOptions.AppendSubMenu( self.axisOptions, u"Axis Options" )
 		
@@ -278,16 +281,16 @@ class MainFrame ( wx.Frame ):
 		self.unitOptions = wx.Menu()
 		
 		self.metric1 = wx.MenuItem( self.unitOptions, wx.ID_ANY, u"Metric (kg-m-s-K)", wx.EmptyString, wx.ITEM_RADIO )
-		self.unitOptions.AppendItem( self.metric1 )
+		self.unitOptions.Append( self.metric1 )
 
 		self.metric2 = wx.MenuItem( self.unitOptions, wx.ID_ANY, u"Metric (kg-m-s-°C)", wx.EmptyString, wx.ITEM_RADIO )
-		self.unitOptions.AppendItem( self.metric2 )
+		self.unitOptions.Append( self.metric2 )
 
 		self.imperial1 = wx.MenuItem( self.unitOptions, wx.ID_ANY, u"Imperial (lbm-ft-s-°F)", wx.EmptyString, wx.ITEM_RADIO )
-		self.unitOptions.AppendItem( self.imperial1 )
+		self.unitOptions.Append( self.imperial1 )
 
 		self.imperial2 = wx.MenuItem( self.unitOptions, wx.ID_ANY, u"Imperial (slug-in-s-°R)", wx.EmptyString, wx.ITEM_RADIO )
-		self.unitOptions.AppendItem( self.imperial2 )
+		self.unitOptions.Append( self.imperial2 )
 		
 		self.menuBar.Append( self.unitOptions, u"Units" ) 
 		
@@ -302,6 +305,7 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.velocity, id = self.velocity_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.quiver, id = self.quiver_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.rho, id = self.rho_change.GetId() )
+		self.Bind( wx.EVT_MENU, self.rhograd, id = self.rhograd_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.pressure, id = self.pressure_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.stagp, id = self.stagpressure_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.temp, id = self.temp_change.GetId() )
@@ -568,6 +572,17 @@ class MainFrame ( wx.Frame ):
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
 			CB.set_label(self.contQuantity + ' (' + self.units.mass + '/' + self.units.length + '$^3$' + ')', rotation=90)
+		elif self.contQuantity == 'Density Gradient':
+			from python.finite_volume.helper import grad
+			rho = self.units.conv_mass(1)/self.units.conv_length(1)**4
+			rhograd = grad(cl*self.mesh.xxc, cl*self.mesh.yyc, rho*self.state.Q[:,:,0])
+			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[1:-1,1:-1], cl*self.mesh.yyc[1:-1,1:-1], \
+							    		      	  rhograd, self.contGrad, cmap=self.cmOption)
+			# colorbar settings
+			ticks = np.linspace(round(np.min(rhograd), 9), round(np.max(rhograd), 9), 6)
+			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
+												shrink=0.8, extend='both', ax=self.contourPanel.cax)
+			CB.set_label(self.contQuantity + ' (' + self.units.mass + '/' + self.units.length + '$^4$' + ')', rotation=90)
 		elif self.contQuantity == 'Pressure':
 			pressure = self.units.conv_press(self.state.p[0:-1,1:-1])
 			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
@@ -606,7 +621,7 @@ class MainFrame ( wx.Frame ):
 			CB.set_label(self.contQuantity + ' (' + self.units.temp + ')', rotation=90)
 
 		# set up contour labels
-		if self.contQuantity is not 'Velocity Quiver':
+		if self.contQuantity != 'Velocity Quiver':
 			if self.labeled:
 				if len(cont.levels) > self.contGrad**(1/3):
 					self.contourPanel.cax.clabel(cont, cont.levels[0:self.contGrad:int(self.contGrad*0.5/self.contGrad**(1/3))], fmt='%2.3f', colors='w', fontsize=8)
@@ -664,6 +679,12 @@ class MainFrame ( wx.Frame ):
 	
 	def rho( self, event ):
 		self.contQuantity = 'Density'
+		if hasattr(self, 'state'):
+			self.call_contplot()
+		event.Skip()
+
+	def rhograd( self, event ):
+		self.contQuantity = 'Density Gradient'
 		if hasattr(self, 'state'):
 			self.call_contplot()
 		event.Skip()

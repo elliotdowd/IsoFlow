@@ -125,15 +125,18 @@ class split:
 
 
 
-# matrix functions
-class matrix:
-    def m22mul( A, B ):
-        import numpy as np
-        result = np.zeros((2,2))
-        for i in range(len(A)):
-            # iterate through columns of A
-            for j in range(len(B[0])):
-                # iterate through rows of B
-                for k in range(len(B)):
-                    result[i][j] += A[i][k] * B[k][j]
-        return result
+# gradient function
+
+def grad(x, y, f):
+    import numpy as np
+    # center divided difference approximation for gradient magnitude
+    # note to leave one halo cell on either side of mesh in each dimension
+
+    # central difference approximation
+
+    fx = (f[2:,1:-1] - f[0:-2,1:-1]) / (2*(x[2:,1:-1]-x[1:-1,1:-1]))
+    fy = (f[1:-1,2:] - f[1:-1,0:-2]) / (2*(y[1:-1,2:]-y[1:-1,1:-1]))
+    
+    df = np.sqrt(fx**2 + fy**2)
+
+    return df
