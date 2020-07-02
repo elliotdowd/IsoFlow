@@ -225,7 +225,7 @@ class MainFrame ( wx.Frame ):
 
 		self.contOptions.AppendSeparator()
 
-		self.coarse = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Coarse", wx.EmptyString, wx.ITEM_NORMAL )
+		self.coarse = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Coarse", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.AppendItem( self.coarse )
 		
 		self.medium = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Medium", wx.EmptyString, wx.ITEM_RADIO )
@@ -344,7 +344,7 @@ class MainFrame ( wx.Frame ):
 				return conv
 		self.units = units
 		self.axisOption = 'equal'
-		self.contGrad = 200
+		self.contGrad = 256
 
 
 	def __del__( self ):
@@ -597,9 +597,10 @@ class MainFrame ( wx.Frame ):
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
 			CB.set_label(self.contQuantity + ' (' + self.units.temp + ')', rotation=90)
 
+		# plot settings
 		self.contourPanel.cax.xaxis.tick_bottom()
-		self.contourPanel.cax.set_xlabel('x-coordinate' + ' (' + self.units.length + ')', fontsize=6)
-		self.contourPanel.cax.set_xlabel('y-coordinate' + ' (' + self.units.length + ')', fontsize=6)
+		self.contourPanel.cax.set_xlabel('x-coordinate' + ' (' + self.units.length + ')')
+		self.contourPanel.cax.set_xlabel('y-coordinate' + ' (' + self.units.length + ')')
 		self.contourPanel.cax.axis(self.axisOption)
 		self.contourPanel.canvas = FigureCanvas(self.contourPanel, -1, self.contourPanel.figure)
 
