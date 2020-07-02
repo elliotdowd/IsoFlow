@@ -7,11 +7,14 @@ def enforce_bc(domain, mesh, parameters, state, gas):
     import numpy as np
     from python.finite_volume.helper import thermo
 
+    gas.Cp = gas.Cp_fn( gas.gamma_p, gas.Cp_p, gas.theta, state.T )
+    gas.Cv = gas.Cv_fn( gas.gamma_p, gas.Cv_p, gas.theta, state.T )
+
     # enforce inlet condition
-    state.Q[0,:,0] = parameters.p_in / (gas.R * parameters.T_in)
-    state.Q[0,:,1] = state.Q[0,:,0] * parameters.M_in * np.sqrt(gas.gamma*parameters.p_in/state.Q[0,:,0])
+    state.Q[0,:,0] = parameters.p_in / (gas.R_fn(gas.Cp[0,:], gas.Cv[0,:]) * parameters.T_in)
+    state.Q[0,:,1] = state.Q[0,:,0] * parameters.M_in * np.sqrt(gas.gamma_fn(gas.Cp[0,:], gas.Cv[0,:])*parameters.p_in/state.Q[0,:,0])
     state.Q[0,:,2] = state.Q[0,:,0] * 0
-    state.Q[0,:,3] = thermo.calc_rho_et(parameters.p_in, state.Q[0,:,0], state.Q[0,:,1]/state.Q[0,:,0], state.Q[0,:,2]/state.Q[0,:,0], gas.gamma)
+    state.Q[0,:,3] = thermo.calc_rho_et(parameters.p_in, state.Q[0,:,0], state.Q[0,:,1]/state.Q[0,:,0], state.Q[0,:,2]/state.Q[0,:,0], gas.gamma_fn(gas.Cp[0,:], gas.Cv[0,:]))
 
     wedge_i = abs(mesh.yy[:,1]) > 0.0000001
     wedge_i = wedge_i[0]
@@ -56,10 +59,11 @@ def invisc_wall(Qwall, pwall, Twall, s_proj, M, gas):
     # run Fortran 90 subroutine to determine wall velocities
     boundary.slip(u0, v0, u1, v1, s_proj, M)
 
-    Qwall[:, 0, 0] = pwall / (gas.R * Twall)
+    Qwall[:, 0, 0] = pwall / (gas.R_fn(gas.Cp[:,0], gas.Cv[:,0]) * Twall)
     Qwall[:, 0, 1] = u0 * Qwall[:, 0, 0]
     Qwall[:, 0, 2] = v0 * Qwall[:, 0, 0]
-    Qwall[:, 0, 3] = thermo.calc_rho_et( pwall, Qwall[:, 0, 0], Qwall[:, 0, 1]/Qwall[:, 0, 0], Qwall[:, 0, 2]/Qwall[:, 0, 0], gas.gamma )
+    Qwall[:, 0, 3] = thermo.calc_rho_et( pwall, Qwall[:, 0, 0], Qwall[:, 0, 1]/Qwall[:, 0, 0], \
+                                         Qwall[:, 0, 2]/Qwall[:, 0, 0], gas.gamma_fn(gas.Cp[:,0], gas.Cv[:,0]) )
     
     return Qwall
 

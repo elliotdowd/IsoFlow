@@ -50,13 +50,14 @@ def AUSM( domain, mesh, parameters, state, gas ):
         # state at previous timestep, use for outflow BCs
         state.Qn = state.Q
 
+        # local timestepping
+        state = local_timestep( mesh, state, parameters, gas )
+
         # simplify variable notation from state vector
         state.u = state.Q[:,:,1] / state.Q[:,:,0]
         state.v = state.Q[:,:,2] / state.Q[:,:,0]
-        state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma) / state.Q[:,:,0] + state.p/state.Q[:,:,0]
-
-        # local timestepping
-        state = local_timestep( mesh, state, parameters, gas )
+        state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / \
+                                      state.Q[:,:,0] + state.p/state.Q[:,:,0]
 
         # density at cell interfaces, upwinded
         #rho_half_zeta = ( state.Q[0:-1,:,0] + state.Q[1:,:,0] ) / 2
@@ -65,7 +66,7 @@ def AUSM( domain, mesh, parameters, state, gas ):
         # speed of sound at cell interfaces
         # from Liou 2006 (JCP 214)
 
-        c_st = thermo.calc_c_star( state.ht, gas.gamma )
+        c_st = thermo.calc_c_star( state.ht, gas.gamma_fn(gas.Cp, gas.Cv) )
 
         c_L = c_st[0:-1,:] / np.maximum( np.sqrt(c_st[0:-1,:]), state.U[0:-1,:] )
         c_R = c_st[1:,:] / np.maximum( np.sqrt(c_st[1:,:]), -state.U[1:,:] ) 
@@ -144,8 +145,8 @@ def AUSM( domain, mesh, parameters, state, gas ):
         #state.res[n-1] = np.log10( np.max(state.residual * mesh.dV4) ) 
 
         # update cell temperatures and pressures
-        state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], state.u, state.v, gas.gamma )
-        state.T = state.p / (gas.R * state.Q[:,:,0])
+        state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv) )
+        state.T = state.p / (gas.R_fn(gas.Cp, gas.Cv) * state.Q[:,:,0])
 
         # update covariant velocities
         #state = covariant(mesh, state)
@@ -163,10 +164,12 @@ def AUSM( domain, mesh, parameters, state, gas ):
     print('________________________________________________________________________________________________________________________________________')
 
     # post processing variables
-    state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma )
+    state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / \
+                           thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv) )
     state.vel = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 )
-    state.p0 = (1+((gas.gamma-1)/2)*state.Mach**2)**(gas.gamma/(gas.gamma-1)) * state.p
-    state.T0 = (1+((gas.gamma-1)/2)*state.Mach**2) * state.T
+    state.p0 = (1+((gas.gamma_fn(gas.Cp, gas.Cv)-1)/2)*state.Mach**2)** \
+                   (gas.gamma_fn(gas.Cp, gas.Cv)/(gas.gamma_fn(gas.Cp, gas.Cv)-1)) * state.p
+    state.T0 = (1+((gas.gamma_fn(gas.Cp, gas.Cv)-1)/2)*state.Mach**2) * state.T
     state.n = n
 
     return state
@@ -215,13 +218,13 @@ def AUSMplusup( domain, mesh, parameters, state, gas ):
         # state at previous timestep, use for outflow BCs
         state.Qn = state.Q
 
+        # local timestepping
+        state = local_timestep( mesh, state, parameters, gas )
+
         # simplify variable notation from state vector
         state.u = state.Q[:,:,1] / state.Q[:,:,0]
         state.v = state.Q[:,:,2] / state.Q[:,:,0]
-        state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma) / state.Q[:,:,0] + state.p/state.Q[:,:,0]
-
-        # local timestepping
-        state = local_timestep( mesh, state, parameters, gas )
+        state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / state.Q[:,:,0] + state.p/state.Q[:,:,0]
 
         # density at cell interfaces, upwinded
         rho_half_zeta = ( state.Q[0:-1,:,0] + state.Q[1:,:,0] ) / 2
@@ -230,7 +233,7 @@ def AUSMplusup( domain, mesh, parameters, state, gas ):
         # speed of sound at cell interfaces
         # from Liou 2006 (JCP 214)
 
-        c_st = thermo.calc_c_star( state.ht, gas.gamma )
+        c_st = thermo.calc_c_star( state.ht, gas.gamma_fn(gas.Cp, gas.Cv) )
 
         c_L = c_st[0:-1,:] / np.maximum( np.sqrt(c_st[0:-1,:]), state.U[0:-1,:] )
         c_R = c_st[1:,:] / np.maximum( np.sqrt(c_st[1:,:]), -state.U[1:,:] ) 
@@ -301,8 +304,8 @@ def AUSMplusup( domain, mesh, parameters, state, gas ):
         #state.res[n-1] = np.log10( np.max(state.residual * mesh.dV4) ) 
 
         # update cell temperatures and pressures
-        state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], state.u, state.v, gas.gamma )
-        state.T = state.p / (gas.R * state.Q[:,:,0])
+        state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv) )
+        state.T = state.p / (gas.R_fn(gas.Cp, gas.Cv) * state.Q[:,:,0])
 
         # update covariant velocities
         #state = covariant(mesh, state)
@@ -320,10 +323,12 @@ def AUSMplusup( domain, mesh, parameters, state, gas ):
     print('________________________________________________________________________________________________________________________________________')
 
     # post processing variables
-    state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma )
+    state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / \
+                           thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv) )
     state.vel = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 )
-    state.p0 = (1+((gas.gamma-1)/2)*state.Mach**2)**(gas.gamma/(gas.gamma-1)) * state.p
-    state.T0 = (1+((gas.gamma-1)/2)*state.Mach**2) * state.T
+    state.p0 = (1+((gas.gamma_fn(gas.Cp, gas.Cv)-1)/2)*state.Mach**2)** \
+                   (gas.gamma_fn(gas.Cp, gas.Cv)/(gas.gamma_fn(gas.Cp, gas.Cv)-1)) * state.p
+    state.T0 = (1+((gas.gamma_fn(gas.Cp, gas.Cv)-1)/2)*state.Mach**2) * state.T
     state.n = n
 
     return state
@@ -373,13 +378,13 @@ def AUSMDV( domain, mesh, parameters, state, gas ):
         # state at previous timestep, use for outflow BCs
         state.Qn = state.Q
 
+        # local timestepping
+        state = local_timestep( mesh, state, parameters, gas )
+
         # simplify variable notation from state vector
         state.u = state.Q[:,:,1] / state.Q[:,:,0]
         state.v = state.Q[:,:,2] / state.Q[:,:,0]
-        state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma) / state.Q[:,:,0] + state.p/state.Q[:,:,0]
-
-        # local timestepping
-        state = local_timestep( mesh, state, parameters, gas )
+        state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / state.Q[:,:,0] + state.p/state.Q[:,:,0]
 
         # density at cell interfaces, upwinded
         #rho_half_zeta = ( state.Q[0:-1,:,0] + state.Q[1:,:,0] ) / 2
@@ -388,7 +393,7 @@ def AUSMDV( domain, mesh, parameters, state, gas ):
         # speed of sound at cell interfaces
         # from Liou 2006 (JCP 214)
 
-        c_st = thermo.calc_c_star( state.ht, gas.gamma )
+        c_st = thermo.calc_c_star( state.ht, gas.gamma_fn(gas.Cp, gas.Cv) )
 
         c_L = c_st[0:-1,:] / np.maximum( np.sqrt(c_st[0:-1,:]), state.U[0:-1,:] )
         c_R = c_st[1:,:] / np.maximum( np.sqrt(c_st[1:,:]), -state.U[1:,:] ) 
@@ -451,8 +456,8 @@ def AUSMDV( domain, mesh, parameters, state, gas ):
         state.res[n-1,3] = np.log10( np.max(state.residual[:,:,3] * mesh.dV[1:-1,1:-1]) ) 
 
         # update cell temperatures and pressures
-        state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], state.u, state.v, gas.gamma )
-        state.T = state.p / (gas.R * state.Q[:,:,0])
+        state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv) )
+        state.T = state.p / (gas.R_fn(gas.Cp, gas.Cv) * state.Q[:,:,0])
 
         # update covariant velocities
         #state = covariant(mesh, state)
@@ -471,10 +476,12 @@ def AUSMDV( domain, mesh, parameters, state, gas ):
 
 
     # post processing variables
-    state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma )
+    state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / \
+                           thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv) )
     state.vel = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 )
-    state.p0 = (1+((gas.gamma-1)/2)*state.Mach**2)**(gas.gamma/(gas.gamma-1)) * state.p
-    state.T0 = (1+((gas.gamma-1)/2)*state.Mach**2) * state.T
+    state.p0 = (1+((gas.gamma_fn(gas.Cp, gas.Cv)-1)/2)*state.Mach**2)** \
+                   (gas.gamma_fn(gas.Cp, gas.Cv)/(gas.gamma_fn(gas.Cp, gas.Cv)-1)) * state.p
+    state.T0 = (1+((gas.gamma_fn(gas.Cp, gas.Cv)-1)/2)*state.Mach**2) * state.T
     state.n = n
     
     return state

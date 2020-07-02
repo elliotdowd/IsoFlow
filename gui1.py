@@ -196,6 +196,17 @@ class MainFrame ( wx.Frame ):
 		self.Layout()
 		self.menuBar = wx.MenuBar( 0 )
 		self.menuBar.SetFont( wx.Font( 12, 74, 90, 90, False, "Arial" ) )
+
+		self.gasOptions = wx.Menu()
+		self.air = wx.MenuItem( self.gasOptions, wx.ID_ANY, u"Air", wx.EmptyString, wx.ITEM_RADIO )
+		self.gasOptions.AppendItem( self.air )
+		
+		self.gasOptions.AppendSeparator()
+		
+		self.thermalgas = wx.MenuItem( self.gasOptions, wx.ID_ANY, u"Thermally Perfect", wx.EmptyString, wx.ITEM_CHECK )
+		self.gasOptions.AppendItem( self.thermalgas )
+		
+		self.menuBar.Append( self.gasOptions, u"Gas" ) 
 		
 		self.plotOptions = wx.Menu()
 		self.contOptions = wx.Menu()
@@ -301,6 +312,8 @@ class MainFrame ( wx.Frame ):
 		self.m_button3.Bind( wx.EVT_BUTTON, self.call_scheme )
 		self.gridButton.Bind( wx.EVT_BUTTON, self.call_grid )
 		self.initButton.Bind( wx.EVT_BUTTON, self.call_init )
+		self.Bind( wx.EVT_MENU, self.gas_change, id = self.air.GetId() )
+		self.Bind( wx.EVT_MENU, self.thermalgas_change, id = self.thermalgas.GetId() )
 		self.Bind( wx.EVT_MENU, self.mach, id = self.mach_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.velocity, id = self.velocity_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.quiver, id = self.quiver_change.GetId() )
@@ -357,6 +370,9 @@ class MainFrame ( wx.Frame ):
 		self.contGrad = 8
 		self.labeled = False
 		self.gradient = ''
+		self.gasSelect = 'Air'
+		self.thermoModel = 'cpg'
+
 
 
 	def __del__( self ):
@@ -451,6 +467,7 @@ class MainFrame ( wx.Frame ):
 		from python.mesh.metrics.calc_cell_metrics import cellmetrics
 		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 		from pytictoc import TicToc
+		import python.finite_volume.gasdata as gasdata
 
 		t = TicToc()
 
@@ -462,13 +479,9 @@ class MainFrame ( wx.Frame ):
 			iterations = int(wx.grid.Grid.GetCellValue(self.simGrid, 1, 0))
 			tolerance = float(wx.grid.Grid.GetCellValue(self.simGrid, 2, 0))
 			CFL = float(wx.grid.Grid.GetCellValue(self.simGrid, 0, 0))
-		class gas:
-			gamma = 1.4
-			Cp = 1006
-			R = 287
 
 		self.parameters = parameters
-		self.gas = gas
+		self.gas = gasdata.air_tpg
 
 		# initialize state vector, thermodynamic variables
 		t.tic()
@@ -486,6 +499,7 @@ class MainFrame ( wx.Frame ):
 
 		from pytictoc import TicToc
 		from python.finite_volume.AUSM.schemes import AUSM, AUSMplusup, AUSMDV
+		import python.finite_volume.gasdata as gasdata
 
 		t = TicToc()
 
@@ -500,13 +514,13 @@ class MainFrame ( wx.Frame ):
 			iterations = int(wx.grid.Grid.GetCellValue(self.simGrid, 1, 0))
 			tolerance = float(wx.grid.Grid.GetCellValue(self.simGrid, 2, 0))
 			CFL = float(wx.grid.Grid.GetCellValue(self.simGrid, 0, 0))
-		class gas:
-			gamma = 1.4
-			Cp = 1006
-			R = 287
 
 		self.parameters = parameters
-		self.gas = gas
+
+		if self.thermoModel == 'cpg':
+			self.gas = gasdata.air_cpg
+		elif self.thermoModel == 'tpg':
+			self.gas = gasdata.air_tpg
 		
 		if scheme == 'AUSM':
 			self.state = AUSM( self.domain, self.mesh, self.parameters, self.state, self.gas )
@@ -561,7 +575,7 @@ class MainFrame ( wx.Frame ):
 			cont = panel.cax.quiver(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 								  				self.state.u[0:-1,1:-1], self.state.v[0:-1,1:-1], \
 												self.state.vel[0:-1,1:-1], cmap=self.cmOption, pivot='tip', \
-												angles='uv', scale_units='width', scale=0.7*self.domain.M*np.max(self.state.vel[0:-1,1:-1]))
+												angles='uv', scale_units='width', scale=0.8*self.domain.M*np.max(self.state.vel[0:-1,1:-1]))
 			# colorbar settings
 			ticks = np.linspace(round(np.min(self.state.vel),0), round(np.max(self.state.vel),0), 6)
 			CB = panel.figure.colorbar(cont, ticks=ticks, \
@@ -625,6 +639,17 @@ class MainFrame ( wx.Frame ):
 			CB = panel.figure.colorbar(cont, ticks=ticks, \
 												shrink=0.8, extend='both', ax=panel.cax)
 			CB.set_label(contQuantity + ' (' + self.units.temp + ')', rotation=90)
+		elif contQuantity == 'Temperature Gradient':
+			from python.finite_volume.helper import grad
+			ct = self.units.conv_temp(1) / self.units.conv_length(1)
+			tgrad = grad(cl*self.mesh.xxc, cl*self.mesh.yyc, ct*self.state.T)
+			cont = panel.cax.contourf(cl*self.mesh.xxc[1:-1,1:-1], cl*self.mesh.yyc[1:-1,1:-1], \
+							    		      	  tgrad, self.contGrad, cmap=self.cmOption)
+			# colorbar settings
+			ticks = np.linspace(round(np.min(tgrad), 0), round(np.max(tgrad), 0), 6)
+			CB = panel.figure.colorbar(cont, ticks=ticks, \
+												shrink=0.8, extend='both', ax=panel.cax)
+			CB.set_label(contQuantity + ' (' + self.units.temp + '/' + self.units.length + ')', rotation=90)
 		elif contQuantity == 'Stagnation Temperature ':
 			T0 = self.units.conv_temp(self.state.T0[0:-1,1:-1])
 			cont = panel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
@@ -646,7 +671,7 @@ class MainFrame ( wx.Frame ):
 		# plot settings
 		panel.cax.xaxis.tick_bottom()
 		panel.cax.set_xlabel('x-coordinate' + ' (' + self.units.length + ')')
-		panel.cax.set_xlabel('y-coordinate' + ' (' + self.units.length + ')')
+		panel.cax.set_ylabel('y-coordinate' + ' (' + self.units.length + ')')
 		panel.cax.axis(self.axisOption)
 		panel.canvas = FigureCanvas(panel, -1, panel.figure)
 
@@ -900,7 +925,7 @@ class MainFrame ( wx.Frame ):
 			wx.MenuBar.Enable(self.menuBar, 3, True)
 
 			wx.MenuBar.Enable(self.menuBar, 6, True)
-			wx.MenuBar.Enable(self.menuBar, 7, True)
+			#wx.MenuBar.Enable(self.menuBar, 7, True)
 			wx.MenuBar.Enable(self.menuBar, 8, True)
 
 		else:
@@ -910,11 +935,21 @@ class MainFrame ( wx.Frame ):
 			wx.MenuBar.Enable(self.menuBar, 3, False)
 
 			wx.MenuBar.Enable(self.menuBar, 6, False)
-			wx.MenuBar.Enable(self.menuBar, 7, False)
+			#wx.MenuBar.Enable(self.menuBar, 7, False)
 			wx.MenuBar.Enable(self.menuBar, 8, False)
 
 		if hasattr(self, 'state'):
 			self.call_contplot(self.contourPanel)
+		event.Skip()
+
+	def gas_change( self, event ):
+		event.Skip()
+	
+	def thermalgas_change( self, event ):
+		if self.thermoModel == 'tpg':
+			self.thermoModel = 'cpg'
+		else: 
+			self.thermoModel = 'tpg'
 		event.Skip()
 
 	# open contour plot in new window
@@ -941,18 +976,16 @@ class NewWindow(wx.Frame):
 	def __init__(self, parent):
 		import matplotlib.pyplot as plt
 		import numpy as np
-		wx.Frame.__init__( self, parent, title = wx.EmptyString,\
-						   size = wx.Size( 1200,800 ), style=wx.DEFAULT_FRAME_STYLE )
+		wx.Frame.__init__( self, parent, title = 'Fullscreen Contour Plot',\
+						   size = wx.Size( 1020,800 ), style=wx.DEFAULT_FRAME_STYLE )
 
 		self.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
 
 		self.contourPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.contourPanel.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
 
-		
-
-		self.contourPanel.figure = plt.figure( dpi=100, figsize=(9, 9/1.4473))
+		self.contourPanel.figure = plt.figure( dpi=100, figsize=(10, 10/1.4473))
 		self.contourPanel.cax = self.contourPanel.figure.gca()
 		self.contourPanel.cax.set_facecolor((0.4, 0.4, 0.4))
-		self.contourPanel.cax.set_position([0.12, 0.2, 0.84, 0.82])
+		self.contourPanel.cax.set_position([0.15, 0.2, 0.84, 0.82])
 

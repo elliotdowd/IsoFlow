@@ -3,8 +3,11 @@ from python.finite_volume.helper import thermo
 
 def local_timestep( mesh, state, parameters, gas ):
 
+    gas.Cp = gas.Cp_fn( gas.gamma_p, gas.Cp_p, gas.theta, state.T )
+    gas.Cv = gas.Cv_fn( gas.gamma_p, gas.Cv_p, gas.theta, state.T )
+
     # use ideal gas law to find temperature at centroids
-    c = thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma )
+    c = thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv) )
 
     # function for calculating spectral radius in each computational direction
     Sx = mesh.s_proj[:,:,0] / mesh.dV
