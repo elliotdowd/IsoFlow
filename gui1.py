@@ -21,7 +21,7 @@ from matplotlib import cm
 class MainFrame ( wx.Frame ):
 	
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( 100,100 ), size = wx.Size( 740,800 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( 100,100 ), size = wx.Size( 740,800 ), style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER )
 		
 		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 		self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INACTIVEBORDER ) )
@@ -478,7 +478,7 @@ class MainFrame ( wx.Frame ):
 		print('________________________________________________________________________________________________________________________________________')
 		t.toc('Initialize time:')
 
-		self.call_contplot()
+		self.call_contplot(self.contourPanel)
 
 		event.Skip()
 
@@ -516,12 +516,12 @@ class MainFrame ( wx.Frame ):
 			self.state = AUSMDV( self.domain, self.mesh, self.parameters, self.state, self.gas )
 		t.toc('simulation time:')
 
-		self.call_contplot()
+		self.call_contplot(self.contourPanel)
 		self.call_resplot()
 
 		event.Skip()
 
-	def call_contplot(self):
+	def call_contplot(self, panel):
 
 		import numpy as np
 		import matplotlib.pyplot as plt
@@ -529,81 +529,83 @@ class MainFrame ( wx.Frame ):
 		import matplotlib as mpl
 		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 
+		# panel input as self.contourPanel
+
 		# post processing
-		self.contourPanel.figure.clf()
-		self.contourPanel.cax = self.contourPanel.figure.gca()
-		self.contourPanel.cax.set_facecolor((0.4, 0.4, 0.4))
-		self.contourPanel.cax.set_position([0.12, 0.2, 0.84, 0.82])
+		panel.figure.clf()
+		panel.cax = panel.figure.gca()
+		panel.cax.set_facecolor((0.4, 0.4, 0.4))
+		panel.cax.set_position([0.12, 0.2, 0.84, 0.82])
 
 		contQuantity = self.contQuantity + ' ' + self.gradient
 		cl = self.units.conv_length(1)
 
 		if contQuantity == 'Mach ':
-			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
+			cont = panel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 							    		      	  self.state.Mach[0:-1,1:-1], self.contGrad, cmap=self.cmOption)
 			# colorbar settings
 			ticks = np.linspace(round(np.min(self.state.Mach),2), round(np.max(self.state.Mach),2), 6)
-			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
-												shrink=0.8, extend='both', ax=self.contourPanel.cax)
+			CB = panel.figure.colorbar(cont, ticks=ticks, \
+												shrink=0.8, extend='both', ax=panel.cax)
 			CB.set_label(contQuantity, rotation=90)
 		elif contQuantity == 'Velocity ':
 			velocity = (cl/self.units.conv_time(1)) * self.state.vel[0:-1,1:-1]
-			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
+			cont = panel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 							    		      	  velocity, self.contGrad, cmap=self.cmOption)
 			# colorbar settings
 			ticks = np.linspace(round(np.min(velocity),0), round(np.max(velocity),0), 6)
-			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
-												shrink=0.8, extend='both', ax=self.contourPanel.cax)
+			CB = panel.figure.colorbar(cont, ticks=ticks, \
+												shrink=0.8, extend='both', ax=panel.cax)
 			CB.set_label(contQuantity + ' (' + self.units.length + '/' + self.units.time + ')', rotation=90)
 		elif contQuantity == 'Velocity Quiver ':
-			cont = self.contourPanel.cax.quiver(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
+			cont = panel.cax.quiver(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 								  				self.state.u[0:-1,1:-1], self.state.v[0:-1,1:-1], \
 												self.state.vel[0:-1,1:-1], cmap=self.cmOption, pivot='tip', \
 												angles='uv', scale_units='width', scale=0.7*self.domain.M*np.max(self.state.vel[0:-1,1:-1]))
 			# colorbar settings
 			ticks = np.linspace(round(np.min(self.state.vel),0), round(np.max(self.state.vel),0), 6)
-			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
-												shrink=0.8, extend='both', ax=self.contourPanel.cax)
+			CB = panel.figure.colorbar(cont, ticks=ticks, \
+												shrink=0.8, extend='both', ax=panel.cax)
 			CB.set_label(contQuantity + ' (' + self.units.length + '/' + self.units.time + ')', rotation=90)
 		elif contQuantity == 'Density ':
 			rho = self.units.conv_mass(1)/self.units.conv_length(1)**3
-			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
+			cont = panel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 							    		      	  rho*self.state.Q[0:-1,1:-1,0], self.contGrad, cmap=self.cmOption)
 			# colorbar settings
 			ticks = np.linspace(round(np.min(rho*self.state.Q[0:-1,1:-1,0]),9), round(np.max(rho*self.state.Q[0:-1,1:-1,0]),9), 6)
-			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
-												shrink=0.8, extend='both', ax=self.contourPanel.cax)
+			CB = panel.figure.colorbar(cont, ticks=ticks, \
+												shrink=0.8, extend='both', ax=panel.cax)
 			CB.set_label(contQuantity + ' (' + self.units.mass + '/' + self.units.length + '$^3$' + ')', rotation=90)
 		elif contQuantity == 'Density Gradient':
 			from python.finite_volume.helper import grad
 			rho = self.units.conv_mass(1)/self.units.conv_length(1)**4
 			rhograd = grad(cl*self.mesh.xxc, cl*self.mesh.yyc, rho*self.state.Q[:,:,0])
-			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[1:-1,1:-1], cl*self.mesh.yyc[1:-1,1:-1], \
+			cont = panel.cax.contourf(cl*self.mesh.xxc[1:-1,1:-1], cl*self.mesh.yyc[1:-1,1:-1], \
 							    		      	  rhograd, self.contGrad, cmap=self.cmOption)
 			# colorbar settings
 			ticks = np.linspace(round(np.min(rhograd), 9), round(np.max(rhograd), 9), 6)
-			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
-												shrink=0.8, extend='both', ax=self.contourPanel.cax)
+			CB = panel.figure.colorbar(cont, ticks=ticks, \
+												shrink=0.8, extend='both', ax=panel.cax)
 			CB.set_label(contQuantity + ' (' + self.units.mass + '/' + self.units.length + '$^4$' + ')', rotation=90)
 		elif contQuantity == 'Pressure ':
 			pressure = self.units.conv_press(self.state.p[0:-1,1:-1])
-			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
+			cont = panel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 							    		      	  pressure, self.contGrad, cmap=self.cmOption)
 			# colorbar settings
 			ticks = np.linspace(round(np.min(pressure),0), round(np.max(pressure),0), 6)
-			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
-												shrink=0.8, extend='both', ax=self.contourPanel.cax)
+			CB = panel.figure.colorbar(cont, ticks=ticks, \
+												shrink=0.8, extend='both', ax=panel.cax)
 			CB.set_label(contQuantity + ' (' + self.units.press + ')', rotation=90)
 		elif contQuantity == 'Pressure Gradient':
 			from python.finite_volume.helper import grad
 			pg = self.units.conv_press(1) / self.units.conv_length(1)
 			pgrad = grad(cl*self.mesh.xxc, cl*self.mesh.yyc, pg*self.state.p)
-			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[1:-1,1:-1], cl*self.mesh.yyc[1:-1,1:-1], \
+			cont = panel.cax.contourf(cl*self.mesh.xxc[1:-1,1:-1], cl*self.mesh.yyc[1:-1,1:-1], \
 							    		      	  pgrad, self.contGrad, cmap=self.cmOption)
 			# colorbar settings
 			ticks = np.linspace(round(np.min(pgrad), 9), round(np.max(pgrad), 9), 6)
-			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
-												shrink=0.8, extend='both', ax=self.contourPanel.cax)
+			CB = panel.figure.colorbar(cont, ticks=ticks, \
+												shrink=0.8, extend='both', ax=panel.cax)
 			CB.set_label(contQuantity + ' (' + self.units.press + '/' + self.units.length + ')', rotation=90)
 		elif contQuantity == 'Stagnation Pressure ':
 			p0 = self.units.conv_press(self.state.p0[0:-1,1:-1])
@@ -612,25 +614,25 @@ class MainFrame ( wx.Frame ):
 			# colorbar settings
 			ticks = np.linspace(round(np.min(p0),0), round(np.max(p0),0), 6)
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
-												shrink=0.8, extend='both', ax=self.contourPanel.cax)
+												shrink=0.8, extend='both', ax=panel.cax)
 			CB.set_label(contQuantity + ' (' + self.units.press + ')', rotation=90)
 		elif contQuantity == 'Temperature ':
 			temperature = self.units.conv_temp(self.state.T[0:-1,1:-1])
-			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
+			cont = panel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 							    		      	  temperature, self.contGrad, cmap=self.cmOption)
 			# colorbar settings
 			ticks = np.linspace(round(np.min(temperature),0), round(np.max(temperature),0), 6)
-			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
-												shrink=0.8, extend='both', ax=self.contourPanel.cax)
+			CB = panel.figure.colorbar(cont, ticks=ticks, \
+												shrink=0.8, extend='both', ax=panel.cax)
 			CB.set_label(contQuantity + ' (' + self.units.temp + ')', rotation=90)
 		elif contQuantity == 'Stagnation Temperature ':
 			T0 = self.units.conv_temp(self.state.T0[0:-1,1:-1])
-			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
+			cont = panel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 							    		      	  T0, self.contGrad, cmap=self.cmOption)
 			# colorbar settings
 			ticks = np.linspace(round(np.min(T0),0), round(np.max(T0),0), 6)
-			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
-												shrink=0.8, extend='both', ax=self.contourPanel.cax)
+			CB = panel.figure.colorbar(cont, ticks=ticks, \
+												shrink=0.8, extend='both', ax=panel.cax)
 			CB.set_label(contQuantity + ' (' + self.units.temp + ')', rotation=90)
 
 		# set up contour labels
@@ -642,11 +644,11 @@ class MainFrame ( wx.Frame ):
 					self.contourPanel.cax.clabel(cont, fmt='%2.3f', colors='w', fontsize=8)
 
 		# plot settings
-		self.contourPanel.cax.xaxis.tick_bottom()
-		self.contourPanel.cax.set_xlabel('x-coordinate' + ' (' + self.units.length + ')')
-		self.contourPanel.cax.set_xlabel('y-coordinate' + ' (' + self.units.length + ')')
-		self.contourPanel.cax.axis(self.axisOption)
-		self.contourPanel.canvas = FigureCanvas(self.contourPanel, -1, self.contourPanel.figure)
+		panel.cax.xaxis.tick_bottom()
+		panel.cax.set_xlabel('x-coordinate' + ' (' + self.units.length + ')')
+		panel.cax.set_xlabel('y-coordinate' + ' (' + self.units.length + ')')
+		panel.cax.axis(self.axisOption)
+		panel.canvas = FigureCanvas(panel, -1, panel.figure)
 
 	def call_resplot(self):
 
@@ -935,8 +937,11 @@ class RedirectText:
 
 
 class NewWindow(wx.Frame):
-
     def __init__(self,parent,id):
-        wx.Frame.__init__(self, parent, id, 'New Window', size=(1200,800))
+        wx.Frame.__init__( self, parent, id, 'Contour Window', size=(1200,800) )
         wx.Frame.CenterOnScreen(self)
+		wx.Frame.SetPosition(wx.Point(240, 0))
+		MainFrame.call_contplot(MainFrame.contourPanel)
+		#self.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
         #self.new.Show(False)
+
