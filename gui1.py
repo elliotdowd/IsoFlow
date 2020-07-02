@@ -199,31 +199,28 @@ class MainFrame ( wx.Frame ):
 		
 		self.plotOptions = wx.Menu()
 		self.contOptions = wx.Menu()
-		self.mach_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Mach Number", wx.EmptyString, wx.ITEM_RADIO )
+		self.mach_change = wx.MenuItem( self.contOptions, 1, u"Mach Number", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.Append( self.mach_change )
 
-		self.velocity_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Velocity", wx.EmptyString, wx.ITEM_RADIO )
+		self.velocity_change = wx.MenuItem( self.contOptions, 2, u"Velocity", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.Append( self.velocity_change )
 
-		self.quiver_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Velocity Streamlines", wx.EmptyString, wx.ITEM_RADIO )
+		self.quiver_change = wx.MenuItem( self.contOptions, 3, u"Velocity Streamlines", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.Append( self.quiver_change )
 
-		self.rho_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Density", wx.EmptyString, wx.ITEM_RADIO )
+		self.rho_change = wx.MenuItem( self.contOptions, 4, u"Density", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.Append( self.rho_change )
 
-		self.rhograd_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Density Gradient", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.Append( self.rhograd_change )
-
-		self.pressure_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Pressure", wx.EmptyString, wx.ITEM_RADIO )
+		self.pressure_change = wx.MenuItem( self.contOptions, 5, u"Pressure", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.Append( self.pressure_change )
 		
-		self.stagpressure_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Stagnation Pressure", wx.EmptyString, wx.ITEM_RADIO )
+		self.stagpressure_change = wx.MenuItem( self.contOptions, 6, u"Stagnation Pressure", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.Append( self.stagpressure_change )
 		
-		self.temp_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Temperature", wx.EmptyString, wx.ITEM_RADIO )
+		self.temp_change = wx.MenuItem( self.contOptions, 7, u"Temperature", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.Append( self.temp_change )
 		
-		self.stagtemp_change = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Stagnation Temperature", wx.EmptyString, wx.ITEM_RADIO )
+		self.stagtemp_change = wx.MenuItem( self.contOptions, 8, u"Stagnation Temperature", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.Append( self.stagtemp_change )
 
 		self.contOptions.AppendSeparator()
@@ -241,6 +238,9 @@ class MainFrame ( wx.Frame ):
 		
 		self.label = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Contour Labels", wx.EmptyString, wx.ITEM_CHECK )
 		self.contOptions.Append( self.label )
+
+		self.gradient = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Gradient", wx.EmptyString, wx.ITEM_CHECK )
+		self.contOptions.Append( self.gradient )
 		
 		self.plotOptions.AppendSubMenu( self.contOptions, u"Contour Options" )
 		
@@ -305,7 +305,6 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.velocity, id = self.velocity_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.quiver, id = self.quiver_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.rho, id = self.rho_change.GetId() )
-		self.Bind( wx.EVT_MENU, self.rhograd, id = self.rhograd_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.pressure, id = self.pressure_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.stagp, id = self.stagpressure_change.GetId() )
 		self.Bind( wx.EVT_MENU, self.temp, id = self.temp_change.GetId() )
@@ -314,6 +313,7 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.medium_change, id = self.medium.GetId() )
 		self.Bind( wx.EVT_MENU, self.fine_change, id = self.fine.GetId() )
 		self.Bind( wx.EVT_MENU, self.label_change, id = self.label.GetId() )
+		self.Bind( wx.EVT_MENU, self.gradient_change, id = self.gradient.GetId() )
 		self.Bind( wx.EVT_MENU, self.jet_change, id = self.jet.GetId() )
 		self.Bind( wx.EVT_MENU, self.magma_change, id = self.magma.GetId() )
 		self.Bind( wx.EVT_MENU, self.gray_change, id = self.gray.GetId() )
@@ -356,6 +356,7 @@ class MainFrame ( wx.Frame ):
 		self.axisOption = 'equal'
 		self.contGrad = 8
 		self.labeled = False
+		self.gradient = ''
 
 
 	def __del__( self ):
@@ -534,17 +535,18 @@ class MainFrame ( wx.Frame ):
 		self.contourPanel.cax.set_facecolor((0.4, 0.4, 0.4))
 		self.contourPanel.cax.set_position([0.12, 0.2, 0.84, 0.82])
 
+		contQuantity = self.contQuantity + ' ' + self.gradient
 		cl = self.units.conv_length(1)
 
-		if self.contQuantity == 'Mach':
+		if contQuantity == 'Mach ':
 			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 							    		      	  self.state.Mach[0:-1,1:-1], self.contGrad, cmap=self.cmOption)
 			# colorbar settings
 			ticks = np.linspace(round(np.min(self.state.Mach),2), round(np.max(self.state.Mach),2), 6)
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
-			CB.set_label(self.contQuantity, rotation=90)
-		elif self.contQuantity == 'Velocity':
+			CB.set_label(contQuantity, rotation=90)
+		elif contQuantity == 'Velocity ':
 			velocity = (cl/self.units.conv_time(1)) * self.state.vel[0:-1,1:-1]
 			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 							    		      	  velocity, self.contGrad, cmap=self.cmOption)
@@ -552,8 +554,8 @@ class MainFrame ( wx.Frame ):
 			ticks = np.linspace(round(np.min(velocity),0), round(np.max(velocity),0), 6)
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
-			CB.set_label(self.contQuantity + ' (' + self.units.length + '/' + self.units.time + ')', rotation=90)
-		elif self.contQuantity == 'Velocity Quiver':
+			CB.set_label(contQuantity + ' (' + self.units.length + '/' + self.units.time + ')', rotation=90)
+		elif contQuantity == 'Velocity Quiver ':
 			cont = self.contourPanel.cax.quiver(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 								  				self.state.u[0:-1,1:-1], self.state.v[0:-1,1:-1], \
 												self.state.vel[0:-1,1:-1], cmap=self.cmOption, pivot='tip', \
@@ -562,8 +564,8 @@ class MainFrame ( wx.Frame ):
 			ticks = np.linspace(round(np.min(self.state.vel),0), round(np.max(self.state.vel),0), 6)
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
-			CB.set_label(self.contQuantity + ' (' + self.units.length + '/' + self.units.time + ')', rotation=90)
-		elif self.contQuantity == 'Density':
+			CB.set_label(contQuantity + ' (' + self.units.length + '/' + self.units.time + ')', rotation=90)
+		elif contQuantity == 'Density ':
 			rho = self.units.conv_mass(1)/self.units.conv_length(1)**3
 			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 							    		      	  rho*self.state.Q[0:-1,1:-1,0], self.contGrad, cmap=self.cmOption)
@@ -571,8 +573,8 @@ class MainFrame ( wx.Frame ):
 			ticks = np.linspace(round(np.min(rho*self.state.Q[0:-1,1:-1,0]),9), round(np.max(rho*self.state.Q[0:-1,1:-1,0]),9), 6)
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
-			CB.set_label(self.contQuantity + ' (' + self.units.mass + '/' + self.units.length + '$^3$' + ')', rotation=90)
-		elif self.contQuantity == 'Density Gradient':
+			CB.set_label(contQuantity + ' (' + self.units.mass + '/' + self.units.length + '$^3$' + ')', rotation=90)
+		elif contQuantity == 'Density Gradient':
 			from python.finite_volume.helper import grad
 			rho = self.units.conv_mass(1)/self.units.conv_length(1)**4
 			rhograd = grad(cl*self.mesh.xxc, cl*self.mesh.yyc, rho*self.state.Q[:,:,0])
@@ -582,8 +584,8 @@ class MainFrame ( wx.Frame ):
 			ticks = np.linspace(round(np.min(rhograd), 9), round(np.max(rhograd), 9), 6)
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
-			CB.set_label(self.contQuantity + ' (' + self.units.mass + '/' + self.units.length + '$^4$' + ')', rotation=90)
-		elif self.contQuantity == 'Pressure':
+			CB.set_label(contQuantity + ' (' + self.units.mass + '/' + self.units.length + '$^4$' + ')', rotation=90)
+		elif contQuantity == 'Pressure ':
 			pressure = self.units.conv_press(self.state.p[0:-1,1:-1])
 			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 							    		      	  pressure, self.contGrad, cmap=self.cmOption)
@@ -591,8 +593,19 @@ class MainFrame ( wx.Frame ):
 			ticks = np.linspace(round(np.min(pressure),0), round(np.max(pressure),0), 6)
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
-			CB.set_label(self.contQuantity + ' (' + self.units.press + ')', rotation=90)
-		elif self.contQuantity == 'Stagnation Pressure':
+			CB.set_label(contQuantity + ' (' + self.units.press + ')', rotation=90)
+		elif contQuantity == 'Pressure Gradient':
+			from python.finite_volume.helper import grad
+			pg = self.units.conv_press(1) / self.units.conv_length(1)
+			pgrad = grad(cl*self.mesh.xxc, cl*self.mesh.yyc, pg*self.state.p)
+			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[1:-1,1:-1], cl*self.mesh.yyc[1:-1,1:-1], \
+							    		      	  pgrad, self.contGrad, cmap=self.cmOption)
+			# colorbar settings
+			ticks = np.linspace(round(np.min(pgrad), 9), round(np.max(pgrad), 9), 6)
+			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
+												shrink=0.8, extend='both', ax=self.contourPanel.cax)
+			CB.set_label(contQuantity + ' (' + self.units.press + '/' + self.units.length + ')', rotation=90)
+		elif contQuantity == 'Stagnation Pressure ':
 			p0 = self.units.conv_press(self.state.p0[0:-1,1:-1])
 			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 							    		      	  p0, self.contGrad, cmap=self.cmOption)
@@ -600,8 +613,8 @@ class MainFrame ( wx.Frame ):
 			ticks = np.linspace(round(np.min(p0),0), round(np.max(p0),0), 6)
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
-			CB.set_label(self.contQuantity + ' (' + self.units.press + ')', rotation=90)
-		elif self.contQuantity == 'Temperature':
+			CB.set_label(contQuantity + ' (' + self.units.press + ')', rotation=90)
+		elif contQuantity == 'Temperature ':
 			temperature = self.units.conv_temp(self.state.T[0:-1,1:-1])
 			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 							    		      	  temperature, self.contGrad, cmap=self.cmOption)
@@ -609,8 +622,8 @@ class MainFrame ( wx.Frame ):
 			ticks = np.linspace(round(np.min(temperature),0), round(np.max(temperature),0), 6)
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
-			CB.set_label(self.contQuantity + ' (' + self.units.temp + ')', rotation=90)
-		elif self.contQuantity == 'Stagnation Temperature':
+			CB.set_label(contQuantity + ' (' + self.units.temp + ')', rotation=90)
+		elif contQuantity == 'Stagnation Temperature ':
 			T0 = self.units.conv_temp(self.state.T0[0:-1,1:-1])
 			cont = self.contourPanel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 							    		      	  T0, self.contGrad, cmap=self.cmOption)
@@ -618,7 +631,7 @@ class MainFrame ( wx.Frame ):
 			ticks = np.linspace(round(np.min(T0),0), round(np.max(T0),0), 6)
 			CB = self.contourPanel.figure.colorbar(cont, ticks=ticks, \
 												shrink=0.8, extend='both', ax=self.contourPanel.cax)
-			CB.set_label(self.contQuantity + ' (' + self.units.temp + ')', rotation=90)
+			CB.set_label(contQuantity + ' (' + self.units.temp + ')', rotation=90)
 
 		# set up contour labels
 		if self.contQuantity != 'Velocity Quiver':
@@ -679,12 +692,6 @@ class MainFrame ( wx.Frame ):
 	
 	def rho( self, event ):
 		self.contQuantity = 'Density'
-		if hasattr(self, 'state'):
-			self.call_contplot()
-		event.Skip()
-
-	def rhograd( self, event ):
-		self.contQuantity = 'Density Gradient'
 		if hasattr(self, 'state'):
 			self.call_contplot()
 		event.Skip()
@@ -883,12 +890,38 @@ class MainFrame ( wx.Frame ):
 			self.call_contplot()
 		event.Skip()
 
+	def gradient_change( self, event ):
+		if self.gradient == 'Gradient':
+			self.gradient = ''
+			wx.MenuBar.Enable(self.menuBar, 1, True)
+			wx.MenuBar.Enable(self.menuBar, 2, True)
+			wx.MenuBar.Enable(self.menuBar, 3, True)
+
+			wx.MenuBar.Enable(self.menuBar, 6, True)
+			wx.MenuBar.Enable(self.menuBar, 7, True)
+			wx.MenuBar.Enable(self.menuBar, 8, True)
+
+		else:
+			self.gradient = 'Gradient'
+			wx.MenuBar.Enable(self.menuBar, 1, False)
+			wx.MenuBar.Enable(self.menuBar, 2, False)
+			wx.MenuBar.Enable(self.menuBar, 3, False)
+
+			wx.MenuBar.Enable(self.menuBar, 6, False)
+			wx.MenuBar.Enable(self.menuBar, 7, False)
+			wx.MenuBar.Enable(self.menuBar, 8, False)
+
+		if hasattr(self, 'state'):
+			self.call_contplot()
+		event.Skip()
+
 	# open contour plot in new window
 	def expandWindow( self, event ):
 		#import matplotlib.pyplot as plt
-		secondWindow = window2()
-		secondWindow.Show()
+		self.new = NewWindow(parent=None, id=-1)
+		self.new.Show()
 		event.Skip()
+
 
 class RedirectText:
 	def __init__(self,aWxTextCtrl):
@@ -897,6 +930,13 @@ class RedirectText:
 	def write(self,string):
 		self.out.WriteText(string)
 
-
 		# redir=RedirectText(self.consolePanel.text)
 		# sys.stdout=redir
+
+
+class NewWindow(wx.Frame):
+
+    def __init__(self,parent,id):
+        wx.Frame.__init__(self, parent, id, 'New Window', size=(1200,800))
+        wx.Frame.CenterOnScreen(self)
+        #self.new.Show(False)
