@@ -269,6 +269,15 @@ class MainFrame ( wx.Frame ):
 		self.jet = wx.MenuItem( self.cmOptions, wx.ID_ANY, u"Jet", wx.EmptyString, wx.ITEM_RADIO )
 		self.cmOptions.Append( self.jet )
 
+		self.coolwarm = wx.MenuItem( self.cmOptions, wx.ID_ANY, u"CoolWarm", wx.EmptyString, wx.ITEM_RADIO )
+		self.cmOptions.Append( self.coolwarm )
+
+		self.seismic = wx.MenuItem( self.cmOptions, wx.ID_ANY, u"Seismic", wx.EmptyString, wx.ITEM_RADIO )
+		self.cmOptions.Append( self.seismic )
+
+		self.viridis = wx.MenuItem( self.cmOptions, wx.ID_ANY, u"Viridis", wx.EmptyString, wx.ITEM_RADIO )
+		self.cmOptions.Append( self.viridis )
+
 		self.magma = wx.MenuItem( self.cmOptions, wx.ID_ANY, u"Magma", wx.EmptyString, wx.ITEM_RADIO )
 		self.cmOptions.Append( self.magma )
 		
@@ -322,6 +331,7 @@ class MainFrame ( wx.Frame ):
 		self.m_button3.Bind( wx.EVT_BUTTON, self.call_scheme )
 		self.gridButton.Bind( wx.EVT_BUTTON, self.call_grid )
 		self.initButton.Bind( wx.EVT_BUTTON, self.call_init )
+
 		self.Bind( wx.EVT_MENU, self.gas_change, id = self.air.GetId() )
 		self.Bind( wx.EVT_MENU, self.thermalgas_change, id = self.thermalgas.GetId() )
 		self.Bind( wx.EVT_MENU, self.infoWindow, id = self.gasinfo.GetId() )
@@ -333,22 +343,25 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.cont_change, id = self.stagp.GetId() )
 		self.Bind( wx.EVT_MENU, self.cont_change, id = self.temp.GetId() )
 		self.Bind( wx.EVT_MENU, self.cont_change, id = self.stagtemp.GetId() )
-		self.Bind( wx.EVT_MENU, self.coarse_change, id = self.coarse.GetId() )
-		self.Bind( wx.EVT_MENU, self.medium_change, id = self.medium.GetId() )
-		self.Bind( wx.EVT_MENU, self.fine_change, id = self.fine.GetId() )
+		self.Bind( wx.EVT_MENU, self.contlevel_change, id = self.coarse.GetId() )
+		self.Bind( wx.EVT_MENU, self.contlevel_change, id = self.medium.GetId() )
+		self.Bind( wx.EVT_MENU, self.contlevel_change, id = self.fine.GetId() )
 		self.Bind( wx.EVT_MENU, self.label_change, id = self.label.GetId() )
 		self.Bind( wx.EVT_MENU, self.gradient_change, id = self.gradient.GetId() )
 		self.Bind( wx.EVT_MENU, self.cm_change, id = self.jet.GetId() )
+		self.Bind( wx.EVT_MENU, self.cm_change, id = self.coolwarm.GetId() )
+		self.Bind( wx.EVT_MENU, self.cm_change, id = self.seismic.GetId() )
+		self.Bind( wx.EVT_MENU, self.cm_change, id = self.viridis.GetId() )
 		self.Bind( wx.EVT_MENU, self.cm_change, id = self.magma.GetId() )
 		self.Bind( wx.EVT_MENU, self.cm_change, id = self.gray.GetId() )
-		self.Bind( wx.EVT_MENU, self.metric1_change, id = self.metric1.GetId())
-		self.Bind( wx.EVT_MENU, self.metric2_change, id = self.metric2.GetId())
-		self.Bind( wx.EVT_MENU, self.imperial1_change, id = self.imperial1.GetId())
-		self.Bind( wx.EVT_MENU, self.imperial2_change, id = self.imperial2.GetId())
+		self.Bind( wx.EVT_MENU, self.unit_change, id = self.metric1.GetId())
+		self.Bind( wx.EVT_MENU, self.unit_change, id = self.metric2.GetId())
+		self.Bind( wx.EVT_MENU, self.unit_change, id = self.imperial1.GetId())
+		self.Bind( wx.EVT_MENU, self.unit_change, id = self.imperial2.GetId())
 		self.Bind( wx.EVT_MENU, self.expandWindow, id = self.expandCont.GetId() )
-		self.Bind( wx.EVT_MENU, self.equal_change, id = self.equal.GetId() )
-		self.Bind( wx.EVT_MENU, self.tight_change, id = self.tight.GetId() )
-		self.Bind( wx.EVT_MENU, self.auto_change, id = self.auto.GetId() )
+		self.Bind( wx.EVT_MENU, self.axis_change, id = self.equal.GetId() )
+		self.Bind( wx.EVT_MENU, self.axis_change, id = self.tight.GetId() )
+		self.Bind( wx.EVT_MENU, self.axis_change, id = self.auto.GetId() )
 
 
 		# initialize grid values and class attributes
@@ -383,7 +396,6 @@ class MainFrame ( wx.Frame ):
 		self.gradient = ''
 		self.gasSelect = 'Air'
 		self.thermoModel = 'cpg'
-
 
 
 	def __del__( self ):
@@ -720,7 +732,6 @@ class MainFrame ( wx.Frame ):
 
 
 	# menubar events
-
 	def cont_change( self, event ):
 		if self.mach.IsChecked():
 			self.contQuantity = 'Mach'
@@ -751,13 +762,19 @@ class MainFrame ( wx.Frame ):
 			self.cmOption = cm.magma
 		elif self.gray.IsChecked():
 			self.cmOption = cm.gray
+		elif self.viridis.IsChecked():
+			self.cmOption = cm.viridis
+		elif self.coolwarm.IsChecked():
+			self.cmOption = cm.coolwarm
+		elif self.seismic.IsChecked():
+			self.cmOption = cm.seismic
 
 		if hasattr(self, 'state'):
 			self.call_contplot(self.contourPanel)
 		event.Skip()
 
-	def metric1_change( self, event ):
-		class units:
+	def unit_change( self, event ):
+		class metric1:
 			mass = 'kg'
 			def conv_mass(m):
 				conv = m
@@ -778,12 +795,7 @@ class MainFrame ( wx.Frame ):
 			def conv_press(p):
 				conv = p / 1000
 				return conv
-		self.units = units
-		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
-
-	def metric2_change( self, event ):
-		class units:
+		class metric2:
 			mass = 'kg'
 			def conv_mass(m):
 				conv = m
@@ -804,12 +816,7 @@ class MainFrame ( wx.Frame ):
 			def conv_press(p):
 				conv = p / 1000
 				return conv
-		self.units = units
-		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
-
-	def imperial1_change( self, event ):
-		class units:
+		class imp1:
 			mass = 'lbm'
 			def conv_mass(m):
 				conv = m * 2.20462
@@ -830,12 +837,7 @@ class MainFrame ( wx.Frame ):
 			def conv_press(p):
 				conv = p * 0.000145038
 				return conv
-		self.units = units
-		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
-
-	def imperial2_change( self, event ):
-		class units:
+		class imp2:
 			mass = 'slug'
 			def conv_mass(m):
 				conv = m * 0.0685218
@@ -856,42 +858,38 @@ class MainFrame ( wx.Frame ):
 			def conv_press(p):
 				conv = p * 0.02088545226628
 				return conv
-		self.units = units
+
+		if self.metric1.IsChecked():
+			self.units = metric1
+		elif self.metric2.IsChecked():
+			self.units = metric2
+		elif self.imperial1.IsChecked():
+			self.units = imp1
+		elif self.imperial2.IsChecked():
+			self.units = imp2
+
 		if hasattr(self, 'state'):
 			self.call_contplot(self.contourPanel)
 
-	def equal_change( self, event ):
-		self.axisOption = 'equal'
-		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
-		event.Skip()
-	
-	def tight_change( self, event ):
-		self.axisOption = 'tight'
-		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
-		event.Skip()
-	
-	def auto_change( self, event ):
-		self.axisOption = 'auto'
+	def axis_change( self, event ):
+		if self.equal.IsChecked():
+			self.axisOption = 'equal'
+		elif self.tight.IsChecked():
+			self.axisOption = 'tight'
+		elif self.auto.IsChecked():
+			self.axisOption = 'auto'
 		if hasattr(self, 'state'):
 			self.call_contplot(self.contourPanel)
 		event.Skip()
 
-	def coarse_change( self, event ):
-		self.contGrad = 8
-		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
-		event.Skip()
-	
-	def medium_change( self, event ):
-		self.contGrad = 64
-		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
-		event.Skip()
-	
-	def fine_change( self, event ):
-		self.contGrad = 512
+	def contlevel_change( self, event ):
+		if self.coarse.IsChecked():
+			self.contGrad = 8
+		elif self.medium.IsChecked():
+			self.contGrad = 64
+		elif self.fine.IsChecked():
+			self.contGrad = 512
+
 		if hasattr(self, 'state'):
 			self.call_contplot(self.contourPanel)
 		event.Skip()
