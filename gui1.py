@@ -199,18 +199,18 @@ class MainFrame ( wx.Frame ):
 
 		self.gasOptions = wx.Menu()
 		self.air = wx.MenuItem( self.gasOptions, 101, u"Air", wx.EmptyString, wx.ITEM_RADIO )
-		self.gasOptions.AppendItem( self.air )
+		self.gasOptions.Append( self.air )
 
 		self.C02 = wx.MenuItem( self.gasOptions, 102, u"Carbon Dioxide", wx.EmptyString, wx.ITEM_RADIO )
-		self.gasOptions.AppendItem( self.C02 )
+		self.gasOptions.Append( self.C02 )
 
 		self.H2 = wx.MenuItem( self.gasOptions, 103, u"Hydrogen", wx.EmptyString, wx.ITEM_RADIO )
-		self.gasOptions.AppendItem( self.H2 )
+		self.gasOptions.Append( self.H2 )
 		
 		self.gasOptions.AppendSeparator()
 		
 		self.thermalgas = wx.MenuItem( self.gasOptions, wx.ID_ANY, u"Thermally Perfect", wx.EmptyString, wx.ITEM_CHECK )
-		self.gasOptions.AppendItem( self.thermalgas )
+		self.gasOptions.Append( self.thermalgas )
 		
 		self.menuBar.Append( self.gasOptions, u"Gas" ) 
 		
@@ -976,6 +976,7 @@ class MainFrame ( wx.Frame ):
 		self.new.Show()
 		event.Skip()
 
+	# open informational window for gases
 
 class RedirectText:
 	def __init__(self,aWxTextCtrl):
@@ -993,7 +994,7 @@ class NewWindow(wx.Frame):
 		import matplotlib.pyplot as plt
 		import numpy as np
 		wx.Frame.__init__( self, parent, title = 'Fullscreen Contour Plot',\
-						   size = wx.Size( 1020,800 ), style=wx.DEFAULT_FRAME_STYLE )
+						   size = wx.Size( 1020,720 ), style=wx.DEFAULT_FRAME_STYLE )
 
 		self.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
 
@@ -1003,5 +1004,5 @@ class NewWindow(wx.Frame):
 		self.contourPanel.figure = plt.figure( dpi=100, figsize=(10, 10/1.4473))
 		self.contourPanel.cax = self.contourPanel.figure.gca()
 		self.contourPanel.cax.set_facecolor((0.4, 0.4, 0.4))
-		self.contourPanel.cax.set_position([0.15, 0.2, 0.84, 0.82])
+		self.contourPanel.cax.set_position([0.15, 0.1, 0.8, 0.76])
 
