@@ -198,7 +198,7 @@ class MainFrame ( wx.Frame ):
 		self.menuBar.SetFont( wx.Font( 12, 74, 90, 90, False, "Arial" ) )
 
 		self.gasOptions = wx.Menu()
-		self.air = wx.MenuItem( self.gasOptions, wx.ID_ANY, u"Air", wx.EmptyString, wx.ITEM_RADIO )
+		self.air = wx.MenuItem( self.gasOptions, 101, u"Air", wx.EmptyString, wx.ITEM_RADIO )
 		self.gasOptions.AppendItem( self.air )
 		
 		self.gasOptions.AppendSeparator()
@@ -518,9 +518,11 @@ class MainFrame ( wx.Frame ):
 		self.parameters = parameters
 
 		if self.thermoModel == 'cpg':
-			self.gas = gasdata.air_cpg
+			if self.air.IsChecked() == True:
+				self.gas = gasdata.air_cpg
 		elif self.thermoModel == 'tpg':
-			self.gas = gasdata.air_tpg
+			if self.air.IsChecked() == True:
+				self.gas = gasdata.air_tpg
 		
 		if scheme == 'AUSM':
 			self.state = AUSM( self.domain, self.mesh, self.parameters, self.state, self.gas )
