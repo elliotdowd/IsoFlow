@@ -217,6 +217,26 @@ class MainFrame ( wx.Frame ):
 		self.gasinfo = wx.MenuItem( self.gasOptions, wx.ID_ANY, u"Show More Information", wx.EmptyString, wx.ITEM_NORMAL )
 		self.gasOptions.Append( self.gasinfo )
 		self.menuBar.Append( self.gasOptions, u"Gas" ) 
+
+		self.boundOptions = wx.Menu()
+		self.botwall_invisc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Bottom Wall: Inviscid Wall", wx.EmptyString, wx.ITEM_RADIO )
+		self.boundOptions.AppendItem( self.botwall_invisc )
+		
+		self.botwall_visc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Bottom Wall: Viscous Wall", wx.EmptyString, wx.ITEM_RADIO )
+		self.boundOptions.AppendItem( self.botwall_visc )
+
+		self.boundOptions.AppendSeparator()
+
+		self.topwall_out = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Top Wall: Outflow", wx.EmptyString, wx.ITEM_RADIO )
+		self.boundOptions.AppendItem( self.topwall_out )
+		
+		self.topwall_invisc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Top Wall: Inviscid Wall", wx.EmptyString, wx.ITEM_RADIO )
+		self.boundOptions.AppendItem( self.topwall_invisc )
+		
+		self.topwall_visc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Top Wall: Viscous Wall", wx.EmptyString, wx.ITEM_RADIO )
+		self.boundOptions.AppendItem( self.topwall_visc )
+				
+		self.menuBar.Append( self.boundOptions, u"Boundaries" ) 
 		
 		self.plotOptions = wx.Menu()
 		self.contOptions = wx.Menu()
@@ -335,6 +355,11 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.gas_change, id = self.air.GetId() )
 		self.Bind( wx.EVT_MENU, self.thermalgas_change, id = self.thermalgas.GetId() )
 		self.Bind( wx.EVT_MENU, self.infoWindow, id = self.gasinfo.GetId() )
+		self.Bind( wx.EVT_MENU, self.botwall_change, id = self.botwall_invisc.GetId() )
+		self.Bind( wx.EVT_MENU, self.botwall_change, id = self.botwall_visc.GetId() )
+		self.Bind( wx.EVT_MENU, self.topwall_change, id = self.topwall_out.GetId() )
+		self.Bind( wx.EVT_MENU, self.topwall_change, id = self.topwall_invisc.GetId() )
+		self.Bind( wx.EVT_MENU, self.topwall_change, id = self.topwall_visc.GetId() )
 		self.Bind( wx.EVT_MENU, self.cont_change, id = self.mach.GetId() )
 		self.Bind( wx.EVT_MENU, self.cont_change, id = self.velocity.GetId() )
 		self.Bind( wx.EVT_MENU, self.cont_change, id = self.quiver.GetId() )
@@ -936,6 +961,12 @@ class MainFrame ( wx.Frame ):
 			self.thermoModel = 'cpg'
 		else: 
 			self.thermoModel = 'tpg'
+		event.Skip()
+
+	def botwall_change( self, event ):
+		event.Skip()
+
+	def topwall_change( self, event ):
 		event.Skip()
 
 	# open contour plot in new window
