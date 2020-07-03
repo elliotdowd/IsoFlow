@@ -1717,7 +1717,7 @@
                     <property name="label">Gas</property>
                     <property name="name">gasOptions</property>
                     <property name="permission">protected</property>
-                    <object class="wxMenuItem" expanded="1">
+                    <object class="wxMenuItem" expanded="0">
                         <property name="bitmap"></property>
                         <property name="checked">0</property>
                         <property name="enabled">1</property>
@@ -1732,11 +1732,11 @@
                         <event name="OnMenuSelection">gas_change</event>
                         <event name="OnUpdateUI"></event>
                     </object>
-                    <object class="separator" expanded="1">
+                    <object class="separator" expanded="0">
                         <property name="name">m_separator8</property>
                         <property name="permission">none</property>
                     </object>
-                    <object class="wxMenuItem" expanded="1">
+                    <object class="wxMenuItem" expanded="0">
                         <property name="bitmap"></property>
                         <property name="checked">0</property>
                         <property name="enabled">1</property>
@@ -1751,9 +1751,33 @@
                         <event name="OnMenuSelection">thermalgas_change</event>
                         <event name="OnUpdateUI"></event>
                     </object>
+                    <object class="separator" expanded="1">
+                        <property name="name">m_separator9</property>
+                        <property name="permission">none</property>
+                    </object>
+                    <object class="wxMenuItem" expanded="1">
+                        <property name="bitmap"></property>
+                        <property name="checked">0</property>
+                        <property name="enabled">1</property>
+                        <property name="help"></property>
+                        <property name="id">wxID_ANY</property>
+                        <property name="kind">wxITEM_NORMAL</property>
+                        <property name="label">Show More Information</property>
+                        <property name="name">gasinfo</property>
+                        <property name="permission">none</property>
+                        <property name="shortcut"></property>
+                        <property name="unchecked_bitmap"></property>
+                        <event name="OnMenuSelection">infoWindow</event>
+                        <event name="OnUpdateUI"></event>
+                    </object>
+                </object>
+                <object class="wxMenu" expanded="1">
+                    <property name="label">Boundaries</property>
+                    <property name="name">boundOptions</property>
+                    <property name="permission">protected</property>
                 </object>
                 <object class="wxMenu" expanded="0">
-                    <property name="label">Plot Options</property>
+                    <property name="label">Plotting</property>
                     <property name="name">plotOptions</property>
                     <property name="permission">protected</property>
                     <object class="submenu" expanded="0">

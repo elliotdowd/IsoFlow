@@ -21,7 +21,7 @@ from matplotlib import cm
 class MainFrame ( wx.Frame ):
 	
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( 100,100 ), size = wx.Size( 740,800 ), style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( 100,100 ), size = wx.Size( 740, 686 ), style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER )
 		
 		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 		self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INACTIVEBORDER ) )
@@ -76,7 +76,7 @@ class MainFrame ( wx.Frame ):
 		# console redirecting
 		self.consolePanel.command = wx.TextCtrl(self.consolePanel)
 		self.consolePanel.result = wx.TextCtrl(self.consolePanel, style=wx.TE_MULTILINE)
-		self.consolePanel.text = wx.TextCtrl(self.consolePanel, -1, style=wx.TE_MULTILINE|wx.TE_READONLY, size=(714, 60))
+		self.consolePanel.text = wx.TextCtrl(self.consolePanel, -1, style=wx.TE_MULTILINE|wx.TE_READONLY, size=(714, 50))
 		redir=RedirectText(self.consolePanel.text)
 		sys.stdout=redir
 		
@@ -211,34 +211,38 @@ class MainFrame ( wx.Frame ):
 		
 		self.thermalgas = wx.MenuItem( self.gasOptions, wx.ID_ANY, u"Thermally Perfect", wx.EmptyString, wx.ITEM_CHECK )
 		self.gasOptions.Append( self.thermalgas )
-		
+
+		self.gasOptions.AppendSeparator()
+
+		self.gasinfo = wx.MenuItem( self.gasOptions, wx.ID_ANY, u"Show More Information", wx.EmptyString, wx.ITEM_NORMAL )
+		self.gasOptions.Append( self.gasinfo )
 		self.menuBar.Append( self.gasOptions, u"Gas" ) 
 		
 		self.plotOptions = wx.Menu()
 		self.contOptions = wx.Menu()
-		self.mach_change = wx.MenuItem( self.contOptions, 1, u"Mach Number", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.Append( self.mach_change )
+		self.mach = wx.MenuItem( self.contOptions, 1, u"Mach Number", wx.EmptyString, wx.ITEM_RADIO )
+		self.contOptions.Append( self.mach )
 
-		self.velocity_change = wx.MenuItem( self.contOptions, 2, u"Velocity", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.Append( self.velocity_change )
+		self.velocity = wx.MenuItem( self.contOptions, 2, u"Velocity", wx.EmptyString, wx.ITEM_RADIO )
+		self.contOptions.Append( self.velocity )
 
-		self.quiver_change = wx.MenuItem( self.contOptions, 3, u"Velocity Streamlines", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.Append( self.quiver_change )
+		self.quiver = wx.MenuItem( self.contOptions, 3, u"Velocity Streamlines", wx.EmptyString, wx.ITEM_RADIO )
+		self.contOptions.Append( self.quiver )
 
-		self.rho_change = wx.MenuItem( self.contOptions, 4, u"Density", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.Append( self.rho_change )
+		self.rho = wx.MenuItem( self.contOptions, 4, u"Density", wx.EmptyString, wx.ITEM_RADIO )
+		self.contOptions.Append( self.rho )
 
-		self.pressure_change = wx.MenuItem( self.contOptions, 5, u"Pressure", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.Append( self.pressure_change )
+		self.pressure = wx.MenuItem( self.contOptions, 5, u"Pressure", wx.EmptyString, wx.ITEM_RADIO )
+		self.contOptions.Append( self.pressure )
 		
-		self.stagpressure_change = wx.MenuItem( self.contOptions, 6, u"Stagnation Pressure", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.Append( self.stagpressure_change )
+		self.stagp = wx.MenuItem( self.contOptions, 6, u"Stagnation Pressure", wx.EmptyString, wx.ITEM_RADIO )
+		self.contOptions.Append( self.stagp )
 		
-		self.temp_change = wx.MenuItem( self.contOptions, 7, u"Temperature", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.Append( self.temp_change )
+		self.temp = wx.MenuItem( self.contOptions, 7, u"Temperature", wx.EmptyString, wx.ITEM_RADIO )
+		self.contOptions.Append( self.temp )
 		
-		self.stagtemp_change = wx.MenuItem( self.contOptions, 8, u"Stagnation Temperature", wx.EmptyString, wx.ITEM_RADIO )
-		self.contOptions.Append( self.stagtemp_change )
+		self.stagtemp = wx.MenuItem( self.contOptions, 8, u"Stagnation Temperature", wx.EmptyString, wx.ITEM_RADIO )
+		self.contOptions.Append( self.stagtemp )
 
 		self.contOptions.AppendSeparator()
 
@@ -320,22 +324,23 @@ class MainFrame ( wx.Frame ):
 		self.initButton.Bind( wx.EVT_BUTTON, self.call_init )
 		self.Bind( wx.EVT_MENU, self.gas_change, id = self.air.GetId() )
 		self.Bind( wx.EVT_MENU, self.thermalgas_change, id = self.thermalgas.GetId() )
-		self.Bind( wx.EVT_MENU, self.mach, id = self.mach_change.GetId() )
-		self.Bind( wx.EVT_MENU, self.velocity, id = self.velocity_change.GetId() )
-		self.Bind( wx.EVT_MENU, self.quiver, id = self.quiver_change.GetId() )
-		self.Bind( wx.EVT_MENU, self.rho, id = self.rho_change.GetId() )
-		self.Bind( wx.EVT_MENU, self.pressure, id = self.pressure_change.GetId() )
-		self.Bind( wx.EVT_MENU, self.stagp, id = self.stagpressure_change.GetId() )
-		self.Bind( wx.EVT_MENU, self.temp, id = self.temp_change.GetId() )
-		self.Bind( wx.EVT_MENU, self.stagtemp, id = self.stagtemp_change.GetId() )
+		self.Bind( wx.EVT_MENU, self.infoWindow, id = self.gasinfo.GetId() )
+		self.Bind( wx.EVT_MENU, self.cont_change, id = self.mach.GetId() )
+		self.Bind( wx.EVT_MENU, self.cont_change, id = self.velocity.GetId() )
+		self.Bind( wx.EVT_MENU, self.cont_change, id = self.quiver.GetId() )
+		self.Bind( wx.EVT_MENU, self.cont_change, id = self.rho.GetId() )
+		self.Bind( wx.EVT_MENU, self.cont_change, id = self.pressure.GetId() )
+		self.Bind( wx.EVT_MENU, self.cont_change, id = self.stagp.GetId() )
+		self.Bind( wx.EVT_MENU, self.cont_change, id = self.temp.GetId() )
+		self.Bind( wx.EVT_MENU, self.cont_change, id = self.stagtemp.GetId() )
 		self.Bind( wx.EVT_MENU, self.coarse_change, id = self.coarse.GetId() )
 		self.Bind( wx.EVT_MENU, self.medium_change, id = self.medium.GetId() )
 		self.Bind( wx.EVT_MENU, self.fine_change, id = self.fine.GetId() )
 		self.Bind( wx.EVT_MENU, self.label_change, id = self.label.GetId() )
 		self.Bind( wx.EVT_MENU, self.gradient_change, id = self.gradient.GetId() )
-		self.Bind( wx.EVT_MENU, self.jet_change, id = self.jet.GetId() )
-		self.Bind( wx.EVT_MENU, self.magma_change, id = self.magma.GetId() )
-		self.Bind( wx.EVT_MENU, self.gray_change, id = self.gray.GetId() )
+		self.Bind( wx.EVT_MENU, self.cm_change, id = self.jet.GetId() )
+		self.Bind( wx.EVT_MENU, self.cm_change, id = self.magma.GetId() )
+		self.Bind( wx.EVT_MENU, self.cm_change, id = self.gray.GetId() )
 		self.Bind( wx.EVT_MENU, self.metric1_change, id = self.metric1.GetId())
 		self.Bind( wx.EVT_MENU, self.metric2_change, id = self.metric2.GetId())
 		self.Bind( wx.EVT_MENU, self.imperial1_change, id = self.imperial1.GetId())
@@ -715,71 +720,38 @@ class MainFrame ( wx.Frame ):
 
 
 	# menubar events
-	def mach( self, event ):
-		self.contQuantity = 'Mach'
+
+	def cont_change( self, event ):
+		if self.mach.IsChecked():
+			self.contQuantity = 'Mach'
+		elif self.velocity.IsChecked():
+			self.contQuantity = 'Velocity'
+		elif self.quiver.IsChecked():
+			self.contQuantity = 'Velocity Quiver'
+		elif self.rho.IsChecked():
+			self.contQuantity = 'Density'
+		elif self.pressure.IsChecked():
+			self.contQuantity = 'Pressure'
+		elif self.stagp.IsChecked():
+			self.contQuantity = 'Stagnation Pressure'
+		elif self.temp.IsChecked():
+			self.contQuantity = 'Temperature'
+		elif self.stagtemp.IsChecked():
+			self.contQuantity = 'Stagnation Temperature'
+
 		if hasattr(self, 'state'):
 			self.call_contplot(self.contourPanel)
 		event.Skip()
 
-	def velocity( self, event ):
-		self.contQuantity = 'Velocity'
-		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
-		event.Skip()
-
-	def quiver( self, event ):
-		self.contQuantity = 'Velocity Quiver'
-		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
-		event.Skip()
-	
-	def rho( self, event ):
-		self.contQuantity = 'Density'
-		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
-		event.Skip()
-
-	def pressure( self, event ):
-		self.contQuantity = 'Pressure'
-		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
-		event.Skip()
-	
-	def stagp( self, event ):
-		self.contQuantity = 'Stagnation Pressure'
-		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
-		event.Skip()
-
-	def temp( self, event ):
-		self.contQuantity = 'Temperature'
-		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
-		event.Skip()
-	
-	def stagtemp( self, event ):
-		self.contQuantity = 'Stagnation Temperature'
-		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
-		event.Skip()
-
-	def jet_change( self, event ):
+	def cm_change( self, event ):
 		from matplotlib import cm
-		self.cmOption = cm.jet
-		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
-		event.Skip()
+		if self.jet.IsChecked():
+			self.cmOption = cm.jet
+		elif self.magma.IsChecked():
+			self.cmOption = cm.magma
+		elif self.gray.IsChecked():
+			self.cmOption = cm.gray
 
-	def magma_change( self, event ):
-		from matplotlib import cm
-		self.cmOption = cm.magma
-		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
-		event.Skip()
-
-	def gray_change( self, event ):
-		from matplotlib import cm
-		self.cmOption = cm.gray
 		if hasattr(self, 'state'):
 			self.call_contplot(self.contourPanel)
 		event.Skip()
@@ -970,13 +942,45 @@ class MainFrame ( wx.Frame ):
 
 	# open contour plot in new window
 	def expandWindow( self, event ):
-		#import matplotlib.pyplot as plt
 		self.new = NewWindow(parent=None)
 		self.call_contplot(self.new.contourPanel)
 		self.new.Show()
 		event.Skip()
 
 	# open informational window for gases
+	def infoWindow( self, event ):
+		self.new = self.tableWindow(  parent=self )
+		self.new.Show()
+		# create window class
+
+
+	class tableWindow(wx.Frame):
+		def __init__(self, parent):
+			wx.Frame.__init__( self, parent, title = 'Fullscreen Contour Plot',\
+							size = wx.Size( 360,240 ), style=wx.DEFAULT_FRAME_STYLE )
+			#self.SetBackgroundColor( wx.Colour( 256, 256, 256 ) )
+			import gui1
+
+			# Gas information grid
+			self.gasGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
+			self.gasGrid.CreateGrid( 4, 1 )
+			self.gasGrid.SetRowLabelSize( 120 )
+			self.gasGrid.SetColLabelSize( 0 )
+			self.gasGrid.SetRowLabelValue( 0, u"Temperature " + '(' + parent.units.temp + ')' )
+			self.gasGrid.SetRowLabelValue( 1, u"Specific Heat Ratio" )
+			self.gasGrid.SetRowLabelValue( 2, u"Cp" )
+			self.gasGrid.SetRowLabelValue( 3, u"Cv" )
+
+			# set values
+			self.gasGrid.SetCellValue( 0, 0, "300")
+			self.gasGrid.SetCellValue( 1, 0, "1000")
+			self.gasGrid.SetCellValue( 2, 0, "-6")
+
+			self.gasGrid.EnableEditing( True )
+			self.gasGrid.EnableGridLines( True )
+			self.gasGrid.EnableDragGridSize( False )
+			self.gasGrid.SetMargins( 0, 0 )
+
 
 class RedirectText:
 	def __init__(self,aWxTextCtrl):
@@ -994,15 +998,16 @@ class NewWindow(wx.Frame):
 		import matplotlib.pyplot as plt
 		import numpy as np
 		wx.Frame.__init__( self, parent, title = 'Fullscreen Contour Plot',\
-						   size = wx.Size( 1020,720 ), style=wx.DEFAULT_FRAME_STYLE )
-
+						   size = wx.Size( 900,640 ), style=wx.DEFAULT_FRAME_STYLE )
 		self.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
 
 		self.contourPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.contourPanel.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
 
-		self.contourPanel.figure = plt.figure( dpi=100, figsize=(10, 10/1.4473))
+		self.contourPanel.figure = plt.figure( dpi=100, figsize=(9, 9/1.4473))
 		self.contourPanel.cax = self.contourPanel.figure.gca()
 		self.contourPanel.cax.set_facecolor((0.4, 0.4, 0.4))
-		self.contourPanel.cax.set_position([0.15, 0.1, 0.8, 0.76])
+		self.contourPanel.cax.set_position([0.15, 0.1, 0.8, 0.72])
+
+
 
