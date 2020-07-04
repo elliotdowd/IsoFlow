@@ -67,7 +67,7 @@ class MainFrame ( wx.Frame ):
 		
 		self.contourPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.contourPanel.SetBackgroundColour( wx.Colour( 222, 222, 222 ) )
-		MainSizer.Add( self.contourPanel, wx.GBPosition( 1, 2 ), wx.GBSpan( 8, 54 ), wx.ALL|wx.EXPAND, 5 )
+		MainSizer.Add( self.contourPanel, wx.GBPosition( 1, 2 ), wx.GBSpan( 9, 54 ), wx.ALL|wx.EXPAND, 5 )
 		
 		self.consolePanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.consolePanel.SetBackgroundColour( wx.Colour( 222, 222, 222 ) )
@@ -220,21 +220,21 @@ class MainFrame ( wx.Frame ):
 
 		self.boundOptions = wx.Menu()
 		self.botwall_invisc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Bottom Wall: Inviscid Wall", wx.EmptyString, wx.ITEM_RADIO )
-		self.boundOptions.AppendItem( self.botwall_invisc )
+		self.boundOptions.Append( self.botwall_invisc )
 		
 		self.botwall_visc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Bottom Wall: Viscous Wall", wx.EmptyString, wx.ITEM_RADIO )
-		self.boundOptions.AppendItem( self.botwall_visc )
+		self.boundOptions.Append( self.botwall_visc )
 
 		self.boundOptions.AppendSeparator()
 
 		self.topwall_out = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Top Wall: Outflow", wx.EmptyString, wx.ITEM_RADIO )
-		self.boundOptions.AppendItem( self.topwall_out )
+		self.boundOptions.Append( self.topwall_out )
 		
 		self.topwall_invisc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Top Wall: Inviscid Wall", wx.EmptyString, wx.ITEM_RADIO )
-		self.boundOptions.AppendItem( self.topwall_invisc )
+		self.boundOptions.Append( self.topwall_invisc )
 		
 		self.topwall_visc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Top Wall: Viscous Wall", wx.EmptyString, wx.ITEM_RADIO )
-		self.boundOptions.AppendItem( self.topwall_visc )
+		self.boundOptions.Append( self.topwall_visc )
 				
 		self.menuBar.Append( self.boundOptions, u"Boundaries" ) 
 		
@@ -527,6 +527,17 @@ class MainFrame ( wx.Frame ):
 			iterations = int(wx.grid.Grid.GetCellValue(self.simGrid, 1, 0))
 			tolerance = float(wx.grid.Grid.GetCellValue(self.simGrid, 2, 0))
 			CFL = float(wx.grid.Grid.GetCellValue(self.simGrid, 0, 0))
+			if self.topwall_out.IsChecked():
+				topwall = 'Outflow'
+			elif self.topwall_visc.IsChecked():
+				topwall = 'Viscous Wall'
+			elif self.topwall_invisc.IsChecked():
+				topwall = 'Inviscid Wall'
+			
+			if self.botwall_visc.IsChecked():
+				botwall = 'Viscous Wall'
+			elif self.botwall_invisc.IsChecked():
+				botwall = 'Inviscid Wall'
 
 		self.parameters = parameters
 		self.gas = gasdata.air_tpg
@@ -562,6 +573,17 @@ class MainFrame ( wx.Frame ):
 			iterations = int(wx.grid.Grid.GetCellValue(self.simGrid, 1, 0))
 			tolerance = float(wx.grid.Grid.GetCellValue(self.simGrid, 2, 0))
 			CFL = float(wx.grid.Grid.GetCellValue(self.simGrid, 0, 0))
+			if self.topwall_out.IsChecked():
+				topwall = 'Outflow'
+			elif self.topwall_visc.IsChecked():
+				topwall = 'Viscous Wall'
+			elif self.topwall_invisc.IsChecked():
+				topwall = 'Inviscid Wall'
+			
+			if self.botwall_visc.IsChecked():
+				botwall = 'Viscous Wall'
+			elif self.botwall_invisc.IsChecked():
+				botwall = 'Inviscid Wall'
 
 		self.parameters = parameters
 
@@ -599,15 +621,24 @@ class MainFrame ( wx.Frame ):
 		import matplotlib.pyplot as plt
 		from matplotlib import cm
 		import matplotlib as mpl
+		import matplotlib.pyplot as plt
 		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 
 		# panel input as self.contourPanel
 
+		# change aspect ratio if possible
+		r = (1.5/1.3) / (self.domain.length / self.domain.height)
+
 		# post processing
-		panel.figure.clf()
+		plt.close(fig=panel.figure)
+		panel.figure = plt.figure( dpi=100, figsize=(5.6, 3.8*r), facecolor=(242/256,242/256,242/256) )
+
 		panel.cax = panel.figure.gca()
 		panel.cax.set_facecolor((0.4, 0.4, 0.4))
-		panel.cax.set_position([0.12, 0.2, 0.84, 0.82])
+		panel.cax.set_position([0.12, 0.2, 0.84, 0.82], which='both')
+		#panel.cax.set_aspect(panel.cax, aspect='auto', adjustable='box', anchor='C')
+		panel.cax.set_xlim([np.min(self.mesh.xx), np.max(self.mesh.xx)])
+		panel.cax.set_ylim([np.min(self.mesh.yy), np.max(self.mesh.yy)])
 
 		contQuantity = self.contQuantity + ' ' + self.gradient
 		cl = self.units.conv_length(1)
@@ -727,7 +758,7 @@ class MainFrame ( wx.Frame ):
 					self.contourPanel.cax.clabel(cont, fmt='%2.3f', colors='w', fontsize=8)
 
 		# plot settings
-		panel.cax.xaxis.tick_bottom()
+		#panel.cax.xaxis.tick_bottom()
 		panel.cax.set_xlabel('x-coordinate' + ' (' + self.units.length + ')')
 		panel.cax.set_ylabel('y-coordinate' + ' (' + self.units.length + ')')
 		panel.cax.axis(self.axisOption)

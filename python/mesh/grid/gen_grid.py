@@ -23,7 +23,7 @@ def mesh_wedge(domain):
     meshing.mod2wedge(xx, yy, height, theta, wedge_start, M, N)
 
     yy = np.fliplr(yy)
-    yy[:,-1] = height*(1+(1/(N)))
+    #yy[:,-1] = height*(1+(1/(N)))
 
     return xx, yy
 
