@@ -498,13 +498,12 @@ class MainFrame ( wx.Frame ):
 
 		# plot settings
 		if self.topwall_out.IsChecked():
-			self.contourPanel.cax.set(xlim=[np.min(self.mesh.xx[1:-1,1:-1]), np.max(self.mesh.xx[1:-1,1:-1])], \
-					  	  			  ylim=[np.min(self.mesh.yy[1:-1,1:-1]), np.max(self.mesh.yy[1:-1,1:-1])])
+			self.contourPanel.cax.set(xlim=[np.min(self.mesh.xx) * cl, np.max(self.mesh.xx) * cl], \
+					  	  			  ylim=[np.min(self.mesh.yy) * cl, np.max(self.mesh.yy) * cl])
 		else:
-			self.contourPanel.cax.set(xlim=[np.min(self.mesh.xx[1:-1,1:-1]), np.max(self.mesh.xx[1:-1,1:-1])], \
-					  	  			  ylim=[np.min(self.mesh.yy[1:-1,1:-2]), np.max(self.mesh.yy[1:-1,1:-2])])
+			self.contourPanel.cax.set(xlim=[np.min(self.mesh.xx) * cl, np.max(self.mesh.xx) * cl], \
+					  	  			  ylim=[np.min(self.mesh.yy[:,0:-1]) * cl, np.max(self.mesh.yy[:,0:-1]) * cl])
 
-		#self.contourPanel.cax.xaxis.tick_bottom()
 		self.contourPanel.cax.set_xlabel('x-coordinate ' + '(' + self.units.length + ')')
 		self.contourPanel.cax.set_ylabel('y-coordinate ' + '(' + self.units.length + ')')
 		self.contourPanel.cax.set_aspect(self.axisOption, adjustable='box', anchor='C')
@@ -778,11 +777,11 @@ class MainFrame ( wx.Frame ):
 
 		# plot settings
 		if self.topwall_out.IsChecked():
-			panel.cax.set(xlim=[np.min(self.mesh.xxc[1:-1,1:-1]), np.max(self.mesh.xxc[1:-1,1:-1])], \
-					  	  ylim=[np.min(self.mesh.yyc[1:-1,1:-1]), np.max(self.mesh.yyc[1:-1,1:-1])])
+			panel.cax.set(xlim=[np.min(self.mesh.xxc[1:-1,1:-1]) * cl, np.max(self.mesh.xxc[1:-1,1:-1]) * cl], \
+					  	  ylim=[np.min(self.mesh.yyc[1:-1,1:-1]) * cl, np.max(self.mesh.yyc[1:-1,1:-1]) * cl])
 		else:
-			panel.cax.set(xlim=[np.min(self.mesh.xxc[1:-1,1:-1]), np.max(self.mesh.xxc[1:-1,1:-1])], \
-					  	  ylim=[np.min(self.mesh.yyc[1:-1,1:-2]), np.max(self.mesh.yyc[1:-1,1:-2])])
+			panel.cax.set(xlim=[np.min(self.mesh.xxc[1:-1,1:-1]) * cl, np.max(self.mesh.xxc[1:-1,1:-1]) * cl], \
+					  	  ylim=[np.min(self.mesh.yyc[1:-1,1:-2]) * cl, np.max(self.mesh.yyc[1:-1,1:-2]) * cl])
 
 		panel.cax.set_aspect(self.axisOption, adjustable='box', anchor='C')
 
