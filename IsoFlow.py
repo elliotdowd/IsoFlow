@@ -23,7 +23,7 @@ frame.Show(True)
 frame.contourPanel.figure = plt.figure( dpi=100, figsize=(5.5, 3.8), facecolor=(222/256,222/256,222/256) )
 frame.contourPanel.cax = frame.contourPanel.figure.gca()
 
-frame.iterPanel.figure = plt.figure( dpi=100, figsize=(5, 1), facecolor=(222/256,222/256,222/256) )
+frame.iterPanel.figure = plt.figure( dpi=100, figsize=(5, 1.2), facecolor=(222/256,222/256,222/256) )
 frame.iterPanel.iax = frame.iterPanel.figure.gca()
 
 

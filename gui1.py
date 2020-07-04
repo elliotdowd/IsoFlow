@@ -67,7 +67,7 @@ class MainFrame ( wx.Frame ):
 		
 		self.contourPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.contourPanel.SetBackgroundColour( wx.Colour( 222, 222, 222 ) )
-		MainSizer.Add( self.contourPanel, wx.GBPosition( 1, 2 ), wx.GBSpan( 9, 54 ), wx.ALL|wx.EXPAND, 5 )
+		MainSizer.Add( self.contourPanel, wx.GBPosition( 0, 2 ), wx.GBSpan( 10, 54 ), wx.ALL|wx.EXPAND, 5 )
 		
 		self.consolePanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.consolePanel.SetBackgroundColour( wx.Colour( 222, 222, 222 ) )
@@ -453,6 +453,7 @@ class MainFrame ( wx.Frame ):
 		import numpy as np
 		from python.mesh.grid.gen_grid import mesh_wedge, mesh_airfoil
 		from python.mesh.metrics.calc_cell_metrics import cellmetrics
+		import matplotlib.pyplot as plt
 		import matplotlib as mpl
 		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 		from pytictoc import TicToc
@@ -485,9 +486,9 @@ class MainFrame ( wx.Frame ):
 		t.toc('Meshing time:')
 
 		# mesh plotting
-		self.contourPanel.figure.clf()
+		self.contourPanel.figure = plt.figure( dpi=100, figsize=(5.5, 3.9), facecolor=(222/256,222/256,222/256) )
 		self.contourPanel.cax = self.contourPanel.figure.gca()
-		self.contourPanel.cax.set_position([0.1, 0.16, 0.84, 0.82])
+		self.contourPanel.cax.set_position([0.08, 0.11, 0.84, 0.78])
 
 		#mpl.axes.Axes.clear(self.contourPanel.cax)
 		self.contourPanel.cax.plot(self.mesh.xx * cl, self.mesh.yy * cl, color='blue', linewidth=0.5)
@@ -500,7 +501,7 @@ class MainFrame ( wx.Frame ):
 		#self.contourPanel.cax.xaxis.tick_bottom()
 		self.contourPanel.cax.set_xlabel('x-coordinate ' + '(' + self.units.length + ')')
 		self.contourPanel.cax.set_ylabel('y-coordinate ' + '(' + self.units.length + ')')
-		self.contourPanel.cax.axis(self.axisOption)
+		self.contourPanel.cax.set_aspect(self.axisOption, adjustable='box', anchor='C')
 		self.contourPanel.canvas = FigureCanvas(self.contourPanel, -1, self.contourPanel.figure)
 
 		sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -550,7 +551,7 @@ class MainFrame ( wx.Frame ):
 		print('________________________________________________________________________________________________________________________________________')
 		t.toc('Initialize time:')
 
-		self.call_contplot(self.contourPanel)
+		self.call_contplot(self.contourPanel, 1)
 
 		event.Skip()
 
@@ -610,12 +611,12 @@ class MainFrame ( wx.Frame ):
 			self.state = AUSMDV( self.domain, self.mesh, self.parameters, self.state, self.gas )
 		t.toc('simulation time:')
 
-		self.call_contplot(self.contourPanel)
+		self.call_contplot(self.contourPanel, 1)
 		self.call_resplot()
 
 		event.Skip()
 
-	def call_contplot(self, panel):
+	def call_contplot(self, panel, scale):
 
 		import numpy as np
 		import matplotlib.pyplot as plt
@@ -626,30 +627,35 @@ class MainFrame ( wx.Frame ):
 
 		# panel input as self.contourPanel
 
-		# change aspect ratio if possible
-		r = (1.5/1.3) / (self.domain.length / self.domain.height)
-
 		# post processing
 		plt.close(fig=panel.figure)
-		panel.figure = plt.figure( dpi=100, figsize=(5.6, 3.8*r), facecolor=(242/256,242/256,242/256) )
+		panel.figure = plt.figure( dpi=100, figsize=(scale*5.5, scale*3.9), facecolor=(222/256,222/256,222/256) )
 
 		panel.cax = panel.figure.gca()
 		panel.cax.set_facecolor((0.4, 0.4, 0.4))
 		panel.cax.set_position([0.12, 0.2, 0.84, 0.82], which='both')
-		#panel.cax.set_aspect(panel.cax, aspect='auto', adjustable='box', anchor='C')
-		panel.cax.set_xlim([np.min(self.mesh.xx), np.max(self.mesh.xx)])
-		panel.cax.set_ylim([np.min(self.mesh.yy), np.max(self.mesh.yy)])
-
+		
 		contQuantity = self.contQuantity + ' ' + self.gradient
 		cl = self.units.conv_length(1)
+
+		def colorbar(mappable):
+			from mpl_toolkits.axes_grid1 import make_axes_locatable
+			import matplotlib.pyplot as plt
+			last_axes = plt.gca()
+			ax = mappable.axes
+			fig = ax.figure
+			divider = make_axes_locatable(ax)
+			cbax = divider.append_axes("right", size="5%", pad=0.05)
+			cbar = fig.colorbar(mappable, cax=cbax)
+			plt.sca(last_axes)
+			return cbar
 
 		if contQuantity == 'Mach ':
 			cont = panel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 							    		      	  self.state.Mach[0:-1,1:-1], self.contGrad, cmap=self.cmOption)
 			# colorbar settings
 			ticks = np.linspace(round(np.min(self.state.Mach),2), round(np.max(self.state.Mach),2), 6)
-			CB = panel.figure.colorbar(cont, ticks=ticks, \
-												shrink=0.8, extend='both', ax=panel.cax)
+			CB = panel.figure.colorbar(cont)
 			CB.set_label(contQuantity, rotation=90)
 		elif contQuantity == 'Velocity ':
 			velocity = (cl/self.units.conv_time(1)) * self.state.vel[0:-1,1:-1]
@@ -758,10 +764,17 @@ class MainFrame ( wx.Frame ):
 					self.contourPanel.cax.clabel(cont, fmt='%2.3f', colors='w', fontsize=8)
 
 		# plot settings
-		#panel.cax.xaxis.tick_bottom()
+		if self.topwall_out.IsChecked():
+			panel.cax.set(xlim=[np.min(self.mesh.xxc[1:-1,1:-1]), np.max(self.mesh.xxc[1:-1,1:-1])], \
+					  	  ylim=[np.min(self.mesh.yyc[1:-1,1:-1]), np.max(self.mesh.yyc[1:-1,1:-1])])
+		else:
+			panel.cax.set(xlim=[np.min(self.mesh.xxc[1:-1,1:-1]), np.max(self.mesh.xxc[1:-1,1:-1])], \
+					  	  ylim=[np.min(self.mesh.yyc[1:-1,1:-2]), np.max(self.mesh.yyc[1:-1,1:-2])])
+
+		panel.cax.set_aspect(self.axisOption, adjustable='box', anchor='C')
+
 		panel.cax.set_xlabel('x-coordinate' + ' (' + self.units.length + ')')
 		panel.cax.set_ylabel('y-coordinate' + ' (' + self.units.length + ')')
-		panel.cax.axis(self.axisOption)
 		panel.canvas = FigureCanvas(panel, -1, panel.figure)
 
 	def call_resplot(self):
@@ -807,7 +820,7 @@ class MainFrame ( wx.Frame ):
 			self.contQuantity = 'Stagnation Temperature'
 
 		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
+			self.call_contplot(self.contourPanel, 1)
 		event.Skip()
 
 	def cm_change( self, event ):
@@ -826,7 +839,7 @@ class MainFrame ( wx.Frame ):
 			self.cmOption = cm.seismic
 
 		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
+			self.call_contplot(self.contourPanel, 1)
 		event.Skip()
 
 	def unit_change( self, event ):
@@ -925,7 +938,7 @@ class MainFrame ( wx.Frame ):
 			self.units = imp2
 
 		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
+			self.call_contplot(self.contourPanel, 1)
 
 	def axis_change( self, event ):
 		if self.equal.IsChecked():
@@ -947,7 +960,7 @@ class MainFrame ( wx.Frame ):
 			self.contGrad = 512
 
 		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
+			self.call_contplot(self.contourPanel, 1)
 		event.Skip()
 
 	def label_change( self, event ):
@@ -956,7 +969,7 @@ class MainFrame ( wx.Frame ):
 		else:
 			self.labeled = False
 		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
+			self.call_contplot(self.contourPanel, 1)
 		event.Skip()
 
 	def gradient_change( self, event ):
@@ -981,7 +994,7 @@ class MainFrame ( wx.Frame ):
 			wx.MenuBar.Enable(self.menuBar, 8, False)
 
 		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
+			self.call_contplot(self.contourPanel, 1)
 		event.Skip()
 
 	def gas_change( self, event ):
@@ -1003,7 +1016,7 @@ class MainFrame ( wx.Frame ):
 	# open contour plot in new window
 	def expandWindow( self, event ):
 		self.new = NewWindow(parent=None)
-		self.call_contplot(self.new.contourPanel)
+		self.call_contplot(self.new.contourPanel, 1.6)
 		self.new.Show()
 		event.Skip()
 
@@ -1058,7 +1071,7 @@ class NewWindow(wx.Frame):
 		import matplotlib.pyplot as plt
 		import numpy as np
 		wx.Frame.__init__( self, parent, title = 'Fullscreen Contour Plot',\
-						   size = wx.Size( 900,640 ), style=wx.DEFAULT_FRAME_STYLE )
+						   size = wx.Size( 880,640 ), style=wx.DEFAULT_FRAME_STYLE )
 		self.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
 
 		self.contourPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
