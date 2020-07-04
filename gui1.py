@@ -486,6 +486,7 @@ class MainFrame ( wx.Frame ):
 		t.toc('Meshing time:')
 
 		# mesh plotting
+		plt.close(fig=self.contourPanel.figure)
 		self.contourPanel.figure = plt.figure( dpi=100, figsize=(5.5, 3.9), facecolor=(222/256,222/256,222/256) )
 		self.contourPanel.cax = self.contourPanel.figure.gca()
 		self.contourPanel.cax.set_position([0.08, 0.11, 0.84, 0.78])
@@ -495,8 +496,13 @@ class MainFrame ( wx.Frame ):
 		self.contourPanel.cax.plot(np.transpose(self.mesh.xx) * cl, np.transpose(self.mesh.yy) * cl, color='blue', linewidth=0.5)
 		self.contourPanel.cax.plot(self.mesh.xxc * cl, self.mesh.yyc * cl, 'gx', markersize=2)
 
-		self.contourPanel.cax.set_xlim([np.min(self.mesh.xx[0,:]), np.max(self.mesh.xx[-1,:])])
-		self.contourPanel.cax.set_ylim([np.min(self.mesh.yy[0,:]), domain.height])
+		# plot settings
+		if self.topwall_out.IsChecked():
+			self.contourPanel.cax.set(xlim=[np.min(self.mesh.xx[1:-1,1:-1]), np.max(self.mesh.xx[1:-1,1:-1])], \
+					  	  			  ylim=[np.min(self.mesh.yy[1:-1,1:-1]), np.max(self.mesh.yy[1:-1,1:-1])])
+		else:
+			self.contourPanel.cax.set(xlim=[np.min(self.mesh.xx[1:-1,1:-1]), np.max(self.mesh.xx[1:-1,1:-1])], \
+					  	  			  ylim=[np.min(self.mesh.yy[1:-1,1:-2]), np.max(self.mesh.yy[1:-1,1:-2])])
 
 		#self.contourPanel.cax.xaxis.tick_bottom()
 		self.contourPanel.cax.set_xlabel('x-coordinate ' + '(' + self.units.length + ')')
@@ -1076,10 +1082,10 @@ class RedirectText:
 class NewWindow(wx.Frame):
 	def __init__(self, parent):
 		import matplotlib.pyplot as plt
-		from matplotlib.backends.backend_gtk3 import (NavigationToolbar2GTK3 as NavigationToolbar)
+		#from matplotlib.backends.backend_gtk3 import (NavigationToolbar2GTK3 as NavigationToolbar)
 		import numpy as np
 		wx.Frame.__init__( self, parent, title = 'Fullscreen Contour Plot',\
-						   size = wx.Size( 880,640 ), style=wx.DEFAULT_FRAME_STYLE )
+						   size = wx.Size( 880,672 ), style=wx.DEFAULT_FRAME_STYLE )
 		self.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
 
 		self.contourPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
