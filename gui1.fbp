@@ -250,8 +250,8 @@
                     <property name="colspan">54</property>
                     <property name="column">2</property>
                     <property name="flag">wxALL|wxEXPAND</property>
-                    <property name="row">1</property>
-                    <property name="rowspan">8</property>
+                    <property name="row">0</property>
+                    <property name="rowspan">10</property>
                     <object class="wxPanel" expanded="0">
                         <property name="BottomDockable">1</property>
                         <property name="LeftDockable">1</property>
@@ -1775,7 +1775,7 @@
                     <property name="label">Boundaries</property>
                     <property name="name">boundOptions</property>
                     <property name="permission">protected</property>
-                    <object class="wxMenuItem" expanded="1">
+                    <object class="wxMenuItem" expanded="0">
                         <property name="bitmap"></property>
                         <property name="checked">0</property>
                         <property name="enabled">1</property>
@@ -1790,7 +1790,7 @@
                         <event name="OnMenuSelection">botwall_change</event>
                         <event name="OnUpdateUI"></event>
                     </object>
-                    <object class="wxMenuItem" expanded="1">
+                    <object class="wxMenuItem" expanded="0">
                         <property name="bitmap"></property>
                         <property name="checked">0</property>
                         <property name="enabled">1</property>
@@ -1805,11 +1805,62 @@
                         <event name="OnMenuSelection">botwall_change</event>
                         <event name="OnUpdateUI"></event>
                     </object>
-                    <object class="separator" expanded="1">
+                    <object class="submenu" expanded="1">
+                        <property name="bitmap"></property>
+                        <property name="label">Bottom Wall Thermal Options</property>
+                        <property name="name">botwall_thermal</property>
+                        <property name="permission">protected</property>
+                        <object class="wxMenuItem" expanded="1">
+                            <property name="bitmap"></property>
+                            <property name="checked">0</property>
+                            <property name="enabled">1</property>
+                            <property name="help"></property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_RADIO</property>
+                            <property name="label">Adiabatic</property>
+                            <property name="name">botwall_adiabatic</property>
+                            <property name="permission">none</property>
+                            <property name="shortcut"></property>
+                            <property name="unchecked_bitmap"></property>
+                            <event name="OnMenuSelection"></event>
+                            <event name="OnUpdateUI"></event>
+                        </object>
+                        <object class="wxMenuItem" expanded="1">
+                            <property name="bitmap"></property>
+                            <property name="checked">0</property>
+                            <property name="enabled">1</property>
+                            <property name="help"></property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_RADIO</property>
+                            <property name="label">Isothermal</property>
+                            <property name="name">botwall_isothermal</property>
+                            <property name="permission">none</property>
+                            <property name="shortcut"></property>
+                            <property name="unchecked_bitmap"></property>
+                            <event name="OnMenuSelection"></event>
+                            <event name="OnUpdateUI"></event>
+                        </object>
+                    </object>
+                    <object class="separator" expanded="0">
                         <property name="name">m_separator5</property>
                         <property name="permission">none</property>
                     </object>
                     <object class="wxMenuItem" expanded="1">
+                        <property name="bitmap"></property>
+                        <property name="checked">0</property>
+                        <property name="enabled">1</property>
+                        <property name="help"></property>
+                        <property name="id">wxID_ANY</property>
+                        <property name="kind">wxITEM_RADIO</property>
+                        <property name="label">Top Wall: Outflow</property>
+                        <property name="name">topwall_out</property>
+                        <property name="permission">none</property>
+                        <property name="shortcut"></property>
+                        <property name="unchecked_bitmap"></property>
+                        <event name="OnMenuSelection">topwall_change</event>
+                        <event name="OnUpdateUI"></event>
+                    </object>
+                    <object class="wxMenuItem" expanded="0">
                         <property name="bitmap"></property>
                         <property name="checked">0</property>
                         <property name="enabled">1</property>
@@ -1824,7 +1875,7 @@
                         <event name="OnMenuSelection">topwall_change</event>
                         <event name="OnUpdateUI"></event>
                     </object>
-                    <object class="wxMenuItem" expanded="1">
+                    <object class="wxMenuItem" expanded="0">
                         <property name="bitmap"></property>
                         <property name="checked">0</property>
                         <property name="enabled">1</property>
@@ -1838,6 +1889,42 @@
                         <property name="unchecked_bitmap"></property>
                         <event name="OnMenuSelection">topwall_change</event>
                         <event name="OnUpdateUI"></event>
+                    </object>
+                    <object class="submenu" expanded="1">
+                        <property name="bitmap"></property>
+                        <property name="label">Bottom Wall Thermal Options</property>
+                        <property name="name">topwall_thermal</property>
+                        <property name="permission">protected</property>
+                        <object class="wxMenuItem" expanded="1">
+                            <property name="bitmap"></property>
+                            <property name="checked">0</property>
+                            <property name="enabled">1</property>
+                            <property name="help"></property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_RADIO</property>
+                            <property name="label">Adiabatic</property>
+                            <property name="name">topwall_adiabatic</property>
+                            <property name="permission">none</property>
+                            <property name="shortcut"></property>
+                            <property name="unchecked_bitmap"></property>
+                            <event name="OnMenuSelection"></event>
+                            <event name="OnUpdateUI"></event>
+                        </object>
+                        <object class="wxMenuItem" expanded="1">
+                            <property name="bitmap"></property>
+                            <property name="checked">0</property>
+                            <property name="enabled">1</property>
+                            <property name="help"></property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_RADIO</property>
+                            <property name="label">Isothermal</property>
+                            <property name="name">topwall_isothermal</property>
+                            <property name="permission">none</property>
+                            <property name="shortcut"></property>
+                            <property name="unchecked_bitmap"></property>
+                            <event name="OnMenuSelection"></event>
+                            <event name="OnUpdateUI"></event>
+                        </object>
                     </object>
                 </object>
                 <object class="wxMenu" expanded="0">

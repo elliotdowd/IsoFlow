@@ -21,7 +21,7 @@ from matplotlib import cm
 class MainFrame ( wx.Frame ):
 	
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( 100,100 ), size = wx.Size( 740, 686 ), style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( 100,100 ), size = wx.Size( 732, 686 ), style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER )
 		
 		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 		self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INACTIVEBORDER ) )
@@ -225,6 +225,15 @@ class MainFrame ( wx.Frame ):
 		self.botwall_visc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Bottom Wall: Viscous Wall", wx.EmptyString, wx.ITEM_RADIO )
 		self.boundOptions.Append( self.botwall_visc )
 
+		self.botwall_thermal = wx.Menu()
+		self.botwall_adiabatic = wx.MenuItem( self.botwall_thermal, wx.ID_ANY, u"Adiabatic", wx.EmptyString, wx.ITEM_RADIO )
+		self.botwall_thermal.AppendItem( self.botwall_adiabatic )
+		
+		self.botwall_isothermal = wx.MenuItem( self.botwall_thermal, wx.ID_ANY, u"Isothermal", wx.EmptyString, wx.ITEM_RADIO )
+		self.botwall_thermal.AppendItem( self.botwall_isothermal )
+		
+		self.boundOptions.AppendSubMenu( self.botwall_thermal, u"Bottom Wall Thermal Options" )
+
 		self.boundOptions.AppendSeparator()
 
 		self.topwall_out = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Top Wall: Outflow", wx.EmptyString, wx.ITEM_RADIO )
@@ -235,6 +244,15 @@ class MainFrame ( wx.Frame ):
 		
 		self.topwall_visc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Top Wall: Viscous Wall", wx.EmptyString, wx.ITEM_RADIO )
 		self.boundOptions.Append( self.topwall_visc )
+
+		self.topwall_thermal = wx.Menu()
+		self.topwall_adiabatic = wx.MenuItem( self.topwall_thermal, wx.ID_ANY, u"Adiabatic", wx.EmptyString, wx.ITEM_RADIO )
+		self.topwall_thermal.AppendItem( self.topwall_adiabatic )
+		
+		self.topwall_isothermal = wx.MenuItem( self.topwall_thermal, wx.ID_ANY, u"Isothermal", wx.EmptyString, wx.ITEM_RADIO )
+		self.topwall_thermal.AppendItem( self.topwall_isothermal )
+		
+		self.boundOptions.AppendSubMenu( self.topwall_thermal, u"Top Wall Thermal Options" )
 				
 		self.menuBar.Append( self.boundOptions, u"Boundaries" ) 
 		
@@ -355,11 +373,6 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.gas_change, id = self.air.GetId() )
 		self.Bind( wx.EVT_MENU, self.thermalgas_change, id = self.thermalgas.GetId() )
 		self.Bind( wx.EVT_MENU, self.infoWindow, id = self.gasinfo.GetId() )
-		self.Bind( wx.EVT_MENU, self.botwall_change, id = self.botwall_invisc.GetId() )
-		self.Bind( wx.EVT_MENU, self.botwall_change, id = self.botwall_visc.GetId() )
-		self.Bind( wx.EVT_MENU, self.topwall_change, id = self.topwall_out.GetId() )
-		self.Bind( wx.EVT_MENU, self.topwall_change, id = self.topwall_invisc.GetId() )
-		self.Bind( wx.EVT_MENU, self.topwall_change, id = self.topwall_visc.GetId() )
 		self.Bind( wx.EVT_MENU, self.cont_change, id = self.mach.GetId() )
 		self.Bind( wx.EVT_MENU, self.cont_change, id = self.velocity.GetId() )
 		self.Bind( wx.EVT_MENU, self.cont_change, id = self.quiver.GetId() )
@@ -391,7 +404,9 @@ class MainFrame ( wx.Frame ):
 
 		# initialize grid values and class attributes
 		self.init_grids()
-		self.contQuantity = 'Mach'
+
+		class options:
+			self.contQuantity = 'Mach'
 		self.cmOption = cm.jet
 		class units:
 			mass = 'kg'
@@ -487,7 +502,7 @@ class MainFrame ( wx.Frame ):
 
 		# mesh plotting
 		plt.close(fig=self.contourPanel.figure)
-		self.contourPanel.figure = plt.figure( dpi=100, figsize=(5.5, 3.9), facecolor=(222/256,222/256,222/256) )
+		self.contourPanel.figure = plt.figure( dpi=100, figsize=(5.6, 4), facecolor=(222/256,222/256,222/256) )
 		self.contourPanel.cax = self.contourPanel.figure.gca()
 		self.contourPanel.cax.set_position([0.08, 0.11, 0.84, 0.78])
 
@@ -539,11 +554,19 @@ class MainFrame ( wx.Frame ):
 				topwall = 'Viscous Wall'
 			elif self.topwall_invisc.IsChecked():
 				topwall = 'Inviscid Wall'
+			if self.topwall_adiabatic.IsChecked():
+				topwall_thermal = 'Adiabatic'
+			elif self.topwall_isothermal.IsChecked():
+				topwall_thermal = 'Isothermal'
 			
 			if self.botwall_visc.IsChecked():
 				botwall = 'Viscous Wall'
 			elif self.botwall_invisc.IsChecked():
 				botwall = 'Inviscid Wall'
+			if self.botwall_adiabatic.IsChecked():
+				botwall_thermal = 'Adiabatic'
+			elif self.botwall_isothermal.IsChecked():
+				botwall_thermal = 'Isothermal'
 
 		self.parameters = parameters
 		self.gas = gasdata.air_tpg
@@ -585,11 +608,19 @@ class MainFrame ( wx.Frame ):
 				topwall = 'Viscous Wall'
 			elif self.topwall_invisc.IsChecked():
 				topwall = 'Inviscid Wall'
+			if self.topwall_adiabatic.IsChecked():
+				topwall_thermal = 'Adiabatic'
+			elif self.topwall_isothermal.IsChecked():
+				topwall_thermal = 'Isothermal'
 			
 			if self.botwall_visc.IsChecked():
 				botwall = 'Viscous Wall'
 			elif self.botwall_invisc.IsChecked():
 				botwall = 'Inviscid Wall'
+			if self.botwall_adiabatic.IsChecked():
+				botwall_thermal = 'Adiabatic'
+			elif self.botwall_isothermal.IsChecked():
+				botwall_thermal = 'Isothermal'
 
 		self.parameters = parameters
 
@@ -638,9 +669,9 @@ class MainFrame ( wx.Frame ):
 		# post processing
 		plt.close(fig=panel.figure)
 		if scale > 1:
-			panel.figure = plt.figure( dpi=100, figsize=(scale*5.5, scale*3.9), facecolor=(1, 1, 1) )
+			panel.figure = plt.figure( dpi=100, figsize=(scale*5.6, scale*4), facecolor=(1, 1, 1) )
 		else:
-			panel.figure = plt.figure( dpi=100, figsize=(scale*5.5, scale*3.9), facecolor=(222/256,222/256,222/256) )
+			panel.figure = plt.figure( dpi=100, figsize=(scale*5.6, scale*4), facecolor=(222/256,222/256,222/256) )
 
 		panel.cax = panel.figure.gca()
 		panel.cax.set_facecolor((0.4, 0.4, 0.4))
@@ -1019,11 +1050,6 @@ class MainFrame ( wx.Frame ):
 			self.thermoModel = 'tpg'
 		event.Skip()
 
-	def botwall_change( self, event ):
-		event.Skip()
-
-	def topwall_change( self, event ):
-		event.Skip()
 
 	# open contour plot in new window
 	def expandWindow( self, event ):
@@ -1045,6 +1071,7 @@ class MainFrame ( wx.Frame ):
 							size = wx.Size( 360,240 ), style=wx.DEFAULT_FRAME_STYLE )
 			#self.SetBackgroundColor( wx.Colour( 256, 256, 256 ) )
 			import gui1
+			import python.finite_volume.gasdata as gasdata
 
 			# Gas information grid
 			self.gasGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -1055,6 +1082,8 @@ class MainFrame ( wx.Frame ):
 			self.gasGrid.SetRowLabelValue( 1, u"Specific Heat Ratio" )
 			self.gasGrid.SetRowLabelValue( 2, u"Cp" )
 			self.gasGrid.SetRowLabelValue( 3, u"Cv" )
+
+			if parent.gasSelect
 
 			# set values
 			self.gasGrid.SetCellValue( 0, 0, "300")
