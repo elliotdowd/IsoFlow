@@ -1067,33 +1067,60 @@ class MainFrame ( wx.Frame ):
 
 	class tableWindow(wx.Frame):
 		def __init__(self, parent):
-			wx.Frame.__init__( self, parent, title = 'Fullscreen Contour Plot',\
-							size = wx.Size( 360,240 ), style=wx.DEFAULT_FRAME_STYLE )
+			wx.Frame.__init__( self, parent, title = 'Fluid Properties',\
+							size = wx.Size( 300, 180 ), style=wx.DEFAULT_FRAME_STYLE )
 			#self.SetBackgroundColor( wx.Colour( 256, 256, 256 ) )
 			import gui1
 			import python.finite_volume.gasdata as gasdata
 
 			# Gas information grid
 			self.gasGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
-			self.gasGrid.CreateGrid( 4, 1 )
+			self.gasGrid.CreateGrid( 5, 1 )
 			self.gasGrid.SetRowLabelSize( 120 )
 			self.gasGrid.SetColLabelSize( 0 )
 			self.gasGrid.SetRowLabelValue( 0, u"Temperature " + '(' + parent.units.temp + ')' )
 			self.gasGrid.SetRowLabelValue( 1, u"Specific Heat Ratio" )
-			self.gasGrid.SetRowLabelValue( 2, u"Cp" )
+			self.gasGrid.SetRowLabelValue( 2, u"Cp")
 			self.gasGrid.SetRowLabelValue( 3, u"Cv" )
+			self.gasGrid.SetRowLabelValue( 4, u"R" )
 
-			if parent.gasSelect
+			self.gasGrid.Bind( wx.grid.EVT_GRID_CELL_CHANGED, self.gasdata_change )
+			self.temp = 300
 
-			# set values
-			self.gasGrid.SetCellValue( 0, 0, "300")
-			self.gasGrid.SetCellValue( 1, 0, "1000")
-			self.gasGrid.SetCellValue( 2, 0, "-6")
+			if parent.thermoModel == 'cpg':
+				if parent.gasSelect == 'Air':
+					self.gas = gasdata.air_cpg
+				elif parent.gasSelect == 'Carbon Dioxide':
+					self.gas = gasdata.C02_cpg
+				elif parent.gasSelect == 'Hydrogen':
+					self.gas = gasdata.H2_cpg
+			elif parent.thermoModel == 'tpg':
+				if parent.gasSelect == 'Air':
+					self.gas = gasdata.air_tpg
+				elif parent.gasSelect == 'Carbon Dioxide':
+					self.gas = gasdata.C02_tpg
+				elif parent.gasSelect == 'Hydrogen':
+					self.gas = gasdata.H2_tpg
+
+			self.gasGrid.SetCellValue( 0, 0, '300')
+			self.gasdata_change( wx.grid.EVT_GRID_CELL_CHANGED )
 
 			self.gasGrid.EnableEditing( True )
 			self.gasGrid.EnableGridLines( True )
 			self.gasGrid.EnableDragGridSize( False )
 			self.gasGrid.SetMargins( 0, 0 )
+
+		def gasdata_change(self, event):
+			gas = self.gas
+			temp = float(self.gasGrid.GetCellValue(0, 0))
+			self.gasGrid.SetCellValue( 0, 0, str(temp))
+			self.gasGrid.SetCellValue( 1, 0, str( round( gas.Cp_fn(gas.gamma_p, gas.Cp_p, gas.theta, temp) \
+													   / gas.Cv_fn(gas.gamma_p, gas.Cv_p, gas.theta, temp), 2) ) )
+			self.gasGrid.SetCellValue( 2, 0, str( round( gas.Cp_fn(gas.gamma_p, gas.Cp_p, gas.theta, temp), 2 ) ) )
+			self.gasGrid.SetCellValue( 3, 0, str( round( gas.Cv_fn(gas.gamma_p, gas.Cv_p, gas.theta, temp), 2 ) ) )
+			self.gasGrid.SetCellValue( 4, 0, str( round( gas.Cp_fn(gas.gamma_p, gas.Cp_p, gas.theta, temp) - \
+														 gas.Cv_fn(gas.gamma_p, gas.Cv_p, gas.theta, temp), 2) ) )
+			#event.Skip()
 
 
 class RedirectText:
