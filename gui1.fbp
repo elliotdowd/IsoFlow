@@ -96,7 +96,7 @@
                 <property name="hgap">0</property>
                 <property name="minimum_size"></property>
                 <property name="name">MainSizer</property>
-                <property name="non_flexible_grow_mode">wxFLEX_GROWMODE_SPECIFIED</property>
+                <property name="non_flexible_grow_mode">wxFLEX_GROWMODE_ALL</property>
                 <property name="permission">none</property>
                 <property name="vgap">0</property>
                 <object class="gbsizeritem" expanded="0">
@@ -1771,7 +1771,7 @@
                         <event name="OnUpdateUI"></event>
                     </object>
                 </object>
-                <object class="wxMenu" expanded="1">
+                <object class="wxMenu" expanded="0">
                     <property name="label">Boundaries</property>
                     <property name="name">boundOptions</property>
                     <property name="permission">protected</property>
@@ -1805,12 +1805,12 @@
                         <event name="OnMenuSelection">botwall_change</event>
                         <event name="OnUpdateUI"></event>
                     </object>
-                    <object class="submenu" expanded="1">
+                    <object class="submenu" expanded="0">
                         <property name="bitmap"></property>
                         <property name="label">Bottom Wall Thermal Options</property>
                         <property name="name">botwall_thermal</property>
                         <property name="permission">protected</property>
-                        <object class="wxMenuItem" expanded="1">
+                        <object class="wxMenuItem" expanded="0">
                             <property name="bitmap"></property>
                             <property name="checked">0</property>
                             <property name="enabled">1</property>
@@ -1825,7 +1825,7 @@
                             <event name="OnMenuSelection"></event>
                             <event name="OnUpdateUI"></event>
                         </object>
-                        <object class="wxMenuItem" expanded="1">
+                        <object class="wxMenuItem" expanded="0">
                             <property name="bitmap"></property>
                             <property name="checked">0</property>
                             <property name="enabled">1</property>
@@ -1845,7 +1845,7 @@
                         <property name="name">m_separator5</property>
                         <property name="permission">none</property>
                     </object>
-                    <object class="wxMenuItem" expanded="1">
+                    <object class="wxMenuItem" expanded="0">
                         <property name="bitmap"></property>
                         <property name="checked">0</property>
                         <property name="enabled">1</property>
@@ -1890,12 +1890,12 @@
                         <event name="OnMenuSelection">topwall_change</event>
                         <event name="OnUpdateUI"></event>
                     </object>
-                    <object class="submenu" expanded="1">
+                    <object class="submenu" expanded="0">
                         <property name="bitmap"></property>
                         <property name="label">Top Wall Thermal Options</property>
                         <property name="name">topwall_thermal</property>
                         <property name="permission">protected</property>
-                        <object class="wxMenuItem" expanded="1">
+                        <object class="wxMenuItem" expanded="0">
                             <property name="bitmap"></property>
                             <property name="checked">0</property>
                             <property name="enabled">1</property>
@@ -1910,7 +1910,7 @@
                             <event name="OnMenuSelection"></event>
                             <event name="OnUpdateUI"></event>
                         </object>
-                        <object class="wxMenuItem" expanded="1">
+                        <object class="wxMenuItem" expanded="0">
                             <property name="bitmap"></property>
                             <property name="checked">0</property>
                             <property name="enabled">1</property>
@@ -1925,6 +1925,158 @@
                             <event name="OnMenuSelection"></event>
                             <event name="OnUpdateUI"></event>
                         </object>
+                    </object>
+                </object>
+                <object class="wxMenu" expanded="1">
+                    <property name="label">Scheme</property>
+                    <property name="name">schemeOptions</property>
+                    <property name="permission">protected</property>
+                    <object class="wxMenuItem" expanded="1">
+                        <property name="bitmap"></property>
+                        <property name="checked">0</property>
+                        <property name="enabled">1</property>
+                        <property name="help"></property>
+                        <property name="id">wxID_ANY</property>
+                        <property name="kind">wxITEM_CHECK</property>
+                        <property name="label">Higher Order Accuracy?</property>
+                        <property name="name">higherorder</property>
+                        <property name="permission">none</property>
+                        <property name="shortcut"></property>
+                        <property name="unchecked_bitmap"></property>
+                        <event name="OnMenuSelection">muscl_change</event>
+                        <event name="OnUpdateUI"></event>
+                    </object>
+                    <object class="submenu" expanded="1">
+                        <property name="bitmap"></property>
+                        <property name="label">Higher Order Scheme</property>
+                        <property name="name">higherorderscheme</property>
+                        <property name="permission">protected</property>
+                        <object class="wxMenuItem" expanded="0">
+                            <property name="bitmap"></property>
+                            <property name="checked">0</property>
+                            <property name="enabled">1</property>
+                            <property name="help"></property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_RADIO</property>
+                            <property name="label">Second Order &quot;Full&quot; Upwind</property>
+                            <property name="name">secondfullupwind</property>
+                            <property name="permission">none</property>
+                            <property name="shortcut"></property>
+                            <property name="unchecked_bitmap"></property>
+                            <event name="OnMenuSelection">muscl_change</event>
+                            <event name="OnUpdateUI"></event>
+                        </object>
+                        <object class="wxMenuItem" expanded="0">
+                            <property name="bitmap"></property>
+                            <property name="checked">0</property>
+                            <property name="enabled">1</property>
+                            <property name="help"></property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_RADIO</property>
+                            <property name="label">Second Order &quot;Full&quot; Upwind</property>
+                            <property name="name">secondupwindbiased</property>
+                            <property name="permission">none</property>
+                            <property name="shortcut"></property>
+                            <property name="unchecked_bitmap"></property>
+                            <event name="OnMenuSelection">muscl_change</event>
+                            <event name="OnUpdateUI"></event>
+                        </object>
+                        <object class="wxMenuItem" expanded="0">
+                            <property name="bitmap"></property>
+                            <property name="checked">0</property>
+                            <property name="enabled">1</property>
+                            <property name="help"></property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_RADIO</property>
+                            <property name="label">Second Order Central</property>
+                            <property name="name">secondcentral</property>
+                            <property name="permission">none</property>
+                            <property name="shortcut"></property>
+                            <property name="unchecked_bitmap"></property>
+                            <event name="OnMenuSelection">muscl_change</event>
+                            <event name="OnUpdateUI"></event>
+                        </object>
+                        <object class="wxMenuItem" expanded="0">
+                            <property name="bitmap"></property>
+                            <property name="checked">0</property>
+                            <property name="enabled">1</property>
+                            <property name="help"></property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_RADIO</property>
+                            <property name="label">Third Order &quot;Full&quot; Upwind</property>
+                            <property name="name">thirdfull</property>
+                            <property name="permission">none</property>
+                            <property name="shortcut"></property>
+                            <property name="unchecked_bitmap"></property>
+                            <event name="OnMenuSelection">muscl_change</event>
+                            <event name="OnUpdateUI"></event>
+                        </object>
+                        <object class="wxMenuItem" expanded="0">
+                            <property name="bitmap"></property>
+                            <property name="checked">0</property>
+                            <property name="enabled">1</property>
+                            <property name="help"></property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_RADIO</property>
+                            <property name="label">Third Order Upwind</property>
+                            <property name="name">thirdupwind</property>
+                            <property name="permission">none</property>
+                            <property name="shortcut"></property>
+                            <property name="unchecked_bitmap"></property>
+                            <event name="OnMenuSelection">muscl_change</event>
+                            <event name="OnUpdateUI"></event>
+                        </object>
+                    </object>
+                    <object class="submenu" expanded="1">
+                        <property name="bitmap"></property>
+                        <property name="label">Flux Limiter Function</property>
+                        <property name="name">limiterOptions</property>
+                        <property name="permission">protected</property>
+                        <object class="wxMenuItem" expanded="0">
+                            <property name="bitmap"></property>
+                            <property name="checked">0</property>
+                            <property name="enabled">1</property>
+                            <property name="help"></property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_RADIO</property>
+                            <property name="label">Minmod</property>
+                            <property name="name">minmod</property>
+                            <property name="permission">none</property>
+                            <property name="shortcut"></property>
+                            <property name="unchecked_bitmap"></property>
+                            <event name="OnMenuSelection">muscl_change</event>
+                            <event name="OnUpdateUI"></event>
+                        </object>
+                        <object class="wxMenuItem" expanded="1">
+                            <property name="bitmap"></property>
+                            <property name="checked">0</property>
+                            <property name="enabled">1</property>
+                            <property name="help"></property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_RADIO</property>
+                            <property name="label">Koren</property>
+                            <property name="name">koren</property>
+                            <property name="permission">none</property>
+                            <property name="shortcut"></property>
+                            <property name="unchecked_bitmap"></property>
+                            <event name="OnMenuSelection">muscl_change</event>
+                            <event name="OnUpdateUI"></event>
+                        </object>
+                    </object>
+                    <object class="wxMenuItem" expanded="1">
+                        <property name="bitmap"></property>
+                        <property name="checked">0</property>
+                        <property name="enabled">1</property>
+                        <property name="help"></property>
+                        <property name="id">wxID_ANY</property>
+                        <property name="kind">wxITEM_NORMAL</property>
+                        <property name="label">Show More Information</property>
+                        <property name="name">musclinfo</property>
+                        <property name="permission">none</property>
+                        <property name="shortcut"></property>
+                        <property name="unchecked_bitmap"></property>
+                        <event name="OnMenuSelection"></event>
+                        <event name="OnUpdateUI"></event>
                     </object>
                 </object>
                 <object class="wxMenu" expanded="0">

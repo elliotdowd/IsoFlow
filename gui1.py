@@ -30,7 +30,7 @@ class MainFrame ( wx.Frame ):
 		
 		MainSizer = wx.GridBagSizer( 0, 0 )
 		MainSizer.SetFlexibleDirection( wx.BOTH )
-		MainSizer.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+		MainSizer.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_ALL )
 		
 		self.domainGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
 		
