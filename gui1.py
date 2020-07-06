@@ -21,7 +21,7 @@ from matplotlib import cm
 class MainFrame ( wx.Frame ):
 	
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( 100,100 ), size = wx.Size( 732, 686 ), style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( 100,100 ), size = wx.Size( 740, 686 ), style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER )
 		
 		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 		self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INACTIVEBORDER ) )
@@ -50,11 +50,11 @@ class MainFrame ( wx.Frame ):
 		# Rows
 		self.domainGrid.EnableDragRowSize( True )
 		self.domainGrid.SetRowLabelSize( 112 )
-		self.domainGrid.SetRowLabelValue( 0, u"Length" )
-		self.domainGrid.SetRowLabelValue( 1, u"Height" )
-		self.domainGrid.SetRowLabelValue( 2, u"Wedge Start" )
-		self.domainGrid.SetRowLabelValue( 3, u"Wedge End" )
-		self.domainGrid.SetRowLabelValue( 4, u"Wedge Angle" )
+		self.domainGrid.SetRowLabelValue( 0, u"Length (m)" )
+		self.domainGrid.SetRowLabelValue( 1, u"Height (m)" )
+		self.domainGrid.SetRowLabelValue( 2, u"Wedge Start (m)" )
+		self.domainGrid.SetRowLabelValue( 3, u"Wedge End (m)" )
+		self.domainGrid.SetRowLabelValue( 4, u"Wedge Angle (°)" )
 		self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
 		self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
 		self.domainGrid.SetRowLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
@@ -227,10 +227,13 @@ class MainFrame ( wx.Frame ):
 
 		self.botwall_thermal = wx.Menu()
 		self.botwall_adiabatic = wx.MenuItem( self.botwall_thermal, wx.ID_ANY, u"Adiabatic", wx.EmptyString, wx.ITEM_RADIO )
-		self.botwall_thermal.AppendItem( self.botwall_adiabatic )
+		self.botwall_thermal.Append( self.botwall_adiabatic )
 		
 		self.botwall_isothermal = wx.MenuItem( self.botwall_thermal, wx.ID_ANY, u"Isothermal", wx.EmptyString, wx.ITEM_RADIO )
-		self.botwall_thermal.AppendItem( self.botwall_isothermal )
+		self.botwall_thermal.Append( self.botwall_isothermal )
+
+		self.botwall_fixed = wx.MenuItem( self.botwall_thermal, wx.ID_ANY, u"Fixed Temperature", wx.EmptyString, wx.ITEM_RADIO )
+		self.botwall_thermal.Append( self.botwall_fixed )
 		
 		self.boundOptions.AppendSubMenu( self.botwall_thermal, u"Bottom Wall Thermal Options" )
 
@@ -247,10 +250,13 @@ class MainFrame ( wx.Frame ):
 
 		self.topwall_thermal = wx.Menu()
 		self.topwall_adiabatic = wx.MenuItem( self.topwall_thermal, wx.ID_ANY, u"Adiabatic", wx.EmptyString, wx.ITEM_RADIO )
-		self.topwall_thermal.AppendItem( self.topwall_adiabatic )
+		self.topwall_thermal.Append( self.topwall_adiabatic )
 		
 		self.topwall_isothermal = wx.MenuItem( self.topwall_thermal, wx.ID_ANY, u"Isothermal", wx.EmptyString, wx.ITEM_RADIO )
-		self.topwall_thermal.AppendItem( self.topwall_isothermal )
+		self.topwall_thermal.Append( self.topwall_isothermal )
+
+		self.topwall_fixed = wx.MenuItem( self.topwall_thermal, wx.ID_ANY, u"Fixed Temperature", wx.EmptyString, wx.ITEM_RADIO )
+		self.topwall_thermal.Append( self.topwall_fixed )
 		
 		self.boundOptions.AppendSubMenu( self.topwall_thermal, u"Top Wall Thermal Options" )
 				
@@ -371,8 +377,16 @@ class MainFrame ( wx.Frame ):
 		self.initButton.Bind( wx.EVT_BUTTON, self.call_init )
 
 		self.Bind( wx.EVT_MENU, self.gas_change, id = self.air.GetId() )
+		self.Bind( wx.EVT_MENU, self.gas_change, id = self.C02.GetId() )
+		self.Bind( wx.EVT_MENU, self.gas_change, id = self.H2.GetId() )
 		self.Bind( wx.EVT_MENU, self.thermalgas_change, id = self.thermalgas.GetId() )
 		self.Bind( wx.EVT_MENU, self.infoWindow, id = self.gasinfo.GetId() )
+
+		self.Bind( wx.EVT_MENU, self.botwall_thermal_change, id = self.botwall_isothermal.GetId() )
+		self.Bind( wx.EVT_MENU, self.botwall_thermal_change, id = self.botwall_fixed.GetId() )
+		self.Bind( wx.EVT_MENU, self.topwall_thermal_change, id = self.topwall_isothermal.GetId() )
+		self.Bind( wx.EVT_MENU, self.topwall_thermal_change, id = self.topwall_fixed.GetId() )
+
 		self.Bind( wx.EVT_MENU, self.cont_change, id = self.mach.GetId() )
 		self.Bind( wx.EVT_MENU, self.cont_change, id = self.velocity.GetId() )
 		self.Bind( wx.EVT_MENU, self.cont_change, id = self.quiver.GetId() )
@@ -429,6 +443,10 @@ class MainFrame ( wx.Frame ):
 			def conv_press(p):
 				conv = p / 1000
 				return conv
+			energy = 'J'
+			def conv_energy(e):
+				conv = e
+				return conv
 		self.units = units
 		self.axisOption = 'equal'
 		self.contGrad = 8
@@ -440,6 +458,7 @@ class MainFrame ( wx.Frame ):
 
 	def __del__( self ):
 		pass
+
 
 	# initialize option grid values
 	def init_grids( self ):
@@ -461,7 +480,6 @@ class MainFrame ( wx.Frame ):
 		self.simGrid.SetCellValue( 0, 0, "0.4")
 		self.simGrid.SetCellValue( 1, 0, "1000")
 		self.simGrid.SetCellValue( 2, 0, "-6")
-
 
 	# Virtual event handlers, overide them in your derived class
 	def call_grid( self, event ):
@@ -543,8 +561,14 @@ class MainFrame ( wx.Frame ):
 		# initialize state vector, simulation parameters and fluid properties
 		class parameters:
 			M_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 0, 0))
-			p_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 1, 0))
-			T_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 2, 0))
+			p_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 1, 0)) / self.units.conv_press(1)
+			if self.units.temp == '°C':
+				T_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 2, 0)) + self.units.conv_temp(0)
+			elif self.units.temp == '°F':
+				T_in = (float(wx.grid.Grid.GetCellValue(self.parameterGrid, 2, 0))-32)*(5/9) + 273.15
+			else:
+				T_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 2, 0)) * self.units.conv_temp(1)
+
 			iterations = int(wx.grid.Grid.GetCellValue(self.simGrid, 1, 0))
 			tolerance = float(wx.grid.Grid.GetCellValue(self.simGrid, 2, 0))
 			CFL = float(wx.grid.Grid.GetCellValue(self.simGrid, 0, 0))
@@ -558,7 +582,11 @@ class MainFrame ( wx.Frame ):
 				topwall_thermal = 'Adiabatic'
 			elif self.topwall_isothermal.IsChecked():
 				topwall_thermal = 'Isothermal'
-			
+				topwall_temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
+			elif self.topwall_fixed.IsChecked():
+				topwall_thermal = 'Fixed Temperature'
+				topwall_temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
+
 			if self.botwall_visc.IsChecked():
 				botwall = 'Viscous Wall'
 			elif self.botwall_invisc.IsChecked():
@@ -567,6 +595,10 @@ class MainFrame ( wx.Frame ):
 				botwall_thermal = 'Adiabatic'
 			elif self.botwall_isothermal.IsChecked():
 				botwall_thermal = 'Isothermal'
+				botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
+			elif self.botwall_fixed.IsChecked():
+				botwall_thermal = 'Fixed Temperature'
+				botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
 
 		self.parameters = parameters
 		self.gas = gasdata.air_tpg
@@ -597,8 +629,13 @@ class MainFrame ( wx.Frame ):
 
 		class parameters:
 			M_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 0, 0))
-			p_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 1, 0))
-			T_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 2, 0))
+			p_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 1, 0)) / self.units.conv_press(1)
+			if self.units.temp == '°C':
+				T_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 2, 0)) + self.units.conv_temp(0)
+			elif self.units.temp == '°F':
+				T_in = (float(wx.grid.Grid.GetCellValue(self.parameterGrid, 2, 0))-32)*(5/9) + 273.15
+			else:
+				T_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 2, 0)) * self.units.conv_temp(1)
 			iterations = int(wx.grid.Grid.GetCellValue(self.simGrid, 1, 0))
 			tolerance = float(wx.grid.Grid.GetCellValue(self.simGrid, 2, 0))
 			CFL = float(wx.grid.Grid.GetCellValue(self.simGrid, 0, 0))
@@ -612,7 +649,11 @@ class MainFrame ( wx.Frame ):
 				topwall_thermal = 'Adiabatic'
 			elif self.topwall_isothermal.IsChecked():
 				topwall_thermal = 'Isothermal'
-			
+				topwall_temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
+			elif self.topwall_fixed.IsChecked():
+				topwall_thermal = 'Fixed Temperature'
+				topwall_temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
+
 			if self.botwall_visc.IsChecked():
 				botwall = 'Viscous Wall'
 			elif self.botwall_invisc.IsChecked():
@@ -621,6 +662,10 @@ class MainFrame ( wx.Frame ):
 				botwall_thermal = 'Adiabatic'
 			elif self.botwall_isothermal.IsChecked():
 				botwall_thermal = 'Isothermal'
+				botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
+			elif self.botwall_fixed.IsChecked():
+				botwall_thermal = 'Fixed Temperature'
+				botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
 
 		self.parameters = parameters
 
@@ -660,11 +705,12 @@ class MainFrame ( wx.Frame ):
 		import matplotlib as mpl
 		import matplotlib.pyplot as plt
 		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+		import matplotlib.ticker as ticker
 
 		# panel input as self.contourPanel
 
 		# length to height ratio
-		r = (1.5/1.3) / (self.domain.length/self.domain.height)
+		r = min(1, (1.5/1.3) / (self.domain.length/self.domain.height))
 
 		# post processing
 		plt.close(fig=panel.figure)
@@ -680,17 +726,11 @@ class MainFrame ( wx.Frame ):
 		contQuantity = self.contQuantity + ' ' + self.gradient
 		cl = self.units.conv_length(1)
 
-		# def colorbar(mappable, shr):
-		# 	from mpl_toolkits.axes_grid1 import make_axes_locatable
-		# 	import matplotlib.pyplot as plt
-		# 	last_axes = plt.gca()
-		# 	ax = mappable.axes
-		# 	fig = ax.figure
-		# 	divider = make_axes_locatable(ax)
-		# 	cbax = divider.append_axes("right", size="1%", pad=0.025)
-		# 	cbar = fig.colorbar(mappable, cax=cbax)
-		# 	plt.sca(last_axes)
-		# 	return cbar
+		# floating point display formatting
+		def fmt(x, pos):
+			a, b = '{:.2e}'.format(x).split('e')
+			b = int(b)
+			return r'${} \times 10^{{{}}}$'.format(a, b)
 
 		if contQuantity == 'Mach ':
 			cont = panel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
@@ -710,6 +750,8 @@ class MainFrame ( wx.Frame ):
 												shrink=r, extend='both', ax=panel.cax)
 			CB.set_label(contQuantity + ' (' + self.units.length + '/' + self.units.time + ')', rotation=90)
 		elif contQuantity == 'Velocity Quiver ':
+			fill = panel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
+									  self.state.Mach[0:-1,1:-1] * 0, colors='w')
 			cont = panel.cax.quiver(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 								  				self.state.u[0:-1,1:-1], self.state.v[0:-1,1:-1], \
 												self.state.vel[0:-1,1:-1], cmap=self.cmOption, pivot='tip', \
@@ -797,6 +839,8 @@ class MainFrame ( wx.Frame ):
 			CB = panel.figure.colorbar(cont, ticks=ticks, \
 												shrink=r, extend='both', ax=panel.cax)
 			CB.set_label(contQuantity + ' (' + self.units.temp + ')', rotation=90)
+
+		#CB(cont, format=ticker.FuncFormatter(fmt))
 
 		# set up contour labels
 		if self.contQuantity != 'Velocity Quiver':
@@ -907,6 +951,10 @@ class MainFrame ( wx.Frame ):
 			def conv_press(p):
 				conv = p / 1000
 				return conv
+			energy = 'J'
+			def conv_energy(e):
+				conv = e
+				return conv
 		class metric2:
 			mass = 'kg'
 			def conv_mass(m):
@@ -927,6 +975,10 @@ class MainFrame ( wx.Frame ):
 			press = 'kPa'
 			def conv_press(p):
 				conv = p / 1000
+				return conv
+			energy = 'J'
+			def conv_energy(e):
+				conv = e
 				return conv
 		class imp1:
 			mass = 'lbm'
@@ -949,6 +1001,10 @@ class MainFrame ( wx.Frame ):
 			def conv_press(p):
 				conv = p * 0.000145038
 				return conv
+			energy = 'ft-lbf'
+			def conv_energy(e):
+				conv = e * 0.737562
+				return conv
 		class imp2:
 			mass = 'slug'
 			def conv_mass(m):
@@ -966,9 +1022,13 @@ class MainFrame ( wx.Frame ):
 			def conv_temp(T):
 				conv = (T - 272.15) * 9/5 + 32 + 491.67
 				return conv
-			press = 'lbf/ft$^2$'
+			press = 'psi'
 			def conv_press(p):
-				conv = p * 0.02088545226628
+				conv = p * 0.000145038
+				return conv
+			energy = 'ft-lbf'
+			def conv_energy(e):
+				conv = e * 0.737562
 				return conv
 
 		if self.metric1.IsChecked():
@@ -979,6 +1039,19 @@ class MainFrame ( wx.Frame ):
 			self.units = imp1
 		elif self.imperial2.IsChecked():
 			self.units = imp2
+
+		# update units on user input tables
+		self.domainGrid.SetRowLabelValue( 0, u"Length (" + self.units.length + ')' )
+		self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
+		self.domainGrid.SetRowLabelValue( 2, u"Wedge Start (" + self.units.length + ')' )
+		self.domainGrid.SetRowLabelValue( 3, u"Wedge End (" + self.units.length + ')' )
+		self.domainGrid.SetRowLabelValue( 4, u"Wedge Angle (°)" )
+		self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
+		self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
+
+		self.parameterGrid.SetRowLabelValue( 0, u"Inlet Mach #" )
+		self.parameterGrid.SetRowLabelValue( 1, u"Inlet Pres. (" + self.units.press + ')' )
+		self.parameterGrid.SetRowLabelValue( 2, u"Inlet Temp. (" + self.units.temp + ')' )
 
 		if hasattr(self, 'state'):
 			self.call_contplot(self.contourPanel, 1)
@@ -1041,6 +1114,12 @@ class MainFrame ( wx.Frame ):
 		event.Skip()
 
 	def gas_change( self, event ):
+		if self.air.IsChecked() == True:
+			self.gasSelect = 'Air'
+		elif self.C02.IsChecked() == True:
+			self.gasSelect = 'Carbon Dioxide'
+		elif self.H2.IsChecked() == True:
+			self.gasSelect = 'Hydrogen'
 		event.Skip()
 	
 	def thermalgas_change( self, event ):
@@ -1050,6 +1129,15 @@ class MainFrame ( wx.Frame ):
 			self.thermoModel = 'tpg'
 		event.Skip()
 
+	def botwall_thermal_change( self, event ):
+		self.bot_thermal_window = thermalWindow(parent=self)
+		self.bot_thermal_window.Show()
+		event.Skip()
+
+	def topwall_thermal_change( self, event ):
+		self.top_thermal_window = thermalWindow(parent=self)
+		self.top_thermal_window.Show()
+		event.Skip()
 
 	# open contour plot in new window
 	def expandWindow( self, event ):
@@ -1060,67 +1148,8 @@ class MainFrame ( wx.Frame ):
 
 	# open informational window for gases
 	def infoWindow( self, event ):
-		self.new = self.tableWindow(  parent=self )
+		self.new = tableWindow(  parent=self )
 		self.new.Show()
-		# create window class
-
-
-	class tableWindow(wx.Frame):
-		def __init__(self, parent):
-			wx.Frame.__init__( self, parent, title = 'Fluid Properties',\
-							size = wx.Size( 300, 180 ), style=wx.DEFAULT_FRAME_STYLE )
-			#self.SetBackgroundColor( wx.Colour( 256, 256, 256 ) )
-			import gui1
-			import python.finite_volume.gasdata as gasdata
-
-			# Gas information grid
-			self.gasGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
-			self.gasGrid.CreateGrid( 5, 1 )
-			self.gasGrid.SetRowLabelSize( 120 )
-			self.gasGrid.SetColLabelSize( 0 )
-			self.gasGrid.SetRowLabelValue( 0, u"Temperature " + '(' + parent.units.temp + ')' )
-			self.gasGrid.SetRowLabelValue( 1, u"Specific Heat Ratio" )
-			self.gasGrid.SetRowLabelValue( 2, u"Cp")
-			self.gasGrid.SetRowLabelValue( 3, u"Cv" )
-			self.gasGrid.SetRowLabelValue( 4, u"R" )
-
-			self.gasGrid.Bind( wx.grid.EVT_GRID_CELL_CHANGED, self.gasdata_change )
-			self.temp = 300
-
-			if parent.thermoModel == 'cpg':
-				if parent.gasSelect == 'Air':
-					self.gas = gasdata.air_cpg
-				elif parent.gasSelect == 'Carbon Dioxide':
-					self.gas = gasdata.C02_cpg
-				elif parent.gasSelect == 'Hydrogen':
-					self.gas = gasdata.H2_cpg
-			elif parent.thermoModel == 'tpg':
-				if parent.gasSelect == 'Air':
-					self.gas = gasdata.air_tpg
-				elif parent.gasSelect == 'Carbon Dioxide':
-					self.gas = gasdata.C02_tpg
-				elif parent.gasSelect == 'Hydrogen':
-					self.gas = gasdata.H2_tpg
-
-			self.gasGrid.SetCellValue( 0, 0, '300')
-			self.gasdata_change( wx.grid.EVT_GRID_CELL_CHANGED )
-
-			self.gasGrid.EnableEditing( True )
-			self.gasGrid.EnableGridLines( True )
-			self.gasGrid.EnableDragGridSize( False )
-			self.gasGrid.SetMargins( 0, 0 )
-
-		def gasdata_change(self, event):
-			gas = self.gas
-			temp = float(self.gasGrid.GetCellValue(0, 0))
-			self.gasGrid.SetCellValue( 0, 0, str(temp))
-			self.gasGrid.SetCellValue( 1, 0, str( round( gas.Cp_fn(gas.gamma_p, gas.Cp_p, gas.theta, temp) \
-													   / gas.Cv_fn(gas.gamma_p, gas.Cv_p, gas.theta, temp), 2) ) )
-			self.gasGrid.SetCellValue( 2, 0, str( round( gas.Cp_fn(gas.gamma_p, gas.Cp_p, gas.theta, temp), 2 ) ) )
-			self.gasGrid.SetCellValue( 3, 0, str( round( gas.Cv_fn(gas.gamma_p, gas.Cv_p, gas.theta, temp), 2 ) ) )
-			self.gasGrid.SetCellValue( 4, 0, str( round( gas.Cp_fn(gas.gamma_p, gas.Cp_p, gas.theta, temp) - \
-														 gas.Cv_fn(gas.gamma_p, gas.Cv_p, gas.theta, temp), 2) ) )
-			#event.Skip()
 
 
 class RedirectText:
@@ -1152,4 +1181,90 @@ class NewWindow(wx.Frame):
 		self.contourPanel.cax.set_position([0.15, 0.1, 0.8, 0.72])
 
 
+class tableWindow(wx.Frame):
+	def __init__(self, parent):
+		wx.Frame.__init__( self, parent, title = parent.gasSelect + ' Properties',\
+						size = wx.Size( 236, 134 ), style=wx.DEFAULT_FRAME_STYLE )
+		#self.SetBackgroundColor( wx.Colour( 256, 256, 256 ) )
+		import gui1
+		import python.finite_volume.gasdata as gasdata
+
+		# Gas information grid
+		self.gasGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.gasGrid.CreateGrid( 5, 1 )
+		self.gasGrid.SetRowLabelSize( 140 )
+		self.gasGrid.SetColLabelSize( 0 )
+		self.gasGrid.SetRowLabelValue( 0, u"Temperature " + '(' + parent.units.temp + ')' )
+		self.gasGrid.SetRowLabelValue( 1, u"Specific Heat Ratio" )
+		self.gasGrid.SetRowLabelValue( 2, u"Cp " + '(' + parent.units.energy + '/' + parent.units.mass + parent.units.temp + ')')
+		self.gasGrid.SetRowLabelValue( 3, u"Cv " + '(' + parent.units.energy + '/' + parent.units.mass + parent.units.temp + ')' )
+		self.gasGrid.SetRowLabelValue( 4, u"R " + '(' + parent.units.energy + '/' + parent.units.mass + parent.units.temp + ')')
+
+		self.gasGrid.Bind( wx.grid.EVT_GRID_CELL_CHANGED, self.gasdata_change )
+		self.temp = 300
+		self.units = parent.units
+
+		if parent.thermoModel == 'cpg':
+			if parent.gasSelect == 'Air':
+				self.gas = gasdata.air_cpg
+			elif parent.gasSelect == 'Carbon Dioxide':
+				self.gas = gasdata.C02_cpg
+			elif parent.gasSelect == 'Hydrogen':
+				self.gas = gasdata.H2_cpg
+		elif parent.thermoModel == 'tpg':
+			if parent.gasSelect == 'Air':
+				self.gas = gasdata.air_tpg
+			elif parent.gasSelect == 'Carbon Dioxide':
+				self.gas = gasdata.C02_tpg
+			elif parent.gasSelect == 'Hydrogen':
+				self.gas = gasdata.H2_tpg
+
+		self.gasGrid.SetCellValue( 0, 0, '300')
+		self.gasdata_change( wx.grid.EVT_GRID_CELL_CHANGED )
+
+		self.gasGrid.EnableEditing( True )
+		self.gasGrid.EnableGridLines( True )
+		self.gasGrid.EnableDragGridSize( False )
+		self.gasGrid.SetMargins( 0, 0 )
+
+	def gasdata_change(self, event):
+		gas = self.gas
+		if self.units.temp == '°C':
+			temp = float(self.gasGrid.GetCellValue(0, 0)) + 273.15
+			conv = 1 / (self.units.conv_energy(1) / (self.units.conv_mass(1)*(self.units.conv_temp(0)+273.15)))
+		elif self.units.temp == '°F':
+			temp = float(self.gasGrid.GetCellValue(0, 0)) + 459.67
+			conv = 1 / (self.units.conv_energy(1) / (self.units.conv_mass(1)*(self.units.conv_temp(0)+458.87)))
+		else:
+			temp = float(self.gasGrid.GetCellValue(0, 0))
+			conv = 1 / (self.units.conv_energy(1) / (self.units.conv_mass(1)*self.units.conv_temp(1)))
+
+		input_temp = float(self.gasGrid.GetCellValue(0, 0))
+
+		self.gasGrid.SetCellValue( 0, 0, str(input_temp))
+		self.gasGrid.SetCellValue( 1, 0, str( round( gas.Cp_fn(gas.gamma_p, gas.Cp_p, gas.theta, temp) \
+													/ gas.Cv_fn(gas.gamma_p, gas.Cv_p, gas.theta, temp), 4) ) )
+		self.gasGrid.SetCellValue( 2, 0, str( conv*round( gas.Cp_fn(gas.gamma_p, gas.Cp_p, gas.theta, temp), 2 ) ) )
+		self.gasGrid.SetCellValue( 3, 0, str( conv*round( gas.Cv_fn(gas.gamma_p, gas.Cv_p, gas.theta, temp), 2 ) ) )
+		self.gasGrid.SetCellValue( 4, 0, str( conv*round( gas.Cp_fn(gas.gamma_p, gas.Cp_p, gas.theta, temp) - \
+															gas.Cv_fn(gas.gamma_p, gas.Cv_p, gas.theta, temp), 2) ) )
+
+
+class thermalWindow(wx.Frame):
+	def __init__(self, parent):
+		wx.Frame.__init__( self, parent, title = 'Wall' + ' Properties',\
+						size = wx.Size( 236, 58 ), style=wx.DEFAULT_FRAME_STYLE )
+
+		self.wallGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.wallGrid.CreateGrid( 1, 1 )
+		self.wallGrid.SetRowLabelSize( 140 )
+		self.wallGrid.SetColLabelSize( 0 )
+
+		self.wallGrid.SetRowLabelValue( 0, u"Wall Temperature " + '(' + parent.units.temp + ')' )
+		self.wallGrid.SetCellValue( 0, 0, '300')
+		self.walltemp = self.wallGrid.GetCellValue( 0, 0 )
+		self.wallGrid.Bind( wx.grid.EVT_GRID_CELL_CHANGED, self.wall_change )
+
+	def wall_change( self, event ):
+		self.walltemp = self.wallGrid.GetCellValue( 0, 0 )
 

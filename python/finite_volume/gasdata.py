@@ -30,7 +30,7 @@ class air_cpg:
 
     def Cv_fn( k_p, Cv_p, th, T ):
         import numpy as np
-        Cv = Cv_p * (1+(k_p-1)/k_p * ((th/T)**2*np.exp(th/T)/(np.exp(th/T)-1)**2))
+        Cv = Cv_p * (1+(k_p-1) * ((th/T)**2*np.exp(th/T)/(np.exp(th/T)-1)**2))
         return Cv
 
     def R_fn( Cp, Cv ):
@@ -56,7 +56,7 @@ class C02_cpg:
 
     def Cv_fn( k_p, Cv_p, th, T ):
         import numpy as np
-        Cv = Cv_p * (1+(k_p-1)/k_p * ((th/T)**2*np.exp(th/T)/(np.exp(th/T)-1)**2))
+        Cv = Cv_p * (1+(k_p-1) * ((th/T)**2*np.exp(th/T)/(np.exp(th/T)-1)**2))
         return Cv
 
     def R_fn( Cp, Cv ):
@@ -82,7 +82,7 @@ class H2_cpg:
 
     def Cv_fn( k_p, Cv_p, th, T ):
         import numpy as np
-        Cv = Cv_p * (1+(k_p-1)/k_p * ((th/T)**2*np.exp(th/T)/(np.exp(th/T)-1)**2))
+        Cv = Cv_p * (1+(k_p-1) * ((th/T)**2*np.exp(th/T)/(np.exp(th/T)-1)**2))
         return Cv
 
     def R_fn( Cp, Cv ):
@@ -112,7 +112,7 @@ class air_tpg:
 
     def Cv_fn( k_p, Cv_p, th, T ):
         import numpy as np
-        Cv = Cv_p * (1+(k_p-1)/k_p * ((th/T)**2*np.exp(th/T)/(np.exp(th/T)-1)**2))
+        Cv = Cv_p * (1+(k_p-1) * ((th/T)**2*np.exp(th/T)/(np.exp(th/T)-1)**2))
         return Cv
 
     def R_fn( Cp, Cv ):
@@ -138,7 +138,7 @@ class C02_tpg:
 
     def Cv_fn( k_p, Cv_p, th, T ):
         import numpy as np
-        Cv = Cv_p * (1+(k_p-1)/k_p * ((th/T)**2*np.exp(th/T)/(np.exp(th/T)-1)**2))
+        Cv = Cv_p * (1+(k_p-1) * ((th/T)**2*np.exp(th/T)/(np.exp(th/T)-1)**2))
         return Cv
 
     def R_fn( Cp, Cv ):
@@ -164,7 +164,7 @@ class H2_tpg:
 
     def Cv_fn( k_p, Cv_p, th, T ):
         import numpy as np
-        Cv = Cv_p * (1+(k_p-1)/k_p * ((th/T)**2*np.exp(th/T)/(np.exp(th/T)-1)**2))
+        Cv = Cv_p * (1+(k_p-1) * ((th/T)**2*np.exp(th/T)/(np.exp(th/T)-1)**2))
         return Cv
 
     def R_fn( Cp, Cv ):

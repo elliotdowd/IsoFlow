@@ -34,18 +34,22 @@ def enforce_bc(domain, mesh, parameters, state, gas):
     if parameters.botwall_thermal == 'Adiabatic':
         state.T[:,0] = state.T[:,1]
     elif parameters.botwall_thermal == 'Isothermal':
-        state.T[obj_i+1:obj_f,0] = 2 * 300 - state.T[obj_i+1:obj_f,1]
+        state.T[obj_i:obj_f,0] = 2 * parameters.botwall_temp - state.T[obj_i:obj_f,1]
+    elif parameters.botwall_thermal == 'Fixed Temperature':
+        state.T[obj_i:obj_f,0] = parameters.botwall_temp
 
     if parameters.botwall == 'Inviscid Wall':
         state.Q[:, 0:2, :] = invisc_wall(state.Q[:, 0:2, :], state.p[:, 0], state.T[:, 0], mesh.s_proj[:, 0:2, :], domain.M+2, 0, gas, False)
     elif parameters.botwall == 'Viscous Wall':
-        state.Q[obj_i+1:obj_f, 0:2, :] = visc_wall(state.Q[obj_i+1:obj_f, 0:2, :], \
-                state.p[obj_i+1:obj_f, 0], state.T[obj_i+1:obj_f, 0], mesh.s_proj[obj_i+1:obj_f, 0:2, :], gas, obj_i, obj_f, 0, False)
+        state.Q[obj_i:obj_f, 0:2, :] = visc_wall(state.Q[obj_i:obj_f, 0:2, :], \
+                state.p[obj_i:obj_f, 0], state.T[obj_i:obj_f, 0], mesh.s_proj[obj_i:obj_f, 0:2, :], gas, obj_i-1, obj_f, 0, False)
 
     if parameters.topwall_thermal == 'Adiabatic':
         state.T[:,domain.N+1] = state.T[:,domain.N]
     elif parameters.topwall_thermal == 'Isothermal':
-        state.T[obj_i+1:obj_f,domain.N+1] = 2 * 300 - state.T[obj_i+1:obj_f,domain.N]
+        state.T[:,domain.N+1] = 2 * parameters.topwall_temp - state.T[:,domain.N]
+    elif parameters.topwall_thermal == 'Fixed Temperature':
+        state.T[:,domain.N+1] = parameters.topwall_temp
 
     if parameters.topwall == 'Outflow':
         state.Q[:, domain.N+1, :] = state.Qn[:, domain.N+1, :]
