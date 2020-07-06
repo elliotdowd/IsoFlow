@@ -1134,11 +1134,13 @@ class MainFrame ( wx.Frame ):
 		event.Skip()
 
 	def botwall_thermal_change( self, event ):
+		self.faceselect = 'bot'
 		self.bot_thermal_window = thermalWindow(parent=self)
 		self.bot_thermal_window.Show()
 		event.Skip()
 
 	def topwall_thermal_change( self, event ):
+		self.faceselect = 'top'
 		self.top_thermal_window = thermalWindow(parent=self)
 		self.top_thermal_window.Show()
 		event.Skip()
@@ -1234,7 +1236,15 @@ class tableWindow(wx.Frame):
 			elif parent.gasSelect == 'Hydrogen':
 				self.gas = gasdata.H2_tpg
 
-		self.gasGrid.SetCellValue( 0, 0, '300')
+		if self.units.temp == '°C':
+			self.gasGrid.SetCellValue( 0, 0, '0')
+		elif self.units.temp == '°F':
+			self.gasGrid.SetCellValue( 0, 0, '32')
+		elif self.units.temp == '°R':
+			self.gasGrid.SetCellValue( 0, 0, '459.67')
+		else:
+			self.gasGrid.SetCellValue( 0, 0, '273.15')
+			
 		self.gasdata_change( wx.grid.EVT_GRID_CELL_CHANGED )
 
 		self.gasGrid.EnableEditing( True )
@@ -1248,8 +1258,8 @@ class tableWindow(wx.Frame):
 			temp = float(self.gasGrid.GetCellValue(0, 0)) + 273.15
 			conv = 1 / (self.units.conv_energy(1) / (self.units.conv_mass(1)*(self.units.conv_temp(0)+273.15)))
 		elif self.units.temp == '°F':
-			temp = float(self.gasGrid.GetCellValue(0, 0)) + 459.67
-			conv = 1 / (self.units.conv_energy(1) / (self.units.conv_mass(1)*(self.units.conv_temp(0)+458.87)))
+			temp = (float(self.gasGrid.GetCellValue(0, 0))-32)*(5/9) + 273.15
+			conv = 1 / (self.units.conv_energy(1) / self.units.conv_mass(1))
 		else:
 			temp = float(self.gasGrid.GetCellValue(0, 0))
 			conv = 1 / (self.units.conv_energy(1) / (self.units.conv_mass(1)*self.units.conv_temp(1)))
@@ -1276,7 +1286,14 @@ class thermalWindow(wx.Frame):
 		self.wallGrid.SetColLabelSize( 0 )
 
 		self.wallGrid.SetRowLabelValue( 0, u"Wall Temperature " + '(' + parent.units.temp + ')' )
-		self.wallGrid.SetCellValue( 0, 0, '300')
+
+		if parent.faceselect == 'bot' and hasattr(parent, 'bot_thermal_window'):
+			self.wallGrid.SetCellValue( 0, 0, str(parent.bot_thermal_window.walltemp))
+		elif parent.faceselect == 'top' and hasattr(parent, 'top_thermal_window'):
+			self.wallGrid.SetCellValue( 0, 0, str(parent.top_thermal_window.walltemp))
+		else:
+			self.wallGrid.SetCellValue( 0, 0, '300')
+
 		self.walltemp = self.wallGrid.GetCellValue( 0, 0 )
 		self.wallGrid.Bind( wx.grid.EVT_GRID_CELL_CHANGED, self.wall_change )
 
