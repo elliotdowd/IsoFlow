@@ -1201,21 +1201,30 @@ class NewWindow(wx.Frame):
 class tableWindow(wx.Frame):
 	def __init__(self, parent):
 		wx.Frame.__init__( self, parent, title = parent.gasSelect + ' Properties',\
-						size = wx.Size( 236, 134 ), style=wx.DEFAULT_FRAME_STYLE )
-		#self.SetBackgroundColor( wx.Colour( 256, 256, 256 ) )
+						size = wx.Size( 300, 294 ), style=wx.DEFAULT_FRAME_STYLE )
 		import gui1
 		import python.finite_volume.gasdata as gasdata
+		import numpy as np
+		import matplotlib.pyplot as plt
+		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+
+		sizer = wx.BoxSizer(wx.VERTICAL)
 
 		# Gas information grid
 		self.gasGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.gasGrid.CreateGrid( 5, 1 )
-		self.gasGrid.SetRowLabelSize( 140 )
+		self.gasGrid.SetRowLabelSize( 190 )
 		self.gasGrid.SetColLabelSize( 0 )
 		self.gasGrid.SetRowLabelValue( 0, u"Temperature " + '(' + parent.units.temp + ')' )
 		self.gasGrid.SetRowLabelValue( 1, u"Specific Heat Ratio" )
 		self.gasGrid.SetRowLabelValue( 2, u"Cp " + '(' + parent.units.energy + '/' + parent.units.mass + parent.units.temp + ')')
 		self.gasGrid.SetRowLabelValue( 3, u"Cv " + '(' + parent.units.energy + '/' + parent.units.mass + parent.units.temp + ')' )
 		self.gasGrid.SetRowLabelValue( 4, u"R " + '(' + parent.units.energy + '/' + parent.units.mass + parent.units.temp + ')')
+
+		self.gasPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		self.gasPanel.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
+
+		#sizer.Add( self.gasPanel, 0, wx.CENTER )
 
 		self.gasGrid.Bind( wx.grid.EVT_GRID_CELL_CHANGED, self.gasdata_change )
 		self.temp = 300
@@ -1236,21 +1245,51 @@ class tableWindow(wx.Frame):
 			elif parent.gasSelect == 'Hydrogen':
 				self.gas = gasdata.H2_tpg
 
+		T = np.linspace(0, 4000, 100)
+
 		if self.units.temp == '°C':
 			self.gasGrid.SetCellValue( 0, 0, '0')
+			T_plot = np.linspace(-273, 4000-273, 100)
 		elif self.units.temp == '°F':
 			self.gasGrid.SetCellValue( 0, 0, '32')
+			T_plot = np.linspace(-459.67, 6740.33, 100)
 		elif self.units.temp == '°R':
 			self.gasGrid.SetCellValue( 0, 0, '459.67')
+			T_plot = T * (9/5)
 		else:
 			self.gasGrid.SetCellValue( 0, 0, '273.15')
-			
+			T_plot = T
+
 		self.gasdata_change( wx.grid.EVT_GRID_CELL_CHANGED )
 
 		self.gasGrid.EnableEditing( True )
 		self.gasGrid.EnableGridLines( True )
 		self.gasGrid.EnableDragGridSize( False )
 		self.gasGrid.SetMargins( 0, 0 )
+
+		self.gasGrid.SetDefaultCellAlignment( wx.ALIGN_LEFT, wx.ALIGN_TOP )
+		sizer.Add( self.gasGrid, 0, wx.EXPAND | wx.ALL, 0 )
+		self.gasPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		sizer.Add( self.gasPanel, 1, wx.EXPAND | wx.ALL, 0 )
+		
+		self.SetSizer( sizer )
+		self.Layout()
+		
+		self.Centre( wx.BOTH )
+
+		self.gasPanel.fig = plt.figure( dpi=100, figsize=(2.99, 1.6), facecolor=(1, 1, 1) )
+		self.gasPanel.ax = self.gasPanel.fig.gca()
+
+		self.gasPanel.ax.plot( T_plot, self.gas.Cp_fn(self.gas.gamma_p, self.gas.Cp_p, self.gas.theta, T) \
+									 / self.gas.Cv_fn(self.gas.gamma_p, self.gas.Cv_p, self.gas.theta, T), color='k' )
+
+		self.gasPanel.ax.set_xlabel('Temperature' + ' (' + self.units.temp + ')', fontsize=8)
+		self.gasPanel.ax.tick_params( axis='x', labelsize=8 )
+		self.gasPanel.ax.set_ylabel('$\gamma$', fontsize=8)
+		self.gasPanel.ax.tick_params( axis='y', labelsize=8 )
+		self.gasPanel.ax.set_position([0.2, 0.27, 0.7, 0.66], which='both')
+		self.gasPanel.ax.set_aspect('auto', adjustable='box', anchor='C')
+		self.gasPanel.canvas = FigureCanvas(self.gasPanel, -1, self.gasPanel.fig)
 
 	def gasdata_change(self, event):
 		gas = self.gas

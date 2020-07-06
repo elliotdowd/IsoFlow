@@ -88,7 +88,7 @@
             <event name="OnSetFocus"></event>
             <event name="OnSize"></event>
             <event name="OnUpdateUI"></event>
-            <object class="wxGridBagSizer" expanded="1">
+            <object class="wxGridBagSizer" expanded="0">
                 <property name="empty_cell_size"></property>
                 <property name="flexible_direction">wxBOTH</property>
                 <property name="growablecols"></property>
@@ -191,7 +191,7 @@
                         <event name="OnChar"></event>
                         <event name="OnEnterWindow"></event>
                         <event name="OnEraseBackground"></event>
-                        <event name="OnGridCellChange"></event>
+                        <event name="OnGridCellChange">domainGridOnGridCellChange</event>
                         <event name="OnGridCellLeftClick"></event>
                         <event name="OnGridCellLeftDClick"></event>
                         <event name="OnGridCellRightClick"></event>
@@ -328,14 +328,14 @@
                         <event name="OnUpdateUI"></event>
                     </object>
                 </object>
-                <object class="gbsizeritem" expanded="1">
+                <object class="gbsizeritem" expanded="0">
                     <property name="border">5</property>
                     <property name="colspan">60</property>
                     <property name="column">0</property>
                     <property name="flag">wxALL|wxEXPAND</property>
                     <property name="row">14</property>
                     <property name="rowspan">3</property>
-                    <object class="wxPanel" expanded="1">
+                    <object class="wxPanel" expanded="0">
                         <property name="BottomDockable">1</property>
                         <property name="LeftDockable">1</property>
                         <property name="RightDockable">1</property>
@@ -411,14 +411,14 @@
                         <event name="OnUpdateUI"></event>
                     </object>
                 </object>
-                <object class="gbsizeritem" expanded="1">
+                <object class="gbsizeritem" expanded="0">
                     <property name="border">5</property>
                     <property name="colspan">54</property>
                     <property name="column">2</property>
                     <property name="flag">wxALL|wxEXPAND</property>
                     <property name="row">10</property>
                     <property name="rowspan">4</property>
-                    <object class="wxPanel" expanded="1">
+                    <object class="wxPanel" expanded="0">
                         <property name="BottomDockable">1</property>
                         <property name="LeftDockable">1</property>
                         <property name="RightDockable">1</property>
@@ -494,14 +494,14 @@
                         <event name="OnUpdateUI"></event>
                     </object>
                 </object>
-                <object class="gbsizeritem" expanded="1">
+                <object class="gbsizeritem" expanded="0">
                     <property name="border">5</property>
                     <property name="colspan">1</property>
                     <property name="column">0</property>
                     <property name="flag">wxALL|wxEXPAND</property>
                     <property name="row">7</property>
                     <property name="rowspan">1</property>
-                    <object class="wxGrid" expanded="1">
+                    <object class="wxGrid" expanded="0">
                         <property name="BottomDockable">1</property>
                         <property name="LeftDockable">1</property>
                         <property name="RightDockable">1</property>
@@ -640,14 +640,14 @@
                         <event name="OnUpdateUI"></event>
                     </object>
                 </object>
-                <object class="gbsizeritem" expanded="1">
+                <object class="gbsizeritem" expanded="0">
                     <property name="border">5</property>
                     <property name="colspan">1</property>
                     <property name="column">0</property>
                     <property name="flag">wxALL|wxEXPAND</property>
                     <property name="row">11</property>
                     <property name="rowspan">1</property>
-                    <object class="wxGrid" expanded="1">
+                    <object class="wxGrid" expanded="0">
                         <property name="BottomDockable">1</property>
                         <property name="LeftDockable">1</property>
                         <property name="RightDockable">1</property>
@@ -786,14 +786,14 @@
                         <event name="OnUpdateUI"></event>
                     </object>
                 </object>
-                <object class="gbsizeritem" expanded="1">
+                <object class="gbsizeritem" expanded="0">
                     <property name="border">5</property>
                     <property name="colspan">1</property>
                     <property name="column">0</property>
                     <property name="flag">wxALL|wxALIGN_CENTER_HORIZONTAL</property>
                     <property name="row">6</property>
                     <property name="rowspan">1</property>
-                    <object class="wxStaticText" expanded="1">
+                    <object class="wxStaticText" expanded="0">
                         <property name="BottomDockable">1</property>
                         <property name="LeftDockable">1</property>
                         <property name="RightDockable">1</property>
@@ -872,14 +872,14 @@
                         <event name="OnUpdateUI"></event>
                     </object>
                 </object>
-                <object class="gbsizeritem" expanded="1">
+                <object class="gbsizeritem" expanded="0">
                     <property name="border">5</property>
                     <property name="colspan">1</property>
                     <property name="column">0</property>
                     <property name="flag">wxALL|wxALIGN_CENTER_HORIZONTAL</property>
                     <property name="row">10</property>
                     <property name="rowspan">1</property>
-                    <object class="wxStaticText" expanded="1">
+                    <object class="wxStaticText" expanded="0">
                         <property name="BottomDockable">1</property>
                         <property name="LeftDockable">1</property>
                         <property name="RightDockable">1</property>
@@ -958,14 +958,14 @@
                         <event name="OnUpdateUI"></event>
                     </object>
                 </object>
-                <object class="gbsizeritem" expanded="1">
+                <object class="gbsizeritem" expanded="0">
                     <property name="border">5</property>
                     <property name="colspan">1</property>
                     <property name="column">0</property>
                     <property name="flag">wxALL|wxEXPAND</property>
                     <property name="row">3</property>
                     <property name="rowspan">1</property>
-                    <object class="wxChoice" expanded="1">
+                    <object class="wxChoice" expanded="0">
                         <property name="BottomDockable">1</property>
                         <property name="LeftDockable">1</property>
                         <property name="RightDockable">1</property>
@@ -1049,14 +1049,14 @@
                         <event name="OnUpdateUI"></event>
                     </object>
                 </object>
-                <object class="gbsizeritem" expanded="1">
+                <object class="gbsizeritem" expanded="0">
                     <property name="border">5</property>
                     <property name="colspan">1</property>
                     <property name="column">0</property>
                     <property name="flag">wxALL|wxEXPAND</property>
                     <property name="row">13</property>
                     <property name="rowspan">1</property>
-                    <object class="wxButton" expanded="1">
+                    <object class="wxButton" expanded="0">
                         <property name="BottomDockable">1</property>
                         <property name="LeftDockable">1</property>
                         <property name="RightDockable">1</property>
@@ -1140,14 +1140,14 @@
                         <event name="OnUpdateUI"></event>
                     </object>
                 </object>
-                <object class="gbsizeritem" expanded="1">
+                <object class="gbsizeritem" expanded="0">
                     <property name="border">5</property>
                     <property name="colspan">1</property>
                     <property name="column">0</property>
                     <property name="flag">wxALL|wxEXPAND</property>
                     <property name="row">12</property>
                     <property name="rowspan">1</property>
-                    <object class="wxChoice" expanded="1">
+                    <object class="wxChoice" expanded="0">
                         <property name="BottomDockable">1</property>
                         <property name="LeftDockable">1</property>
                         <property name="RightDockable">1</property>
@@ -1322,14 +1322,14 @@
                         <event name="OnUpdateUI"></event>
                     </object>
                 </object>
-                <object class="gbsizeritem" expanded="1">
+                <object class="gbsizeritem" expanded="0">
                     <property name="border">5</property>
                     <property name="colspan">1</property>
                     <property name="column">0</property>
                     <property name="flag">wxALL|wxEXPAND</property>
                     <property name="row">8</property>
                     <property name="rowspan">1</property>
-                    <object class="wxButton" expanded="1">
+                    <object class="wxButton" expanded="0">
                         <property name="BottomDockable">1</property>
                         <property name="LeftDockable">1</property>
                         <property name="RightDockable">1</property>
@@ -1499,14 +1499,14 @@
                         <event name="OnUpdateUI"></event>
                     </object>
                 </object>
-                <object class="gbsizeritem" expanded="1">
+                <object class="gbsizeritem" expanded="0">
                     <property name="border">5</property>
                     <property name="colspan">1</property>
                     <property name="column">0</property>
                     <property name="flag">wxEXPAND | wxALL</property>
                     <property name="row">5</property>
                     <property name="rowspan">1</property>
-                    <object class="wxStaticLine" expanded="1">
+                    <object class="wxStaticLine" expanded="0">
                         <property name="BottomDockable">1</property>
                         <property name="LeftDockable">1</property>
                         <property name="RightDockable">1</property>
@@ -1583,14 +1583,14 @@
                         <event name="OnUpdateUI"></event>
                     </object>
                 </object>
-                <object class="gbsizeritem" expanded="1">
+                <object class="gbsizeritem" expanded="0">
                     <property name="border">5</property>
                     <property name="colspan">1</property>
                     <property name="column">0</property>
                     <property name="flag">wxALL|wxEXPAND</property>
                     <property name="row">9</property>
                     <property name="rowspan">1</property>
-                    <object class="wxStaticLine" expanded="1">
+                    <object class="wxStaticLine" expanded="0">
                         <property name="BottomDockable">1</property>
                         <property name="LeftDockable">1</property>
                         <property name="RightDockable">1</property>
@@ -1892,7 +1892,7 @@
                     </object>
                     <object class="submenu" expanded="1">
                         <property name="bitmap"></property>
-                        <property name="label">Bottom Wall Thermal Options</property>
+                        <property name="label">Top Wall Thermal Options</property>
                         <property name="name">topwall_thermal</property>
                         <property name="permission">protected</property>
                         <object class="wxMenuItem" expanded="1">
