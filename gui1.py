@@ -20,6 +20,7 @@ from matplotlib import cm
 
 class MainFrame ( wx.Frame ):
 	
+
 	def __init__( self, parent ):
 		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.Point( 100,100 ), size = wx.Size( 740, 686 ), style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER )
 		
@@ -257,6 +258,10 @@ class MainFrame ( wx.Frame ):
 
 		self.topwall_fixed = wx.MenuItem( self.topwall_thermal, wx.ID_ANY, u"Fixed Temperature", wx.EmptyString, wx.ITEM_RADIO )
 		self.topwall_thermal.Append( self.topwall_fixed )
+
+		self.topwall_adiabatic.Enable(False)
+		self.topwall_isothermal.Enable(False)
+		self.topwall_fixed.Enable(False)
 		
 		self.boundOptions.AppendSubMenu( self.topwall_thermal, u"Top Wall Thermal Options" )
 				
@@ -270,7 +275,7 @@ class MainFrame ( wx.Frame ):
 		self.velocity = wx.MenuItem( self.contOptions, 2, u"Velocity", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.Append( self.velocity )
 
-		self.quiver = wx.MenuItem( self.contOptions, 3, u"Velocity Streamlines", wx.EmptyString, wx.ITEM_RADIO )
+		self.quiver = wx.MenuItem( self.contOptions, 3, u"Velocity Quiver", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.Append( self.quiver )
 
 		self.rho = wx.MenuItem( self.contOptions, 4, u"Density", wx.EmptyString, wx.ITEM_RADIO )
@@ -381,6 +386,10 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.gas_change, id = self.H2.GetId() )
 		self.Bind( wx.EVT_MENU, self.thermalgas_change, id = self.thermalgas.GetId() )
 		self.Bind( wx.EVT_MENU, self.infoWindow, id = self.gasinfo.GetId() )
+
+		self.Bind( wx.EVT_MENU, self.topwall_change, id = self.topwall_out.GetId() )
+		self.Bind( wx.EVT_MENU, self.topwall_change, id = self.topwall_invisc.GetId() )
+		self.Bind( wx.EVT_MENU, self.topwall_change, id = self.topwall_visc.GetId() )
 
 		self.Bind( wx.EVT_MENU, self.botwall_thermal_change, id = self.botwall_isothermal.GetId() )
 		self.Bind( wx.EVT_MENU, self.botwall_thermal_change, id = self.botwall_fixed.GetId() )
@@ -726,12 +735,6 @@ class MainFrame ( wx.Frame ):
 		contQuantity = self.contQuantity + ' ' + self.gradient
 		cl = self.units.conv_length(1)
 
-		# floating point display formatting
-		def fmt(x, pos):
-			a, b = '{:.2e}'.format(x).split('e')
-			b = int(b)
-			return r'${} \times 10^{{{}}}$'.format(a, b)
-
 		if contQuantity == 'Mach ':
 			cont = panel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 							    		      	  self.state.Mach[0:-1,1:-1], self.contGrad, cmap=self.cmOption)
@@ -750,12 +753,15 @@ class MainFrame ( wx.Frame ):
 												shrink=r, extend='both', ax=panel.cax)
 			CB.set_label(contQuantity + ' (' + self.units.length + '/' + self.units.time + ')', rotation=90)
 		elif contQuantity == 'Velocity Quiver ':
+			downM = int(self.domain.M/24)
+			downN = int(self.domain.N/24)
 			fill = panel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
 									  self.state.Mach[0:-1,1:-1] * 0, colors='w')
-			cont = panel.cax.quiver(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
-								  				self.state.u[0:-1,1:-1], self.state.v[0:-1,1:-1], \
-												self.state.vel[0:-1,1:-1], cmap=self.cmOption, pivot='tip', \
-												angles='uv', scale_units='width', scale=0.8*self.domain.M*np.max(self.state.vel[0:-1,1:-1]))
+			cont = panel.cax.quiver(cl*self.mesh.xxc[0:-1:downM,1:-1:downN], cl*self.mesh.yyc[0:-1:downM,1:-1:downN], \
+								  				self.state.u[0:-1:downM,1:-1:downN], self.state.v[0:-1:downM,1:-1:downN], \
+												self.state.vel[0:-1:downM,1:-1:downN], cmap=self.cmOption, pivot='tip', \
+												angles='uv', scale_units='width', \
+												scale=0.8*self.domain.M*np.max(self.state.vel[0:-1,1:-1])/max((downM,downM)))
 			# colorbar settings
 			ticks = np.linspace(round(np.min(self.state.vel),0), round(np.max(self.state.vel),0), 6)
 			CB = panel.figure.colorbar(cont, ticks=ticks, \
@@ -839,8 +845,6 @@ class MainFrame ( wx.Frame ):
 			CB = panel.figure.colorbar(cont, ticks=ticks, \
 												shrink=r, extend='both', ax=panel.cax)
 			CB.set_label(contQuantity + ' (' + self.units.temp + ')', rotation=90)
-
-		#CB(cont, format=ticker.FuncFormatter(fmt))
 
 		# set up contour labels
 		if self.contQuantity != 'Velocity Quiver':
@@ -1137,6 +1141,17 @@ class MainFrame ( wx.Frame ):
 	def topwall_thermal_change( self, event ):
 		self.top_thermal_window = thermalWindow(parent=self)
 		self.top_thermal_window.Show()
+		event.Skip()
+
+	def topwall_change( self, event ):
+		if self.topwall_invisc.IsChecked() or self.topwall_visc.IsChecked():
+			self.topwall_adiabatic.Enable(True)
+			self.topwall_isothermal.Enable(True)
+			self.topwall_fixed.Enable(True)
+		else:
+			self.topwall_adiabatic.Enable(False)
+			self.topwall_isothermal.Enable(False)
+			self.topwall_fixed.Enable(False)
 		event.Skip()
 
 	# open contour plot in new window
