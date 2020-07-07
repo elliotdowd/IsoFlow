@@ -87,3 +87,30 @@ def mesh_airfoil(domain):
 
     return xx, yy
 
+
+def mesh_cylinder(domain):
+
+    # import numpy
+    import numpy as np
+
+    # import domain values
+    M = domain.M
+    N = domain.N
+    length = domain.length
+    height = domain.height
+    theta1 = domain.theta
+    cyl_start = domain.obj_start
+    cyl_end = domain.obj_end
+
+    r = np.linspace( cyl_start*(1-(1/M)), length*(1+(1/M)), M+3)
+    th = np.linspace( 0, 2*np.pi(1+()), N+3)
+
+
+    rr, tt = np.meshgrid(r, th)
+    xx = rr * np.cos(tt)
+    yy = rr * np.sin(tt)
+
+    xx = np.transpose(xx)
+    yy = np.transpose(yy)
+
+    return xx, yy

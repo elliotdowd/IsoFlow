@@ -14,6 +14,11 @@ import wx.grid
 import sys
 from matplotlib import cm
 
+# import gi
+# gi.require_version('Gtk', '3.0')
+# from gi.repository import Gtk
+# from matplotlib.backends.backend_gtk3 import (NavigationToolbar2GTK3 as NavigationToolbar)
+
 ###########################################################################
 ## Class MainFrame
 ###########################################################################
@@ -160,7 +165,7 @@ class MainFrame ( wx.Frame ):
 		
 		MainSizer.Add( self.m_staticText111, wx.GBPosition( 10, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
-		gridChoiceChoices = [ u"Wedge", u"Airfoil" ]
+		gridChoiceChoices = [ u"Wedge", u"Airfoil", u"Cylinder" ]
 		self.gridChoice = wx.Choice( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, gridChoiceChoices, 0 )
 		self.gridChoice.SetSelection( 0 )
 		MainSizer.Add( self.gridChoice, wx.GBPosition( 3, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
@@ -266,6 +271,42 @@ class MainFrame ( wx.Frame ):
 		self.boundOptions.AppendSubMenu( self.topwall_thermal, u"Top Wall Thermal Options" )
 				
 		self.menuBar.Append( self.boundOptions, u"Boundaries" ) 
+
+		self.schemeOptions = wx.Menu()
+		self.higherorder = wx.MenuItem( self.schemeOptions, wx.ID_ANY, u"Higher Order Accuracy?", wx.EmptyString, wx.ITEM_CHECK )
+		self.schemeOptions.Append( self.higherorder )
+		
+		self.higherorderscheme = wx.Menu()
+		self.secondfullupwind = wx.MenuItem( self.higherorderscheme, wx.ID_ANY, u"Second Order \"Full\" Upwind", wx.EmptyString, wx.ITEM_RADIO )
+		self.higherorderscheme.Append( self.secondfullupwind )
+		
+		self.secondupwindbiased = wx.MenuItem( self.higherorderscheme, wx.ID_ANY, u"Second Order \"Full\" Upwind", wx.EmptyString, wx.ITEM_RADIO )
+		self.higherorderscheme.Append( self.secondupwindbiased )
+		
+		self.secondcentral = wx.MenuItem( self.higherorderscheme, wx.ID_ANY, u"Second Order Central", wx.EmptyString, wx.ITEM_RADIO )
+		self.higherorderscheme.Append( self.secondcentral )
+		
+		self.thirdfull = wx.MenuItem( self.higherorderscheme, wx.ID_ANY, u"Third Order \"Full\" Upwind", wx.EmptyString, wx.ITEM_RADIO )
+		self.higherorderscheme.Append( self.thirdfull )
+		
+		self.thirdupwind = wx.MenuItem( self.higherorderscheme, wx.ID_ANY, u"Third Order Upwind", wx.EmptyString, wx.ITEM_RADIO )
+		self.higherorderscheme.Append( self.thirdupwind )
+		
+		self.schemeOptions.AppendSubMenu( self.higherorderscheme, u"Higher Order Scheme" )
+		
+		self.limiterOptions = wx.Menu()
+		self.minmod = wx.MenuItem( self.limiterOptions, wx.ID_ANY, u"Minmod", wx.EmptyString, wx.ITEM_RADIO )
+		self.limiterOptions.Append( self.minmod )
+		
+		self.koren = wx.MenuItem( self.limiterOptions, wx.ID_ANY, u"Koren", wx.EmptyString, wx.ITEM_RADIO )
+		self.limiterOptions.Append( self.koren )
+		
+		self.schemeOptions.AppendSubMenu( self.limiterOptions, u"Flux Limiter Function" )
+		
+		self.musclinfo = wx.MenuItem( self.schemeOptions, wx.ID_ANY, u"Show More Information", wx.EmptyString, wx.ITEM_NORMAL )
+		self.schemeOptions.Append( self.musclinfo )
+		
+		self.menuBar.Append( self.schemeOptions, u"Scheme" ) 
 		
 		self.plotOptions = wx.Menu()
 		self.contOptions = wx.Menu()
@@ -493,7 +534,7 @@ class MainFrame ( wx.Frame ):
 	# Virtual event handlers, overide them in your derived class
 	def call_grid( self, event ):
 		import numpy as np
-		from python.mesh.grid.gen_grid import mesh_wedge, mesh_airfoil
+		from python.mesh.grid.gen_grid import mesh_wedge, mesh_airfoil, mesh_cylinder
 		from python.mesh.metrics.calc_cell_metrics import cellmetrics
 		import matplotlib.pyplot as plt
 		import matplotlib as mpl
@@ -520,6 +561,8 @@ class MainFrame ( wx.Frame ):
 			xx, yy = mesh_wedge(domain)
 		elif domain.name == "Airfoil":
 			xx, yy = mesh_airfoil(domain)
+		elif domain.name == "Cylinder":
+			xx, yy = mesh_cylinder(domain)
 		self.mesh = cellmetrics(xx, yy, domain)
 		self.domain = domain
 
@@ -627,7 +670,7 @@ class MainFrame ( wx.Frame ):
 	def call_scheme( self, event ):
 
 		from pytictoc import TicToc
-		from python.finite_volume.AUSM.schemes import AUSM, AUSMplusup, AUSMDV
+		from python.finite_volume.AUSM.schemes import AUSM, AUSMmuscl, AUSMplusup, AUSMDV
 		import python.finite_volume.gasdata as gasdata
 
 		t = TicToc()
@@ -694,7 +737,10 @@ class MainFrame ( wx.Frame ):
 				self.gas = gasdata.H2_tpg
 		
 		if scheme == 'AUSM':
-			self.state = AUSM( self.domain, self.mesh, self.parameters, self.state, self.gas )
+			if self.higherorder.IsChecked():
+				self.state = AUSMmuscl( self.domain, self.mesh, self.parameters, self.state, self.gas )
+			else:
+				self.state = AUSM( self.domain, self.mesh, self.parameters, self.state, self.gas )
 		elif scheme == 'AUSM+up':
 			self.state = AUSMplusup( self.domain, self.mesh, self.parameters, self.state, self.gas )
 		elif scheme == 'AUSMDV':
@@ -719,8 +765,9 @@ class MainFrame ( wx.Frame ):
 		# panel input as self.contourPanel
 
 		# length to height ratio
-		r = min(1, (1.5/1.3) / (self.domain.length/self.domain.height))
-
+		r = min(1, (1.5/1.3) / ( ( np.max(self.mesh.xxc) - np.min(self.mesh.xxc) ) / \
+							   ( np.max(self.mesh.yyc - np.min(self.mesh.yyc) ) ) ) )
+		
 		# post processing
 		plt.close(fig=panel.figure)
 		if scale > 1:

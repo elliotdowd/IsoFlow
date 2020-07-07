@@ -10,78 +10,92 @@ def enforce_bc(domain, mesh, parameters, state, gas):
     gas.Cp = gas.Cp_fn( gas.gamma_p, gas.Cp_p, gas.theta, state.T )
     gas.Cv = gas.Cv_fn( gas.gamma_p, gas.Cv_p, gas.theta, state.T )
 
-    if domain.name == 'Wedge':
-        obj_i = mesh.xx[:,1] > domain.obj_start
-        obj_i = np.where(obj_i)
-        obj_i = obj_i[0][0]
-        obj_f = domain.M+2
-    elif domain.name == 'Airfoil':
-        obj_i = mesh.xx[:,1] > domain.obj_start
-        obj_i = np.where(obj_i) 
-        obj_i = obj_i[0][0]
-        obj_f = mesh.xx[:,1] > domain.obj_end
-        if np.any(obj_f):
-            obj_f = np.where(obj_f)
-            obj_f = obj_f[0][0]
-        else:
-            obj_f = domain.M+2
+    if domain.name == 'Wedge' or 'Airfoil':
 
-    # update state variables at bottom wall
-    state.p[:, 0] = state.p[:, 1]
-    state.T[0:obj_i-1,0] = state.T[0:obj_i-1,1]
-    state.T[:, 0] = state.T[:,0]
+        # update state variables at bottom wall
+        state.p[:, 0] = state.p[:, 1]
+        state.T[:, 0] = state.T[:,0]
 
-    if parameters.botwall_thermal == 'Adiabatic':
-        state.T[:,0] = state.T[:,1]
-    elif parameters.botwall_thermal == 'Isothermal':
-        state.T[obj_i:obj_f,0] = 2 * parameters.botwall_temp - state.T[obj_i:obj_f,1]
-    elif parameters.botwall_thermal == 'Fixed Temperature':
-        state.T[obj_i:obj_f,0] = parameters.botwall_temp
+        if parameters.botwall_thermal == 'Adiabatic':
+            state.T[:,0] = state.T[:,1]
+        elif parameters.botwall_thermal == 'Isothermal':
+            state.T[obj_i:obj_f,0] = 2 * parameters.botwall_temp - state.T[obj_i:obj_f,1]
+        elif parameters.botwall_thermal == 'Fixed Temperature':
+            state.T[obj_i:obj_f,0] = parameters.botwall_temp
 
-    if parameters.botwall == 'Inviscid Wall':
-        state.Q[:, 0:2, :] = invisc_wall(state.Q[:, 0:2, :], state.p[:, 0], state.T[:, 0], mesh.s_proj[:, 0:2, :], domain.M+2, 0, gas, False)
-    elif parameters.botwall == 'Viscous Wall':
-        state.Q[obj_i:obj_f, 0:2, :] = visc_wall(state.Q[obj_i:obj_f, 0:2, :], \
-                state.p[obj_i:obj_f, 0], state.T[obj_i:obj_f, 0], mesh.s_proj[obj_i:obj_f, 0:2, :], gas, obj_i-1, obj_f, 0, False)
+        if parameters.botwall == 'Inviscid Wall':
+            state.Q[:, 0:2, :] = invisc_wall(state.Q[:, 0:2, :], state.p[:, 0], state.T[:, 0], mesh.s_proj[:, 0:2, :], \
+                                            domain.M+2, 0, gas, False)
+        elif parameters.botwall == 'Viscous Wall':
+            state.Q[obj_i:obj_f, 0:2, :] = visc_wall(state.Q[obj_i:obj_f, 0:2, :], \
+                    state.p[obj_i:obj_f, 0], state.T[obj_i:obj_f, 0], mesh.s_proj[obj_i:obj_f, 0:2, :], \
+                                                    gas, obj_i-1, obj_f, 0, False)
 
-    if parameters.topwall_thermal == 'Adiabatic':
-        state.T[:,domain.N+1] = state.T[:,domain.N]
-    elif parameters.topwall_thermal == 'Isothermal':
-        state.T[:,domain.N+1] = 2 * parameters.topwall_temp - state.T[:,domain.N]
-    elif parameters.topwall_thermal == 'Fixed Temperature':
-        state.T[:,domain.N+1] = parameters.topwall_temp
+        if parameters.topwall_thermal == 'Adiabatic':
+            state.T[:,domain.N+1] = state.T[:,domain.N]
+        elif parameters.topwall_thermal == 'Isothermal':
+            state.T[:,domain.N+1] = 2 * parameters.topwall_temp - state.T[:,domain.N]
+        elif parameters.topwall_thermal == 'Fixed Temperature':
+            state.T[:,domain.N+1] = parameters.topwall_temp
 
-    if parameters.topwall == 'Outflow':
-        state.Q[:, domain.N+1, :] = state.Qn[:, domain.N+1, :]
-    elif parameters.topwall == 'Inviscid Wall':
-        # update state variables at top wall
-        state.p[:, domain.N+1] = state.p[:, domain.N]
-        state.T[:,domain.N+1] = state.T[:,domain.N]
-        state.T[:, domain.N+1] = 300
+        if parameters.topwall == 'Outflow':
+            state.Q[:, domain.N+1, :] = state.Qn[:, domain.N+1, :]
+        elif parameters.topwall == 'Inviscid Wall':
+            # update state variables at top wall
+            state.p[:, domain.N+1] = state.p[:, domain.N]
+            state.T[:,domain.N+1] = state.T[:,domain.N]
+            state.T[:, domain.N+1] = 300
 
-        state.Q[:, domain.N:, :] = invisc_wall(state.Q[:, domain.N:, :], state.p[:, domain.N+1], state.T[:, domain.N+1], \
-                                               mesh.s_proj[:, domain.N:, :], domain.M+2, domain.N+1, gas, True)
-    elif parameters.topwall == 'Viscous Wall':
-        # update state variables at top wall
-        state.p[:, domain.N+1] = state.p[:, domain.N]
-        state.T[:,domain.N+1] = state.T[:,domain.N]
-        state.T[:, domain.N+1] = 300
+            state.Q[:, domain.N:, :] = invisc_wall(state.Q[:, domain.N:, :], state.p[:, domain.N+1], state.T[:, domain.N+1], \
+                                                mesh.s_proj[:, domain.N:, :], domain.M+2, domain.N+1, gas, True)
+        elif parameters.topwall == 'Viscous Wall':
+            # update state variables at top wall
+            state.p[:, domain.N+1] = state.p[:, domain.N]
+            state.T[:,domain.N+1] = state.T[:,domain.N]
+            state.T[:, domain.N+1] = 300
 
-        state.Q[:, domain.N:, :] = visc_wall(state.Q[:, domain.N:, :], \
-                                  state.p[:, domain.N+1], state.T[:, domain.N+1], mesh.s_proj[:, domain.N:, :], gas, -1, domain.M+2, domain.N+1, True)
+            state.Q[:, domain.N:, :] = visc_wall(state.Q[:, domain.N:, :], \
+                                    state.p[:, domain.N+1], state.T[:, domain.N+1], mesh.s_proj[:, domain.N:, :], gas, -1, domain.M+2, domain.N+1, True)
 
-        #state.Q[:, domain.N:, :] = np.flipud( visc_wall(np.array([state.Q[:, domain.N+1, :], state.Q[:, domain.N, :]]).reshape([domain.M+2, 2, 4]), state.p[:, domain.N], state.T[:, domain.N], \
-        #                    np.array([mesh.s_proj[:, domain.N+1, :], mesh.s_proj[:, domain.N, :]]).reshape([domain.M+2, 2, 6]), gas, -1, domain.M+2) )
+        # enforce inlet condition
+        state.Q[0,:,0] = parameters.p_in / (gas.R_fn(gas.Cp[0,:], gas.Cv[0,:]) * parameters.T_in)
+        state.Q[0,:,1] = state.Q[0,:,0] * parameters.M_in * np.sqrt(gas.gamma_fn(gas.Cp[0,:], gas.Cv[0,:])*parameters.p_in/state.Q[0,:,0])
+        state.Q[0,:,2] = state.Q[0,:,0] * 0
+        state.Q[0,:,3] = thermo.calc_rho_et(parameters.p_in, state.Q[0,:,0], state.Q[0,:,1]/state.Q[0,:,0], state.Q[0,:,2]/state.Q[0,:,0], gas.gamma_fn(gas.Cp[0,:], gas.Cv[0,:]))
 
+        # right side outflow
+        state.Q[domain.M+1, :, :] = state.Qn[domain.M, :, :] 
 
-    # enforce inlet condition
-    state.Q[0,:,0] = parameters.p_in / (gas.R_fn(gas.Cp[0,:], gas.Cv[0,:]) * parameters.T_in)
-    state.Q[0,:,1] = state.Q[0,:,0] * parameters.M_in * np.sqrt(gas.gamma_fn(gas.Cp[0,:], gas.Cv[0,:])*parameters.p_in/state.Q[0,:,0])
-    state.Q[0,:,2] = state.Q[0,:,0] * 0
-    state.Q[0,:,3] = thermo.calc_rho_et(parameters.p_in, state.Q[0,:,0], state.Q[0,:,1]/state.Q[0,:,0], state.Q[0,:,2]/state.Q[0,:,0], gas.gamma_fn(gas.Cp[0,:], gas.Cv[0,:]))
+    elif domain.name == 'Cylinder':
 
-    # right side outflow
-    state.Q[domain.M+1, :, :] = state.Qn[domain.M, :, :] 
+        # update state variables at cylinder  wall
+        state.p[:, 0] = state.p[:, 1]
+        state.T[:, 0] = state.T[:,0]
+
+        if parameters.botwall_thermal == 'Adiabatic':
+            state.T[:,0] = state.T[:,1]
+        elif parameters.botwall_thermal == 'Isothermal':
+            state.T[:,0] = 2 * parameters.botwall_temp - state.T[:,1]
+        elif parameters.botwall_thermal == 'Fixed Temperature':
+            state.T[:,0] = parameters.botwall_temp
+
+        if parameters.botwall == 'Inviscid Wall':
+            state.Q[:, 0:2, :] = invisc_wall(state.Q[:, 0:2, :], state.p[:, 0], state.T[:, 0], mesh.s_proj[:, 0:2, :], \
+                                            domain.M+2, 0, gas, False)
+        elif parameters.botwall == 'Viscous Wall':
+            state.Q[:, 0:2, :] = visc_wall(state.Q[:, 0:2, :], \
+                    state.p[:, 0], state.T[:, 0], mesh.s_proj[:, 0:2, :], \
+                                                    gas, -1, domain.M+2, 0, False)
+
+        # enforce inlet condition at outer circle
+        state.Q[:,-1,0] = parameters.p_in / (gas.R_fn(gas.Cp[:,-1], gas.Cv[:,-1]) * parameters.T_in)
+        state.Q[:,-1,1] = state.Q[:,-1,0] * parameters.M_in * np.sqrt(gas.gamma_fn(gas.Cp[:,-1], gas.Cv[:,-1])*parameters.p_in/state.Q[:,-1,0])
+        state.Q[:,-1,2] = state.Q[:,-1,0] * 0
+        state.Q[:,-1,3] = thermo.calc_rho_et(parameters.p_in, state.Q[:,-1,0], state.Q[:,-1,1]/state.Q[:,-1,0], state.Q[:,-1,2]/state.Q[:,-1,0], gas.gamma_fn(gas.Cp[:,-1], gas.Cv[:,-1]))
+
+        # symmetry conditions
+        state.p[0,:] = state.p[-1,:]
+        state.T[0,:] = state.T[-1,:]
 
     return state
 
