@@ -103,7 +103,7 @@ def mesh_cylinder(domain):
     cyl_end = domain.obj_end
 
     r = np.linspace( cyl_start*(1-(1/M)), length*(1+(1/M)), M+3)
-    th = np.linspace( 0, 2*np.pi(1+()), N+3)
+    th = np.linspace( 0, 2*np.pi*(1+(2/N)), N+3)
 
 
     rr, tt = np.meshgrid(r, th)

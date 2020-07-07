@@ -12,6 +12,22 @@ def enforce_bc(domain, mesh, parameters, state, gas):
 
     if domain.name == 'Wedge' or 'Airfoil':
 
+        if domain.name == 'Wedge':
+            obj_i = mesh.xx[:,1] > domain.obj_start
+            obj_i = np.where(obj_i)
+            obj_i = obj_i[0][0]
+            obj_f = domain.M+2
+        elif domain.name == 'Airfoil':
+            obj_i = mesh.xx[:,1] > domain.obj_start
+            obj_i = np.where(obj_i) 
+            obj_i = obj_i[0][0]
+            obj_f = mesh.xx[:,1] > domain.obj_end
+            if np.any(obj_f):
+                obj_f = np.where(obj_f)
+                obj_f = obj_f[0][0]
+            else:
+                obj_f = domain.M+2
+
         # update state variables at bottom wall
         state.p[:, 0] = state.p[:, 1]
         state.T[:, 0] = state.T[:,0]
@@ -67,6 +83,9 @@ def enforce_bc(domain, mesh, parameters, state, gas):
         state.Q[domain.M+1, :, :] = state.Qn[domain.M, :, :] 
 
     elif domain.name == 'Cylinder':
+
+        obj_i = 0
+        obj_f = domain.M+2
 
         # update state variables at cylinder  wall
         state.p[:, 0] = state.p[:, 1]
