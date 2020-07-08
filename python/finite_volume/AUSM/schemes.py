@@ -563,34 +563,45 @@ def SLAU( domain, mesh, parameters, state, gas ):
         M_D = state.V[:,0:-1] / c_half_eta
         M_U = state.V[:,1:] / c_half_eta
 
-        # local mean mach number in each computational direction (Liou 2005 eq. 13)
-    
-        M_bar_zeta = np.sqrt((1/2)*(state.U[0:-1,:]**2 + state.U[1:,:]**2)/c_half_zeta)
-        M_bar_eta = np.sqrt((1/2)*(state.V[:,0:-1]**2 + state.V[:,1:]**2)/c_half_eta)
-
-        # global cutoff Mach numbers
-        M_co_zeta = parameters.M_in
-        M_co_eta = 0.25
-
         # split interface Mach numbers in the zeta and eta directions
-        M_half_zeta = split.M4p( M_L ) + split.M4m( M_R ) + split.Mp(M_bar_zeta, split.M0(M_bar_zeta, M_co_zeta), \
-                                                                     state.p[0:-1,:], state.p[1:,:], rho_half_zeta, c_half_zeta)
-        M_half_eta = split.M4p( M_D ) + split.M4m( M_U ) + split.Mp(M_bar_eta, split.M0(M_bar_eta, M_co_eta), \
-                                                                     state.p[:,0:-1], state.p[:,1:], rho_half_eta, c_half_eta)
+        M_half_zeta = split.M4p( M_L ) + split.M4m( M_R )
+        M_half_eta = split.M4p( M_D ) + split.M4m( M_U )
+
+        # corrective factor g in each computational direction
+        g_zeta = -np.max( np.min(split.M4p( M_L, 0 ),0), -1 ) * np.min( np.max( split.M4m( M_R, 0 ), 1) )
+        g_eta = -np.max( np.min(split.M4p( M_D, 0 ),0), -1 ) * np.min( np.max( split.M4m( M_U, 0 ), 1) )
+
+        # abs(Vbar_n), density weighted covariant velocity, A8 in Shima and Kitamura 2009
+        Ubar = ( state.Q[1:,:,0]*np.abs(state.U[1:,:]) + state.Q[0:-1,:,0]*np.abs(state.U[0:-1,:]) ) / ( state.Q[1:,:,0] + state.Q[0:-1,:,0] )
+        Vbar = ( state.Q[1:,:,0]*np.abs(state.U[1:,:]) + state.Q[0:-1,:,0]*np.abs(state.U[0:-1,:]) ) / ( state.Q[1:,:,0] + state.Q[0:-1,:,0] )
+
+        # corrected 
+
+        # non-dimensional function, O(M)
+        M_bar_zeta = np.minimum( 1.0, (1/c_half_zeta) * np.sqrt( ( state.u[1:,:]**2 + state.v[1:,:]**2 + state.u[0:-1,:]**2 + state.v[0:-1,:]**2 ) / 2 ) )
+        M_bar_eta = np.minimum( 1.0, (1/c_half_eta) * np.sqrt( ( state.u[:,1:]**2 + state.v[:,1:]**2 + state.u[:,0:-1]**2 + state.v[:,0:-1]**2 ) / 2 ) )
 
         # calculate mass flux at cell interfaces
-        mdot_half_zeta = c_half_zeta * M_half_zeta * ( np.double(M_half_zeta>0) * state.Q[0:-1,:,0] + np.double(M_half_zeta<=0) * state.Q[1:,:,0] )
-        mdot_half_eta =  c_half_eta  * M_half_eta  * ( np.double(M_half_eta>0)  * state.Q[:,0:-1,0] + np.double(M_half_eta<=0)  * state.Q[:,1:,0] )
+        mdot_half_zeta = (1/2) * ( ( state.Q[1:,:,0]*state.U[1:,:] + state.Q[0:-1,:,0]*state.U[0:-1,:]) ) - \
+                                 ( np.abs( state.U[1:,:]+state.U[0:-1,:] )/2 ) * ( state.Q[1:,:,0]-state.Q[0:-1,:,0] ) - \
+                                 ( ( np.abs(M_bar_zeta+1) - np.abs(M_bar_zeta-1) ) / 2 ) * ((state.Q[0:-1,:,0]+state.Q[1:,:,0])/2)*(state.U[1:,:]-state.U[0:-1,:]) - \
+                                 ( ( np.abs(M_bar_zeta+1) + np.abs(M_bar_zeta-1) - 2*np.abs(M_bar_zeta) ) / (2*c_half_zeta) )
+
+        mdot_half_eta = (1/2) * ( ( state.Q[:,1:,0]*state.V[:,1:] + state.Q[:,0:-1,0]*state.V[:,0:-1]) ) - \
+                                ( np.abs( state.V[:,1:]+state.V[:,0:-1] )/2 ) * ( state.Q[:,1:,0]-state.Q[:,0:-1,0] ) - \
+                                 ( ( np.abs(M_bar_eta+1) - np.abs(M_bar_eta-1) ) / 2 ) * ((state.Q[:,0:-1,0]+state.Q[:,1:,0])/2)*(state.U[:,1:]-state.U[:,0:-1])
+
+        chi_zeta = ( 1 - M_bar_zeta ) ** 2
+        chi_eta = ( 1 - M_bar_eta ) ** 2
 
         cr = 1e-60
         # calculate pressure flux at cell interfaces
-        p_half_zeta = (state.p[0:-1,:]+state.p[1:,:])/2 + ((split.P5p( M_L )+split.P5n( M_R )))/2*(state.p[0:-1,:]+state.p[1:,:]) + \
-                      (1 - chi)*( (split.P5p( M_L )+split.P5n( M_R ) - 1 )*(state.p[0:-1,:]+state.p[1:,:])/2
+        alpha = 0
+        p_half_zeta = (state.p[0:-1,:]+state.p[1:,:])/2 + (((split.P5p( M_L+cr, alpha )+split.P5m( M_R+cr, alpha )))/2)*(state.p[0:-1,:]+state.p[1:,:]) + \
+                      (1 - chi_zeta) * (split.P5p( M_L+cr, alpha )+split.P5m( M_R+cr, alpha )-1 )*(state.p[0:-1,:]+state.p[1:,:])/2
+        p_half_eta = (state.p[:,0:-1]+state.p[:,1:])/2 + (((split.P5p( M_D+cr, alpha )+split.P5m( M_U+cr, alpha )))/2)*(state.p[:,0:-1]+state.p[:,1:]) + \
+                      (1 - chi_eta) * (split.P5p( M_D+cr, alpha )+split.P5m( M_U+cr, alpha )-1 )*(state.p[:,0:-1]+state.p[:,1:])/2
 
-        p_half_zeta = split.P5p( M_L+cr, 3/16 )*state.p[0:-1,:] + split.P5m( M_R+cr, 3/16 )*state.p[1:,:] + \
-                      split.Pu( M_L+cr, M_R+cr, state.U[0:-1,:], state.U[1:,:], state.Q[0:-1,:,0], state.Q[1:,:,0], c_half_zeta, 3/16 )
-        p_half_eta =  split.P5p( M_D+cr, 3/16 )*state.p[:,0:-1] + split.P5m( M_U+cr, 3/16 )*state.p[:,1:] + \
-                      split.Pu( M_D+cr, M_U+cr, state.V[:,0:-1], state.V[:,1:], state.Q[:,0:-1,0], state.Q[:,1:,0], c_half_eta, 3/16 )
 
         # initialize Phi vector components
         Phi[:,:,1] = state.u

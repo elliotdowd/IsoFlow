@@ -10,6 +10,7 @@
 import wx
 import wx.xrc
 import wx.grid
+wx.version()
 
 import sys
 from matplotlib import cm
@@ -173,7 +174,7 @@ class MainFrame ( wx.Frame ):
 		self.schemeButton = wx.Button( self, wx.ID_ANY, u"Run Simulation", wx.DefaultPosition, wx.DefaultSize, 0 )
 		MainSizer.Add( self.schemeButton, wx.GBPosition( 13, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
 		
-		schemeChoiceChoices = [ u"AUSM", u"AUSM+up", u"AUSMDV" ]
+		schemeChoiceChoices = [ u"AUSM", u"AUSM+up", u"AUSMDV", u"SLAU" ]
 		self.schemeChoice = wx.Choice( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, schemeChoiceChoices, 0 )
 		self.schemeChoice.SetSelection( 0 )
 		MainSizer.Add( self.schemeChoice, wx.GBPosition( 12, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
@@ -673,7 +674,7 @@ class MainFrame ( wx.Frame ):
 	def call_scheme( self, event ):
 
 		from pytictoc import TicToc
-		from python.finite_volume.AUSM.schemes import AUSM, AUSMmuscl, AUSMplusup, AUSMDV
+		from python.finite_volume.AUSM.schemes import AUSM, AUSMmuscl, AUSMplusup, AUSMDV, SLAU
 		import python.finite_volume.gasdata as gasdata
 
 		t = TicToc()
@@ -748,6 +749,9 @@ class MainFrame ( wx.Frame ):
 			self.state = AUSMplusup( self.domain, self.mesh, self.parameters, self.state, self.gas )
 		elif scheme == 'AUSMDV':
 			self.state = AUSMDV( self.domain, self.mesh, self.parameters, self.state, self.gas )
+		elif scheme == 'SLAU':
+			self.state = SLAU( self.domain, self.mesh, self.parameters, self.state, self.gas )
+
 		t.toc('simulation time:')
 
 		self.call_contplot(self.contourPanel, 1, 1)
