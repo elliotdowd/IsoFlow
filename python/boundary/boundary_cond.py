@@ -10,7 +10,7 @@ def enforce_bc(domain, mesh, parameters, state, gas):
     gas.Cp = gas.Cp_fn( gas.gamma_p, gas.Cp_p, gas.theta, state.T )
     gas.Cv = gas.Cv_fn( gas.gamma_p, gas.Cv_p, gas.theta, state.T )
 
-    if domain.name == 'Wedge' or 'Airfoil':
+    if domain.name == 'Wedge' or domain.name == 'Airfoil':
 
         if domain.name == 'Wedge':
             obj_i = mesh.xx[:,1] > domain.obj_start
@@ -80,7 +80,7 @@ def enforce_bc(domain, mesh, parameters, state, gas):
         state.Q[0,:,3] = thermo.calc_rho_et(parameters.p_in, state.Q[0,:,0], state.Q[0,:,1]/state.Q[0,:,0], state.Q[0,:,2]/state.Q[0,:,0], gas.gamma_fn(gas.Cp[0,:], gas.Cv[0,:]))
 
         # right side outflow
-        state.Q[domain.M+1, :, :] = state.Qn[domain.M, :, :] 
+        state.Q[domain.M+1, :, :] = state.Qn[domain.M, :, :]
 
     elif domain.name == 'Cylinder':
 
@@ -106,15 +106,20 @@ def enforce_bc(domain, mesh, parameters, state, gas):
                     state.p[:, 0], state.T[:, 0], mesh.s_proj[:, 0:2, :], \
                                                     gas, -1, domain.M+2, 0, False)
 
-        # enforce inlet condition at outer circle
-        state.Q[:,-1,0] = parameters.p_in / (gas.R_fn(gas.Cp[:,-1], gas.Cv[:,-1]) * parameters.T_in)
-        state.Q[:,-1,1] = state.Q[:,-1,0] * parameters.M_in * np.sqrt(gas.gamma_fn(gas.Cp[:,-1], gas.Cv[:,-1])*parameters.p_in/state.Q[:,-1,0])
-        state.Q[:,-1,2] = state.Q[:,-1,0] * 0
-        state.Q[:,-1,3] = thermo.calc_rho_et(parameters.p_in, state.Q[:,-1,0], state.Q[:,-1,1]/state.Q[:,-1,0], state.Q[:,-1,2]/state.Q[:,-1,0], gas.gamma_fn(gas.Cp[:,-1], gas.Cv[:,-1]))
+        # enforce inlet condition at front half of outer circle
+        half = int(domain.M/2)
+        state.Q[0:half,-1,0] = parameters.p_in / (gas.R_fn(gas.Cp[0:half,-1], gas.Cv[0:half,-1]) * parameters.T_in)
+        state.Q[0:half,-1,1] = state.Q[0:half,-1,0] * parameters.M_in * np.sqrt(gas.gamma_fn(gas.Cp[0:half,-1], gas.Cv[0:half,-1])*parameters.p_in/state.Q[0:half,-1,0])
+        state.Q[0:half,-1,2] = state.Q[0:half,-1,0] * 0
+        state.Q[0:half,-1,3] = thermo.calc_rho_et(parameters.p_in, state.Q[0:half,-1,0], state.Q[0:half,-1,1]/state.Q[0:half,-1,0], \
+                                                  state.Q[0:half,-1,2]/state.Q[0:half,-1,0], gas.gamma_fn(gas.Cp[0:half,-1], gas.Cv[0:half,-1]))
+
+        state.Q[half+1:-1,-1,:] = state.Qn[half+1:-1,-2,:]
 
         # symmetry conditions
-        state.p[0,:] = state.p[-1,:]
-        state.T[0,:] = state.T[-1,:]
+        state.p[:,0] = state.p[:,-1]
+        state.T[:,0] = state.T[:,-1]
+        state.Q[:,0,:] = state.Q[:,-1,:]
 
     return state
 

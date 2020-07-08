@@ -39,8 +39,8 @@ class domain:
     theta = np.deg2rad(20)
 
 # calculate wedge grid coordinates
-from gen_grid import mesh_wedge
-xx, yy = mesh_wedge(domain)
+from python.mesh.grid.gen_grid import mesh_wedge, mesh_cylinder, mesh_airfoil
+xx, yy = mesh_airfoil(domain)
 
 z = np.linspace(0, 2, 30)
 

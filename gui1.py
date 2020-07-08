@@ -170,8 +170,8 @@ class MainFrame ( wx.Frame ):
 		self.gridChoice.SetSelection( 0 )
 		MainSizer.Add( self.gridChoice, wx.GBPosition( 3, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
 		
-		self.m_button3 = wx.Button( self, wx.ID_ANY, u"Run Simulation", wx.DefaultPosition, wx.DefaultSize, 0 )
-		MainSizer.Add( self.m_button3, wx.GBPosition( 13, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
+		self.schemeButton = wx.Button( self, wx.ID_ANY, u"Run Simulation", wx.DefaultPosition, wx.DefaultSize, 0 )
+		MainSizer.Add( self.schemeButton, wx.GBPosition( 13, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
 		
 		schemeChoiceChoices = [ u"AUSM", u"AUSM+up", u"AUSMDV" ]
 		self.schemeChoice = wx.Choice( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, schemeChoiceChoices, 0 )
@@ -306,7 +306,7 @@ class MainFrame ( wx.Frame ):
 		self.musclinfo = wx.MenuItem( self.schemeOptions, wx.ID_ANY, u"Show More Information", wx.EmptyString, wx.ITEM_NORMAL )
 		self.schemeOptions.Append( self.musclinfo )
 		
-		self.menuBar.Append( self.schemeOptions, u"Scheme" ) 
+		#self.menuBar.Append( self.schemeOptions, u"Scheme" ) 
 		
 		self.plotOptions = wx.Menu()
 		self.contOptions = wx.Menu()
@@ -418,9 +418,12 @@ class MainFrame ( wx.Frame ):
 		self.Centre( wx.BOTH )
 		
 		# Connect Events
-		self.m_button3.Bind( wx.EVT_BUTTON, self.call_scheme )
+		self.schemeButton.Bind( wx.EVT_BUTTON, self.call_scheme )
 		self.gridButton.Bind( wx.EVT_BUTTON, self.call_grid )
 		self.initButton.Bind( wx.EVT_BUTTON, self.call_init )
+
+		self.gridChoice.Bind( wx.EVT_CHOICE, self.grid_change )
+
 
 		self.Bind( wx.EVT_MENU, self.gas_change, id = self.air.GetId() )
 		self.Bind( wx.EVT_MENU, self.gas_change, id = self.C02.GetId() )
@@ -663,7 +666,7 @@ class MainFrame ( wx.Frame ):
 		print('________________________________________________________________________________________________________________________________________')
 		t.toc('Initialize time:')
 
-		self.call_contplot(self.contourPanel, 1)
+		self.call_contplot(self.contourPanel, 1, 1)
 
 		event.Skip()
 
@@ -747,12 +750,12 @@ class MainFrame ( wx.Frame ):
 			self.state = AUSMDV( self.domain, self.mesh, self.parameters, self.state, self.gas )
 		t.toc('simulation time:')
 
-		self.call_contplot(self.contourPanel, 1)
+		self.call_contplot(self.contourPanel, 1, 1)
 		self.call_resplot()
 
 		event.Skip()
 
-	def call_contplot(self, panel, scale):
+	def call_contplot(self, panel, scalex, scaley):
 
 		import numpy as np
 		import matplotlib.pyplot as plt
@@ -770,10 +773,10 @@ class MainFrame ( wx.Frame ):
 		
 		# post processing
 		plt.close(fig=panel.figure)
-		if scale > 1:
-			panel.figure = plt.figure( dpi=100, figsize=(scale*5.6, scale*4), facecolor=(1, 1, 1) )
+		if scalex > 1 or scaley > 1:
+			panel.figure = plt.figure( dpi=100, figsize=(scalex*5.6, scaley*4), facecolor=(1, 1, 1) )
 		else:
-			panel.figure = plt.figure( dpi=100, figsize=(scale*5.6, scale*4), facecolor=(222/256,222/256,222/256) )
+			panel.figure = plt.figure( dpi=100, figsize=(scalex*5.6, scaley*4), facecolor=(222/256,222/256,222/256) )
 
 		panel.cax = panel.figure.gca()
 		panel.cax.set_facecolor((0.4, 0.4, 0.4))
@@ -958,7 +961,7 @@ class MainFrame ( wx.Frame ):
 			self.contQuantity = 'Stagnation Temperature'
 
 		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel, 1)
+			self.call_contplot(self.contourPanel, 1, 1)
 		event.Skip()
 
 	def cm_change( self, event ):
@@ -977,7 +980,7 @@ class MainFrame ( wx.Frame ):
 			self.cmOption = cm.seismic
 
 		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel, 1)
+			self.call_contplot(self.contourPanel, 1, 1)
 		event.Skip()
 
 	def unit_change( self, event ):
@@ -1092,20 +1095,14 @@ class MainFrame ( wx.Frame ):
 			self.units = imp2
 
 		# update units on user input tables
-		self.domainGrid.SetRowLabelValue( 0, u"Length (" + self.units.length + ')' )
-		self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
-		self.domainGrid.SetRowLabelValue( 2, u"Wedge Start (" + self.units.length + ')' )
-		self.domainGrid.SetRowLabelValue( 3, u"Wedge End (" + self.units.length + ')' )
-		self.domainGrid.SetRowLabelValue( 4, u"Wedge Angle (°)" )
-		self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
-		self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
+		self.grid_change(wx.EVT_CHOICE)
 
 		self.parameterGrid.SetRowLabelValue( 0, u"Inlet Mach #" )
 		self.parameterGrid.SetRowLabelValue( 1, u"Inlet Pres. (" + self.units.press + ')' )
 		self.parameterGrid.SetRowLabelValue( 2, u"Inlet Temp. (" + self.units.temp + ')' )
 
 		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel, 1)
+			self.call_contplot(self.contourPanel, 1, 1)
 
 	def axis_change( self, event ):
 		if self.equal.IsChecked():
@@ -1115,7 +1112,7 @@ class MainFrame ( wx.Frame ):
 		elif self.auto.IsChecked():
 			self.axisOption = 'auto'
 		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel)
+			self.call_contplot(self.contourPanel, 1, 1)
 		event.Skip()
 
 	def contlevel_change( self, event ):
@@ -1127,7 +1124,7 @@ class MainFrame ( wx.Frame ):
 			self.contGrad = 512
 
 		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel, 1)
+			self.call_contplot(self.contourPanel, 1, 1)
 		event.Skip()
 
 	def label_change( self, event ):
@@ -1161,7 +1158,7 @@ class MainFrame ( wx.Frame ):
 			wx.MenuBar.Enable(self.menuBar, 8, False)
 
 		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel, 1)
+			self.call_contplot(self.contourPanel, 1, 1)
 		event.Skip()
 
 	def gas_change( self, event ):
@@ -1203,10 +1200,42 @@ class MainFrame ( wx.Frame ):
 			self.topwall_fixed.Enable(False)
 		event.Skip()
 
+	def grid_change( self, event ):
+
+		if self.gridChoice.StringSelection == 'Wedge' or self.gridChoice.StringSelection == 'Airfoil':
+			self.domainGrid.ShowRow( 1 )
+			self.domainGrid.ShowRow( 3 )
+			self.domainGrid.ShowRow( 4 )
+
+			self.domainGrid.SetRowLabelValue( 0, u"Length (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
+			self.domainGrid.SetRowLabelValue( 2, u"Wedge Start (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 3, u"Wedge End (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 4, u"Wedge Angle (°)" )
+			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
+			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
+		else:
+			self.domainGrid.HideRow( 1 )
+			self.domainGrid.HideRow( 3 )
+			self.domainGrid.HideRow( 4 )
+
+			self.domainGrid.SetRowLabelValue( 0, u"Domain Diam. (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 2, u"Cylinder Diam. (" + self.units.length + ')' )
+
+			self.domainGrid.SetRowLabelValue( 5, u"Radial Cells" )
+			self.domainGrid.SetRowLabelValue( 6, u"Tangential Cells" )
+
 	# open contour plot in new window
 	def expandWindow( self, event ):
 		self.new = NewWindow(parent=None)
-		self.call_contplot(self.new.contourPanel, 1.65)
+		x = self.new.screenInX
+		y = self.new.screenInY
+
+		scx = x/5.6 * 0.9
+		scy = y/4.0 * 0.9
+		#scale = min(scx, scy)
+
+		self.call_contplot(self.new.contourPanel, scx, scy)
 		self.new.Show()
 		event.Skip()
 
@@ -1227,19 +1256,30 @@ class RedirectText:
 		# sys.stdout=redir
 
 
-class NewWindow(wx.Frame):
+class NewWindow( wx.Frame ):
 	def __init__(self, parent):
 		import matplotlib.pyplot as plt
 		#from matplotlib.backends.backend_gtk3 import (NavigationToolbar2GTK3 as NavigationToolbar)
 		import numpy as np
+		# import gi
+		# gi.require_version("Gtk", "3.0")
+		# from gi.repository import Gtk
+
+		screenSize = wx.DisplaySize()
+		screenMM = wx.DisplaySizeMM()
+		self.screenInX = float(screenMM[0]) * 0.0393701
+		self.screenInY = float(screenMM[1]) * 0.0393701
+
 		wx.Frame.__init__( self, parent, title = 'Fullscreen Contour Plot',\
-						   size = wx.Size( 880,672 ), style=wx.DEFAULT_FRAME_STYLE )
+						   size = wx.Size( int(screenSize[0]*0.96), int(screenSize[1]*0.96) ), style=wx.DEFAULT_FRAME_STYLE )
+
 		self.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
 
 		self.contourPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.contourPanel.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
 
-		self.contourPanel.figure = plt.figure( dpi=100, figsize=(9, 9/1.4473))
+		#self.contourPanel.figure = plt.figure( dpi=100, figsize=(9, 9/1.4473))
+		self.contourPanel.figure = plt.figure( dpi=100, figsize=(self.screenInX, self.screenInY))
 		self.contourPanel.cax = self.contourPanel.figure.gca()
 		self.contourPanel.cax.set_facecolor((0.4, 0.4, 0.4))
 		self.contourPanel.cax.set_position([0.15, 0.1, 0.8, 0.72])
