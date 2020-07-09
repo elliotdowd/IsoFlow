@@ -570,7 +570,7 @@ class MainFrame ( wx.Frame ):
 			xx, yy = mesh_corner(domain)
 		elif domain.name == "Cylinder":
 			xx, yy = mesh_cylinder(domain)
-		elif domain.name == "NACA 00xx Airfoil":
+		elif domain.name == "NACA XXXX Airfoil":
 			xx, yy = mesh_naca4(domain)
 		self.mesh = cellmetrics(xx, yy, domain)
 		self.domain = domain
@@ -917,7 +917,7 @@ class MainFrame ( wx.Frame ):
 		if self.gridChoice.StringSelection == 'NACA XXXX Airfoil':
 			panel.cax.contourf(cl*self.mesh.xxc[self.domain.obj_i:self.domain.obj_f,self.domain.wallL:self.domain.wallU], \
 							   cl*self.mesh.yyc[self.domain.obj_i:self.domain.obj_f,self.domain.wallL:self.domain.wallU], \
-							    		      	self.state.Mach[self.domain.obj_i:self.domain.obj_f,self.domain.wallL:self.domain.wallU], self.contGrad, colors = 'w')
+							    		      	self.state.Mach[self.domain.obj_i:self.domain.obj_f,self.domain.wallL:self.domain.wallU], self.contGrad, colors = 'gray')
 
 		# plot settings
 		if self.topwall_out.IsChecked():
@@ -1240,7 +1240,7 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.SetRowLabelValue( 5, u"Radial Cells" )
 			self.domainGrid.SetRowLabelValue( 6, u"Tangential Cells" )
 
-		elif self.gridChoice.StringSelection == "NACA 00xx Airfoil":
+		elif self.gridChoice.StringSelection == "NACA XXXX Airfoil":
 			self.domainGrid.ShowRow( 1 )
 			self.domainGrid.ShowRow( 3 )
 			self.domainGrid.ShowRow( 4 )
@@ -1249,7 +1249,7 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
 			self.domainGrid.SetRowLabelValue( 2, u"Airfoil Start (" + self.units.length + ')' )
 			self.domainGrid.SetRowLabelValue( 3, u"Airfoil End (" + self.units.length + ')' )
-			self.domainGrid.SetRowLabelValue( 4, u"NACA 00xx" )
+			self.domainGrid.SetRowLabelValue( 4, u"NACA XXXX" )
 			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
 			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
 

@@ -194,6 +194,20 @@ def mesh_naca4(domain):
         xx[domain.obj_i:domain.obj_f, half+2] = np.min(xaf) + xU
 
 
+    # angle of attack rotation 
+    alpha = 5 * (np.pi/180)
+
+    R = np.array( [np.cos(alpha), np.sin(alpha), -np.sin(alpha), np.cos(alpha)] ).reshape( [2, 2] )
+
+    for i in range( 0, M+3 ):
+
+        for j in range( 0, N+3 ):
+
+            xy = np.matmul( R, np.array( [xx[i,j], yy[i,j]] ).reshape( [2,1] ) )
+            xx[i,j] = xy[0]
+            yy[i,j] = xy[1]
+
+
     return xx, yy
 
 
@@ -201,6 +215,7 @@ def NACA4symm( x, c, t ):
     import numpy as np
     y = 5*t*c * ( 0.2969*np.sqrt(x/c) - 0.126*(x/c) - 0.3516*(x/c)**2 + 0.2843*(x/c)**3 - 0.1015*(x/c)**4 )
     return y
+
 
 def NACA4( x, c, naca ):
     import numpy as np
