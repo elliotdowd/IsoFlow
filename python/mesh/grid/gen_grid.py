@@ -28,7 +28,7 @@ def mesh_wedge(domain):
     return xx, yy
 
 
-def mesh_airfoil(domain): 
+def mesh_corner(domain):
 
     # import numpy
     import numpy as np
@@ -120,3 +120,51 @@ def mesh_cylinder(domain):
 
     return xx, yy
 
+
+def mesh_naca4(domain):
+
+    import numpy as np
+    
+    # import domain values
+    domain.M = domain.M + int(domain.M%2 == 1)
+    M = domain.M
+    domain.N = domain.N + int(domain.N%2 == 1)
+    N = domain.N
+    length = domain.length
+    height = domain.height
+    thick = domain.theta
+    obj_start = domain.obj_start
+    obj_end = domain.obj_end
+
+    x = np.linspace(-(1/M)*length, length*(1+(1/M)), M+3)
+    y = np.linspace(-height/2*(1+(1/N)), height/2*(1+(1/N)), N+3)
+
+    domain.obj_i = np.where(x>obj_start)
+    domain.obj_i = domain.obj_i[0][0]
+    domain.obj_f = np.where(x>obj_end)
+    domain.obj_f = domain.obj_f[0][0]
+
+    xaf = x[domain.obj_i:domain.obj_f]
+    c = np.max(xaf)-np.min(xaf)
+    t = thick*c
+    yt = NACA4( xaf-np.min(xaf), c, t )
+
+    xx, yy = np.meshgrid(x, y)
+    xx = np.transpose(xx)
+    yy = np.transpose(yy)
+
+    half = int(N/2)
+    domain.wallL = half
+    domain.wallU = half+2
+    for j in range( 0, half ):
+        yy[domain.obj_i:domain.obj_f, int(N/2)-j] = -yt*float((half-j)/half) + yy[domain.obj_i:domain.obj_f, int(N/2)-j]
+        yy[domain.obj_i:domain.obj_f, int(N/2+2)+j] = yt*float((half-j)/half) + yy[domain.obj_i:domain.obj_f, int(N/2+2)+j]
+
+
+    return xx, yy
+
+
+def NACA4( x, c, t ):
+        import numpy as np
+        y = 5*t*c * ( 0.2969*np.sqrt(x/c) - 0.126*(x/c) - 0.3516*(x/c)**2 + 0.2843*(x/c)**3 - 0.1015*(x/c)**4 )
+        return y

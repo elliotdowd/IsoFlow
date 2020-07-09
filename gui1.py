@@ -166,7 +166,7 @@ class MainFrame ( wx.Frame ):
 		
 		MainSizer.Add( self.m_staticText111, wx.GBPosition( 10, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
-		gridChoiceChoices = [ u"Wedge", u"Airfoil", u"Cylinder" ]
+		gridChoiceChoices = [ u"Wedge", u"Corner", u"Cylinder", u"NACA 00xx Airfoil" ]
 		self.gridChoice = wx.Choice( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, gridChoiceChoices, 0 )
 		self.gridChoice.SetSelection( 0 )
 		MainSizer.Add( self.gridChoice, wx.GBPosition( 3, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
@@ -527,7 +527,7 @@ class MainFrame ( wx.Frame ):
 
 		# set initialization row values
 		self.parameterGrid.SetCellValue( 0, 0, "3.0")
-		self.parameterGrid.SetCellValue( 1, 0, "101325")
+		self.parameterGrid.SetCellValue( 1, 0, "101.325")
 		self.parameterGrid.SetCellValue( 2, 0, "300")
 
 		# set initialization row values
@@ -538,7 +538,7 @@ class MainFrame ( wx.Frame ):
 	# Virtual event handlers, overide them in your derived class
 	def call_grid( self, event ):
 		import numpy as np
-		from python.mesh.grid.gen_grid import mesh_wedge, mesh_airfoil, mesh_cylinder
+		from python.mesh.grid.gen_grid import mesh_wedge, mesh_corner, mesh_cylinder, mesh_naca4
 		from python.mesh.metrics.calc_cell_metrics import cellmetrics
 		import matplotlib.pyplot as plt
 		import matplotlib as mpl
@@ -563,10 +563,12 @@ class MainFrame ( wx.Frame ):
 
 		if domain.name == "Wedge":
 			xx, yy = mesh_wedge(domain)
-		elif domain.name == "Airfoil":
-			xx, yy = mesh_airfoil(domain)
+		elif domain.name == "Corner":
+			xx, yy = mesh_corner(domain)
 		elif domain.name == "Cylinder":
 			xx, yy = mesh_cylinder(domain)
+		elif domain.name == "NACA 00xx Airfoil":
+			xx, yy = mesh_naca4(domain)
 		self.mesh = cellmetrics(xx, yy, domain)
 		self.domain = domain
 
@@ -606,7 +608,7 @@ class MainFrame ( wx.Frame ):
 
 	def call_init( self, event ):
 		import numpy as np
-		from python.mesh.grid.gen_grid import mesh_wedge, mesh_airfoil
+		from python.mesh.grid.gen_grid import mesh_wedge, mesh_corner, mesh_cylinder
 		from python.mesh.metrics.calc_cell_metrics import cellmetrics
 		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 		from pytictoc import TicToc
@@ -908,6 +910,12 @@ class MainFrame ( wx.Frame ):
 				else:
 					self.contourPanel.cax.clabel(cont, fmt='%2.3f', colors='w', fontsize=8)
 
+		# add airfoil if needed
+		if self.gridChoice.StringSelection == 'NACA 00xx Airfoil':
+			panel.cax.contourf(cl*self.mesh.xxc[self.domain.obj_i:self.domain.obj_f,self.domain.wallL:self.domain.wallU], \
+							   cl*self.mesh.yyc[self.domain.obj_i:self.domain.obj_f,self.domain.wallL:self.domain.wallU], \
+							    		      	self.state.Mach[self.domain.obj_i:self.domain.obj_f,self.domain.wallL:self.domain.wallU], self.contGrad, color = 'w')
+
 		# plot settings
 		if self.topwall_out.IsChecked():
 			panel.cax.set(xlim=[np.min(self.mesh.xxc[1:-1,1:-1]) * cl, np.max(self.mesh.xxc[1:-1,1:-1]) * cl], \
@@ -1007,7 +1015,7 @@ class MainFrame ( wx.Frame ):
 				return conv
 			press = 'kPa'
 			def conv_press(p):
-				conv = p / 1000
+				conv = p * 1000
 				return conv
 			energy = 'J'
 			def conv_energy(e):
@@ -1032,7 +1040,7 @@ class MainFrame ( wx.Frame ):
 				return conv
 			press = 'kPa'
 			def conv_press(p):
-				conv = p / 1000
+				conv = p * 1000
 				return conv
 			energy = 'J'
 			def conv_energy(e):
@@ -1206,7 +1214,7 @@ class MainFrame ( wx.Frame ):
 
 	def grid_change( self, event ):
 
-		if self.gridChoice.StringSelection == 'Wedge' or self.gridChoice.StringSelection == 'Airfoil':
+		if self.gridChoice.StringSelection == 'Wedge' or self.gridChoice.StringSelection == 'Corner':
 			self.domainGrid.ShowRow( 1 )
 			self.domainGrid.ShowRow( 3 )
 			self.domainGrid.ShowRow( 4 )
@@ -1218,7 +1226,7 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.SetRowLabelValue( 4, u"Wedge Angle (°)" )
 			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
 			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
-		else:
+		elif self.gridChoice.StringSelection == 'Cylinder':
 			self.domainGrid.HideRow( 1 )
 			self.domainGrid.HideRow( 3 )
 			self.domainGrid.HideRow( 4 )
@@ -1228,6 +1236,19 @@ class MainFrame ( wx.Frame ):
 
 			self.domainGrid.SetRowLabelValue( 5, u"Radial Cells" )
 			self.domainGrid.SetRowLabelValue( 6, u"Tangential Cells" )
+
+		elif self.gridChoice.StringSelection == "NACA 00xx Airfoil":
+			self.domainGrid.ShowRow( 1 )
+			self.domainGrid.ShowRow( 3 )
+			self.domainGrid.ShowRow( 4 )
+
+			self.domainGrid.SetRowLabelValue( 0, u"Length (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
+			self.domainGrid.SetRowLabelValue( 2, u"Airfoil Start (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 3, u"Airfoil End (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 4, u"NACA 00xx" )
+			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
+			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
 
 	# open contour plot in new window
 	def expandWindow( self, event ):

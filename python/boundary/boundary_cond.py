@@ -10,14 +10,14 @@ def enforce_bc(domain, mesh, parameters, state, gas):
     gas.Cp = gas.Cp_fn( gas.gamma_p, gas.Cp_p, gas.theta, state.T )
     gas.Cv = gas.Cv_fn( gas.gamma_p, gas.Cv_p, gas.theta, state.T )
 
-    if domain.name == 'Wedge' or domain.name == 'Airfoil':
+    if domain.name == 'Wedge' or domain.name == 'Corner':
 
         if domain.name == 'Wedge':
             obj_i = mesh.xx[:,1] > domain.obj_start
             obj_i = np.where(obj_i)
             obj_i = obj_i[0][0]
             obj_f = domain.M+2
-        elif domain.name == 'Airfoil':
+        elif domain.name == 'Corner':
             obj_i = mesh.xx[:,1] > domain.obj_start
             obj_i = np.where(obj_i) 
             obj_i = obj_i[0][0]
@@ -120,6 +120,52 @@ def enforce_bc(domain, mesh, parameters, state, gas):
         state.p[:,0] = state.p[:,-1]
         state.T[:,0] = state.T[:,-1]
         state.Q[:,0,:] = state.Q[:,-1,:]
+
+    elif domain.name == 'NACA 00xx Airfoil':
+
+        obj_i = domain.obj_i
+        obj_f = domain.obj_f
+        wallL = domain.wallL
+        wallU = domain.wallU-1
+
+        state.p[obj_i:obj_f,wallU] = state.p[obj_i:obj_f,wallU+1]
+        state.p[obj_i:obj_f,wallL] = state.p[obj_i:obj_f,wallL-1]
+
+        if parameters.botwall_thermal == 'Adiabatic':
+            state.T[obj_i:obj_f,wallU] = state.T[obj_i:obj_f,wallU+1]
+            state.T[obj_i:obj_f,wallL] = state.T[obj_i:obj_f,wallL-1]
+        elif parameters.botwall_thermal == 'Isothermal':
+            state.T[obj_i:obj_f,wallL] = 2 * parameters.botwall_temp - state.T[obj_i:obj_f,wallL-1]
+            state.T[obj_i:obj_f,wallU] = 2 * parameters.botwall_temp - state.T[obj_i:obj_f,wallU+1]
+        elif parameters.botwall_thermal == 'Fixed Temperature':
+            state.T[obj_i:obj_f,wallL] = parameters.botwall_temp
+            state.T[obj_i:obj_f,wallU] = parameters.botwall_temp
+
+        if parameters.botwall == 'Inviscid Wall':
+            state.Q[obj_i:obj_f, 0:2, :] = invisc_wall(state.Q[:, 0:2, :], state.p[:, 0], state.T[:, 0], mesh.s_proj[:, 0:2, :], \
+                                            domain.M+2, 0, gas, False)
+        elif parameters.botwall == 'Viscous Wall':
+            state.Q[obj_i:obj_f, wallU:wallU+2, :] = visc_wall(state.Q[obj_i:obj_f, wallU:wallU+2, :], \
+                    state.p[obj_i:obj_f, wallU], state.T[obj_i:obj_f, wallU], mesh.s_proj[obj_i:obj_f, wallU:wallU+2, :], \
+                                                    gas, obj_i-1, obj_f, wallU, False)
+
+            state.Q[obj_i:obj_f, wallL-1:wallL+1, :] = visc_wall(state.Q[obj_i:obj_f, wallL-1:wallL+1, :], \
+                    state.p[obj_i:obj_f, wallL], state.T[obj_i:obj_f, wallL], mesh.s_proj[obj_i:obj_f, wallL-1:wallL+1, :], \
+                                                    gas, obj_i-1, obj_f, wallL, True)
+
+        # enforce front two cells 
+
+        # state.Q[obj_i-1, wallL:wallU, 0] = state.p[obj_i-1, wallL:wallU] / (gas.R_fn(gas.Cp[obj_i-1, wallL:wallU], gas.Cv[obj_i-1, wallL:wallU]) * state.T[obj_i-1, wallL:wallU])
+        # state.Q[obj_i-1, wallL:wallU, 1] = - state.Q[obj_i-1, wallL:wallU, 1]
+        # state.Q[obj_i-1, wallL:wallU, 2] = - state.Q[obj_i-1, wallL:wallU, 2]
+        # state.Q[obj_i-1, wallL:wallU, 3] = thermo.calc_rho_et( state.p[obj_i-1, wallL:wallU], state.Q[obj_i-1, wallL:wallU, 0], state.Q[obj_i-1, wallL:wallU, 1]/state.Q[obj_i-1, wallL:wallU, 0], \
+        #                                     state.Q[obj_i-1, wallL:wallU, 2]/state.Q[obj_i-1, wallL:wallU, 0], gas.gamma_fn(gas.Cp[obj_i-1, wallL:wallU], gas.Cv[obj_i-1, wallL:wallU]) )
+
+        # enforce inlet condition
+        state.Q[0,:,0] = parameters.p_in / (gas.R_fn(gas.Cp[0,:], gas.Cv[0,:]) * parameters.T_in)
+        state.Q[0,:,1] = state.Q[0,:,0] * parameters.M_in * np.sqrt(gas.gamma_fn(gas.Cp[0,:], gas.Cv[0,:])*parameters.p_in/state.Q[0,:,0])
+        state.Q[0,:,2] = state.Q[0,:,0] * 0
+        state.Q[0,:,3] = thermo.calc_rho_et(parameters.p_in, state.Q[0,:,0], state.Q[0,:,1]/state.Q[0,:,0], state.Q[0,:,2]/state.Q[0,:,0], gas.gamma_fn(gas.Cp[0,:], gas.Cv[0,:]))                       
 
     return state
 

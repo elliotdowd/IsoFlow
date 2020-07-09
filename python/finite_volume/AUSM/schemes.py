@@ -560,18 +560,14 @@ def SLAU( domain, mesh, parameters, state, gas ):
         c_D = c_st[:,0:-1] / np.maximum( np.sqrt(c_st[:,0:-1]), state.V[:,0:-1] )
         c_U = c_st[:,1:] / np.maximum( np.sqrt(c_st[:,1:]), -state.V[:,1:] )
 
-        c_half_zeta =  (c_L + c_R) / 2
-        c_half_eta =   (c_D + c_U) / 2
+        c_half_zeta =  np.minimum(c_L, c_R)
+        c_half_eta =   np.minimum(c_D, c_U)
 
         # cell face Mach numbers
         M_L = state.U[0:-1,:] / c_half_zeta
         M_R = state.U[1:,:] / c_half_zeta
         M_D = state.V[:,0:-1] / c_half_eta
         M_U = state.V[:,1:] / c_half_eta
-
-        # split interface Mach numbers in the zeta and eta directions
-        M_half_zeta = split.M4p( M_L ) + split.M4m( M_R )
-        M_half_eta = split.M4p( M_D ) + split.M4m( M_U )
 
         # corrective factor g in each computational direction
         g_zeta = -np.max( np.min(split.M4p( M_L ),0), -1 ) * np.min( np.max( split.M4m( M_R ), 1) )
