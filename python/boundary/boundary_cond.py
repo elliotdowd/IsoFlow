@@ -121,7 +121,7 @@ def enforce_bc(domain, mesh, parameters, state, gas):
         state.T[:,0] = state.T[:,-1]
         state.Q[:,0,:] = state.Q[:,-1,:]
 
-    elif domain.name == 'NACA 00xx Airfoil':
+    elif domain.name == 'NACA XXXX Airfoil':
 
         obj_i = domain.obj_i
         obj_f = domain.obj_f

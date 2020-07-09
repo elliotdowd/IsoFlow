@@ -144,11 +144,11 @@ def mesh_naca4(domain):
     thick = float( naca[2:4] )
 
     # focus points around x-axis/centerline
-    nx = 2
+    nx = 1
     half = int(N/2)
     for j in range( 0, half ):
-        y[half-j] = y[half-j] - 0.75*y[half-j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
-        y[half+2+j] = y[half+2+j] - 0.75*y[half+2+j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
+        y[half-j] = y[half-j] - 0.5*y[half-j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
+        y[half+2+j] = y[half+2+j] - 0.5*y[half+2+j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
 
     domain.obj_i = np.where(x>obj_start)
     domain.obj_i = domain.obj_i[0][0]
@@ -171,7 +171,7 @@ def mesh_naca4(domain):
         yy = np.transpose(yy)
 
         # focus points closer to airfoil
-        ny = 3
+        ny = 2
         for j in range( 0, half ):
             yy[domain.obj_i:domain.obj_f, half-j] = -yt*(np.sinh((half-j)/half)**ny)/np.sinh(1)**ny + yy[domain.obj_i:domain.obj_f, half-j]
             yy[domain.obj_i:domain.obj_f, half+2+j] = yt*(np.sinh((half-j)/half)**ny)/np.sinh(1)**ny + yy[domain.obj_i:domain.obj_f, half+2+j]
