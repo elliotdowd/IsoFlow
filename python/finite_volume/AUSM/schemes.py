@@ -544,6 +544,12 @@ def SLAU( domain, mesh, parameters, state, gas ):
         rho_half_zeta = ( state.Q[0:-1,:,0] + state.Q[1:,:,0] ) / 2
         rho_half_eta =  ( state.Q[:,0:-1,0] + state.Q[:,1:,0] ) / 2
 
+        # density at cell centroids
+        rhoL = state.Q[0:-1,:,0]
+        rhoR = state.Q[1:,:,0]
+        rhoD = state.Q[:,0:-1,0]
+        rhoU = state.Q[:,1:,0]
+
         # speed of sound at cell interfaces
         # from Liou 2006 (JCP 214)
 
@@ -554,8 +560,8 @@ def SLAU( domain, mesh, parameters, state, gas ):
         c_D = c_st[:,0:-1] / np.maximum( np.sqrt(c_st[:,0:-1]), state.V[:,0:-1] )
         c_U = c_st[:,1:] / np.maximum( np.sqrt(c_st[:,1:]), -state.V[:,1:] )
 
-        c_half_zeta = np.minimum( c_L, c_R )
-        c_half_eta =  np.minimum( c_D, c_U )
+        c_half_zeta =  (c_L + c_R) / 2
+        c_half_eta =   (c_D + c_U) / 2
 
         # cell face Mach numbers
         M_L = state.U[0:-1,:] / c_half_zeta
@@ -568,31 +574,29 @@ def SLAU( domain, mesh, parameters, state, gas ):
         M_half_eta = split.M4p( M_D ) + split.M4m( M_U )
 
         # corrective factor g in each computational direction
-        g_zeta = -np.max( np.min(split.M4p( M_L, 0 ),0), -1 ) * np.min( np.max( split.M4m( M_R, 0 ), 1) )
-        g_eta = -np.max( np.min(split.M4p( M_D, 0 ),0), -1 ) * np.min( np.max( split.M4m( M_U, 0 ), 1) )
+        g_zeta = -np.max( np.min(split.M4p( M_L ),0), -1 ) * np.min( np.max( split.M4m( M_R ), 1) )
+        g_eta = -np.max( np.min(split.M4p( M_D ),0), -1 ) * np.min( np.max( split.M4m( M_U ), 1) )
 
         # abs(Vbar_n), density weighted covariant velocity, A8 in Shima and Kitamura 2009
-        Ubar = ( state.Q[1:,:,0]*np.abs(state.U[1:,:]) + state.Q[0:-1,:,0]*np.abs(state.U[0:-1,:]) ) / ( state.Q[1:,:,0] + state.Q[0:-1,:,0] )
-        Vbar = ( state.Q[1:,:,0]*np.abs(state.U[1:,:]) + state.Q[0:-1,:,0]*np.abs(state.U[0:-1,:]) ) / ( state.Q[1:,:,0] + state.Q[0:-1,:,0] )
+        Ubar = ( rhoR*np.abs(state.U[1:,:]) + rhoL*np.abs(state.U[0:-1,:]) ) / ( rhoL + rhoR )
+        Vbar = ( rhoU*np.abs(state.V[:,1:]) + rhoD*np.abs(state.V[:,0:-1]) ) / ( rhoD + rhoU )
 
-        # corrected 
+        # corrected covariant terms
+        U_bar_plus = (1-g_zeta)*Ubar + g_zeta*state.U[1:,:]
+        U_bar_minus = (1-g_zeta)*Ubar + g_zeta*state.U[0:-1,:]
+        V_bar_plus = (1-g_eta)*Vbar + g_eta*state.V[:,1:]
+        V_bar_minus = (1-g_eta)*Vbar + g_eta*state.V[:,0:-1]
 
         # non-dimensional function, O(M)
         M_bar_zeta = np.minimum( 1.0, (1/c_half_zeta) * np.sqrt( ( state.u[1:,:]**2 + state.v[1:,:]**2 + state.u[0:-1,:]**2 + state.v[0:-1,:]**2 ) / 2 ) )
         M_bar_eta = np.minimum( 1.0, (1/c_half_eta) * np.sqrt( ( state.u[:,1:]**2 + state.v[:,1:]**2 + state.u[:,0:-1]**2 + state.v[:,0:-1]**2 ) / 2 ) )
 
-        # calculate mass flux at cell interfaces
-        mdot_half_zeta = (1/2) * ( ( state.Q[1:,:,0]*state.U[1:,:] + state.Q[0:-1,:,0]*state.U[0:-1,:]) ) - \
-                                 ( np.abs( state.U[1:,:]+state.U[0:-1,:] )/2 ) * ( state.Q[1:,:,0]-state.Q[0:-1,:,0] ) - \
-                                 ( ( np.abs(M_bar_zeta+1) - np.abs(M_bar_zeta-1) ) / 2 ) * ((state.Q[0:-1,:,0]+state.Q[1:,:,0])/2)*(state.U[1:,:]-state.U[0:-1,:]) - \
-                                 ( ( np.abs(M_bar_zeta+1) + np.abs(M_bar_zeta-1) - 2*np.abs(M_bar_zeta) ) / (2*c_half_zeta) )
-
-        mdot_half_eta = (1/2) * ( ( state.Q[:,1:,0]*state.V[:,1:] + state.Q[:,0:-1,0]*state.V[:,0:-1]) ) - \
-                                ( np.abs( state.V[:,1:]+state.V[:,0:-1] )/2 ) * ( state.Q[:,1:,0]-state.Q[:,0:-1,0] ) - \
-                                 ( ( np.abs(M_bar_eta+1) - np.abs(M_bar_eta-1) ) / 2 ) * ((state.Q[:,0:-1,0]+state.Q[:,1:,0])/2)*(state.U[:,1:]-state.U[:,0:-1])
-
         chi_zeta = ( 1 - M_bar_zeta ) ** 2
         chi_eta = ( 1 - M_bar_eta ) ** 2
+
+        # calculate mass flux at cell interfaces
+        mdot_half_zeta = (1/2) * ( rhoR*( state.U[1:,:]+U_bar_plus ) + rhoL*(state.U[0:-1,:]+U_bar_minus) - (chi_zeta/c_half_zeta)*(state.p[1:,:]-state.p[0:-1,:]) )
+        mdot_half_eta = (1/2) * ( rhoU*( state.V[:,1:]+V_bar_plus ) + rhoD*(state.V[:,0:-1]+V_bar_minus) - (chi_eta/c_half_eta)*(state.p[:,1:]-state.p[:,0:-1]) )
 
         cr = 1e-60
         # calculate pressure flux at cell interfaces
