@@ -132,12 +132,23 @@ def mesh_naca4(domain):
     N = domain.N
     length = domain.length
     height = domain.height
-    thick = domain.theta
+    naca = domain.theta
     obj_start = domain.obj_start
     obj_end = domain.obj_end
 
     x = np.linspace(-(1/M)*length, length*(1+(1/M)), M+3)
     y = np.linspace(-height/2*(1+(1/N)), height/2*(1+(1/N)), N+3)
+
+    m = float( naca[0] ) / 100
+    p = float( naca[1] ) / 10
+    thick = float( naca[2:4] )
+
+    # focus points around x-axis/centerline
+    nx = 2
+    half = int(N/2)
+    for j in range( 0, half ):
+        y[half-j] = y[half-j] - 0.75*y[half-j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
+        y[half+2+j] = y[half+2+j] - 0.75*y[half+2+j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
 
     domain.obj_i = np.where(x>obj_start)
     domain.obj_i = domain.obj_i[0][0]
@@ -147,24 +158,87 @@ def mesh_naca4(domain):
     xaf = x[domain.obj_i:domain.obj_f]
     c = np.max(xaf)-np.min(xaf)
     t = thick*c
-    yt = NACA4( xaf-np.min(xaf), c, t )
 
-    xx, yy = np.meshgrid(x, y)
-    xx = np.transpose(xx)
-    yy = np.transpose(yy)
-
-    half = int(N/2)
     domain.wallL = half
     domain.wallU = half+2
-    for j in range( 0, half ):
-        yy[domain.obj_i:domain.obj_f, int(N/2)-j] = -yt*float((half-j)/half) + yy[domain.obj_i:domain.obj_f, int(N/2)-j]
-        yy[domain.obj_i:domain.obj_f, int(N/2+2)+j] = yt*float((half-j)/half) + yy[domain.obj_i:domain.obj_f, int(N/2+2)+j]
+
+    if naca[0:2] == '00':
+
+        yt = NACA4symm( xaf-np.min(xaf), c, t/100)
+
+        xx, yy = np.meshgrid(x, y)
+        xx = np.transpose(xx)
+        yy = np.transpose(yy)
+
+        # focus points closer to airfoil
+        ny = 3
+        for j in range( 0, half ):
+            yy[domain.obj_i:domain.obj_f, half-j] = -yt*(np.sinh((half-j)/half)**ny)/np.sinh(1)**ny + yy[domain.obj_i:domain.obj_f, half-j]
+            yy[domain.obj_i:domain.obj_f, half+2+j] = yt*(np.sinh((half-j)/half)**ny)/np.sinh(1)**ny + yy[domain.obj_i:domain.obj_f, half+2+j]
+
+    else:
+        yt = NACA4symm( xaf-np.min(xaf), c, t/100 )
+
+        xL, xU, yL, yU = NACA4( xaf-np.min(xaf), c, np.array( (m, p, thick) ) )
+
+        xx, yy = np.meshgrid(x, y)
+        xx = np.transpose(xx)
+        yy = np.transpose(yy)
+
+        # focus points closer to airfoil
+        for j in range( 0, half ):
+            yy[domain.obj_i:domain.obj_f, half-j] = yL*(np.sinh((half-j)/half)**1)/np.sinh(1)**1 + yy[domain.obj_i:domain.obj_f, half-j]
+            yy[domain.obj_i:domain.obj_f, half+2+j] = yU*(np.sinh((half-j)/half)**1)/np.sinh(1)**1 + yy[domain.obj_i:domain.obj_f, half+2+j]
+
+        xx[domain.obj_i:domain.obj_f, half] = np.min(xaf) + xL
+        xx[domain.obj_i:domain.obj_f, half+2] = np.min(xaf) + xU
 
 
     return xx, yy
 
 
-def NACA4( x, c, t ):
-        import numpy as np
-        y = 5*t*c * ( 0.2969*np.sqrt(x/c) - 0.126*(x/c) - 0.3516*(x/c)**2 + 0.2843*(x/c)**3 - 0.1015*(x/c)**4 )
-        return y
+def NACA4symm( x, c, t ):
+    import numpy as np
+    y = 5*t*c * ( 0.2969*np.sqrt(x/c) - 0.126*(x/c) - 0.3516*(x/c)**2 + 0.2843*(x/c)**3 - 0.1015*(x/c)**4 )
+    return y
+
+def NACA4( x, c, naca ):
+    import numpy as np
+    m = naca[0]
+    p = naca[1]
+    t = naca[2] / 100
+
+    pc = np.where(x>p*c)[0][0]
+
+    # camber line angle
+    theta = camber_angle( x, c, m, p)
+
+    # camber line y-coordinate
+    yc = np.zeros(len(x))
+    yc[0:pc+1] = (m/p**2) * (2*p*(x[0:pc+1]/c) - (x[0:pc+1]/c)**2)
+    yc[pc+1:] = (m/(1-p)**2) * ( (1-2*p) + 2*p*(x[pc+1:]/c) - (x[pc+1:]/c)**2 )
+
+    # thickness profile
+    yt = NACA4symm( x, c, t )
+
+    # airfoil coordinates
+    xU = x - yt*np.sin(theta)
+    xL = x + yt*np.sin(theta)
+    yU = yc + yt*np.cos(theta)
+    yL = yc - yt*np.cos(theta)
+
+    return xL, xU, yL, yU
+
+
+def camber_angle( x, c, m, p):
+    import numpy as np
+
+    dy = np.zeros(len(x))
+    
+    pc = np.where(x>p*c)[0][0]
+    dy[0:pc] = (2*m/p**2) * (p - (x[0:pc]/c))
+    dy[pc+1:] = (2*m/(1-p)**2) * (p - (x[pc+1:]/c))
+
+    theta = np.arctan(dy)
+
+    return theta

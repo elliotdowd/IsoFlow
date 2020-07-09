@@ -559,7 +559,10 @@ class MainFrame ( wx.Frame ):
 			obj_end = float(wx.grid.Grid.GetCellValue(self.domainGrid, 3, 0)) / cl
 			length = float(wx.grid.Grid.GetCellValue(self.domainGrid, 0, 0)) / cl
 			height = float(wx.grid.Grid.GetCellValue(self.domainGrid, 1, 0)) / cl
-			theta = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)))
+			if name == "NACA 00xx Airfoil":
+				theta = wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)
+			else:
+				theta = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)))
 
 		if domain.name == "Wedge":
 			xx, yy = mesh_wedge(domain)
@@ -585,7 +588,7 @@ class MainFrame ( wx.Frame ):
 		#mpl.axes.Axes.clear(self.contourPanel.cax)
 		self.contourPanel.cax.plot(self.mesh.xx * cl, self.mesh.yy * cl, color='blue', linewidth=0.5)
 		self.contourPanel.cax.plot(np.transpose(self.mesh.xx) * cl, np.transpose(self.mesh.yy) * cl, color='blue', linewidth=0.5)
-		self.contourPanel.cax.plot(self.mesh.xxc * cl, self.mesh.yyc * cl, 'gx', markersize=2)
+		self.contourPanel.cax.plot(self.mesh.xxc * cl, self.mesh.yyc * cl, 'gx', markersize=0.25)
 
 		# plot settings
 		if self.topwall_out.IsChecked():
@@ -914,7 +917,7 @@ class MainFrame ( wx.Frame ):
 		if self.gridChoice.StringSelection == 'NACA 00xx Airfoil':
 			panel.cax.contourf(cl*self.mesh.xxc[self.domain.obj_i:self.domain.obj_f,self.domain.wallL:self.domain.wallU], \
 							   cl*self.mesh.yyc[self.domain.obj_i:self.domain.obj_f,self.domain.wallL:self.domain.wallU], \
-							    		      	self.state.Mach[self.domain.obj_i:self.domain.obj_f,self.domain.wallL:self.domain.wallU], self.contGrad, color = 'w')
+							    		      	self.state.Mach[self.domain.obj_i:self.domain.obj_f,self.domain.wallL:self.domain.wallU], self.contGrad, colors = 'w')
 
 		# plot settings
 		if self.topwall_out.IsChecked():
@@ -1145,7 +1148,7 @@ class MainFrame ( wx.Frame ):
 		else:
 			self.labeled = False
 		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel, 1)
+			self.call_contplot(self.contourPanel, 1, 1)
 		event.Skip()
 
 	def gradient_change( self, event ):

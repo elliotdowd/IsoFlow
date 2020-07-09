@@ -41,7 +41,7 @@ def enforce_bc(domain, mesh, parameters, state, gas):
 
         if parameters.botwall == 'Inviscid Wall':
             state.Q[:, 0:2, :] = invisc_wall(state.Q[:, 0:2, :], state.p[:, 0], state.T[:, 0], mesh.s_proj[:, 0:2, :], \
-                                            domain.M+2, 0, gas, False)
+                                            gas, 0, domain.M+2, domain.N+1, False)
         elif parameters.botwall == 'Viscous Wall':
             state.Q[obj_i:obj_f, 0:2, :] = visc_wall(state.Q[obj_i:obj_f, 0:2, :], \
                     state.p[obj_i:obj_f, 0], state.T[obj_i:obj_f, 0], mesh.s_proj[obj_i:obj_f, 0:2, :], \
@@ -63,7 +63,7 @@ def enforce_bc(domain, mesh, parameters, state, gas):
             state.T[:, domain.N+1] = 300
 
             state.Q[:, domain.N:, :] = invisc_wall(state.Q[:, domain.N:, :], state.p[:, domain.N+1], state.T[:, domain.N+1], \
-                                                mesh.s_proj[:, domain.N:, :], domain.M+2, domain.N+1, gas, True)
+                                                mesh.s_proj[:, domain.N:, :], gas, 0, domain.M+2, domain.N+1, True)
         elif parameters.topwall == 'Viscous Wall':
             # update state variables at top wall
             state.p[:, domain.N+1] = state.p[:, domain.N]
@@ -100,7 +100,7 @@ def enforce_bc(domain, mesh, parameters, state, gas):
 
         if parameters.botwall == 'Inviscid Wall':
             state.Q[:, 0:2, :] = invisc_wall(state.Q[:, 0:2, :], state.p[:, 0], state.T[:, 0], mesh.s_proj[:, 0:2, :], \
-                                            domain.M+2, 0, gas, False)
+                                            gas, 0, domain.M+2, 0, False)
         elif parameters.botwall == 'Viscous Wall':
             state.Q[:, 0:2, :] = visc_wall(state.Q[:, 0:2, :], \
                     state.p[:, 0], state.T[:, 0], mesh.s_proj[:, 0:2, :], \
@@ -142,24 +142,19 @@ def enforce_bc(domain, mesh, parameters, state, gas):
             state.T[obj_i:obj_f,wallU] = parameters.botwall_temp
 
         if parameters.botwall == 'Inviscid Wall':
-            state.Q[obj_i:obj_f, 0:2, :] = invisc_wall(state.Q[:, 0:2, :], state.p[:, 0], state.T[:, 0], mesh.s_proj[:, 0:2, :], \
-                                            domain.M+2, 0, gas, False)
+            state.Q[obj_i:obj_f, wallU:wallU+2, :] = invisc_wall(state.Q[obj_i:obj_f, wallU:wallU+2, :], state.p[obj_i:obj_f, wallU], \
+                                                                 state.T[obj_i:obj_f, wallU], mesh.s_proj[obj_i:obj_f, wallU:wallU+2, :], \
+                                                                 gas, obj_i, obj_f, wallL, False)
+            state.Q[obj_i:obj_f, wallL-1:wallL+1, :] = invisc_wall(state.Q[obj_i:obj_f, wallL-1:wallL+1, :], state.p[obj_i:obj_f, wallL], \
+                                                                 state.T[obj_i:obj_f, wallL], mesh.s_proj[obj_i:obj_f, wallL-1:wallL+1, :], \
+                                                                 gas, obj_i, obj_f, wallL, True)
         elif parameters.botwall == 'Viscous Wall':
             state.Q[obj_i:obj_f, wallU:wallU+2, :] = visc_wall(state.Q[obj_i:obj_f, wallU:wallU+2, :], \
                     state.p[obj_i:obj_f, wallU], state.T[obj_i:obj_f, wallU], mesh.s_proj[obj_i:obj_f, wallU:wallU+2, :], \
                                                     gas, obj_i-1, obj_f, wallU, False)
-
             state.Q[obj_i:obj_f, wallL-1:wallL+1, :] = visc_wall(state.Q[obj_i:obj_f, wallL-1:wallL+1, :], \
                     state.p[obj_i:obj_f, wallL], state.T[obj_i:obj_f, wallL], mesh.s_proj[obj_i:obj_f, wallL-1:wallL+1, :], \
                                                     gas, obj_i-1, obj_f, wallL, True)
-
-        # enforce front two cells 
-
-        # state.Q[obj_i-1, wallL:wallU, 0] = state.p[obj_i-1, wallL:wallU] / (gas.R_fn(gas.Cp[obj_i-1, wallL:wallU], gas.Cv[obj_i-1, wallL:wallU]) * state.T[obj_i-1, wallL:wallU])
-        # state.Q[obj_i-1, wallL:wallU, 1] = - state.Q[obj_i-1, wallL:wallU, 1]
-        # state.Q[obj_i-1, wallL:wallU, 2] = - state.Q[obj_i-1, wallL:wallU, 2]
-        # state.Q[obj_i-1, wallL:wallU, 3] = thermo.calc_rho_et( state.p[obj_i-1, wallL:wallU], state.Q[obj_i-1, wallL:wallU, 0], state.Q[obj_i-1, wallL:wallU, 1]/state.Q[obj_i-1, wallL:wallU, 0], \
-        #                                     state.Q[obj_i-1, wallL:wallU, 2]/state.Q[obj_i-1, wallL:wallU, 0], gas.gamma_fn(gas.Cp[obj_i-1, wallL:wallU], gas.Cv[obj_i-1, wallL:wallU]) )
 
         # enforce inlet condition
         state.Q[0,:,0] = parameters.p_in / (gas.R_fn(gas.Cp[0,:], gas.Cv[0,:]) * parameters.T_in)
@@ -171,7 +166,7 @@ def enforce_bc(domain, mesh, parameters, state, gas):
 
 
 # compute velocities at inviscid slip wall, input Qwall[M+2, 2, 4]
-def invisc_wall(Qwall, pwall, Twall, s_proj, M, N, gas, flip):
+def invisc_wall(Qwall, pwall, Twall, s_proj, gas, obj_i, obj_f, N, flip):
 
     import numpy as np
 
@@ -194,13 +189,13 @@ def invisc_wall(Qwall, pwall, Twall, s_proj, M, N, gas, flip):
     v0 = Qwall[:, i, 2] / Qwall[:, i, 0]
 
     # run Fortran 90 subroutine to determine wall velocities
-    boundary.slip(u0, v0, u1, v1, s_proj, M)
+    boundary.slip(u0, v0, u1, v1, s_proj, obj_f-obj_i)
 
-    Qwall[:, i, 0] = pwall / (gas.R_fn(gas.Cp[:,N], gas.Cv[:, N]) * Twall)
+    Qwall[:, i, 0] = pwall / (gas.R_fn(gas.Cp[obj_i:obj_f,N], gas.Cv[obj_i:obj_f, N]) * Twall)
     Qwall[:, i, 1] = u0 * Qwall[:, i, 0]
     Qwall[:, i, 2] = v0 * Qwall[:, i, 0]
     Qwall[:, i, 3] = thermo.calc_rho_et( pwall, Qwall[:, i, 0], Qwall[:, i, 1]/Qwall[:, i, 0], \
-                                         Qwall[:, i, 2]/Qwall[:, i, 0], gas.gamma_fn(gas.Cp[:,N], gas.Cv[:,N]) )
+                                         Qwall[:, i, 2]/Qwall[:, i, 0], gas.gamma_fn(gas.Cp[obj_i:obj_f,N], gas.Cv[obj_i:obj_f,N]) )
     
     return Qwall
 
