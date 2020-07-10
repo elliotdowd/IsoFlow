@@ -132,9 +132,10 @@ def mesh_naca4(domain):
     N = domain.N
     length = domain.length
     height = domain.height
-    naca = domain.theta
+    naca = domain.naca
     obj_start = domain.obj_start
     obj_end = domain.obj_end
+    a = domain.alpha
 
     x = np.linspace(-(1/M)*length, length*(1+(1/M)), M+3)
     y = np.linspace(-height/2*(1+(1/N)), height/2*(1+(1/N)), N+3)
@@ -179,36 +180,72 @@ def mesh_naca4(domain):
     else:
         yt = NACA4symm( xaf-np.min(xaf), c, t/100 )
 
-        xL, xU, yL, yU = NACA4( xaf-np.min(xaf), c, np.array( (m, p, thick) ) )
+        xL, xU, yL, yU, yc = NACA4( xaf-np.min(xaf), c, np.array( (m, p, thick) ) )
 
         xx, yy = np.meshgrid(x, y)
         xx = np.transpose(xx)
         yy = np.transpose(yy)
+
+        yy[domain.obj_i:domain.obj_f, half+1] = yc
 
         # focus points closer to airfoil
         for j in range( 0, half ):
             yy[domain.obj_i:domain.obj_f, half-j] = yL*(np.sinh((half-j)/half)**1)/np.sinh(1)**1 + yy[domain.obj_i:domain.obj_f, half-j]
             yy[domain.obj_i:domain.obj_f, half+2+j] = yU*(np.sinh((half-j)/half)**1)/np.sinh(1)**1 + yy[domain.obj_i:domain.obj_f, half+2+j]
 
+        # shift x-coordinates near camber line
         xx[domain.obj_i:domain.obj_f, half] = np.min(xaf) + xL
         xx[domain.obj_i:domain.obj_f, half+2] = np.min(xaf) + xU
 
+        # shift x-coordinates away from camber line
+        for j in range( 1, int(N/4)):
+            xx[domain.obj_i:domain.obj_f, half-j] = ((j/(N/4)) * xx[domain.obj_i:domain.obj_f, half-j] + (1-(j/(N/4))) * (np.min(xaf) + xL) )
+            xx[domain.obj_i:domain.obj_f, half+2+j] = ((j/(N/4)) * xx[domain.obj_i:domain.obj_f, half+2+j] + (1-(j/(N/4))) * (np.min(xaf) + xU) )
 
-    # angle of attack rotation 
-    alpha = 5 * (np.pi/180)
-
-    R = np.array( [np.cos(alpha), np.sin(alpha), -np.sin(alpha), np.cos(alpha)] ).reshape( [2, 2] )
-
-    for i in range( 0, M+3 ):
-
-        for j in range( 0, N+3 ):
-
-            xy = np.matmul( R, np.array( [xx[i,j], yy[i,j]] ).reshape( [2,1] ) )
-            xx[i,j] = xy[0]
-            yy[i,j] = xy[1]
-
+    xx = np.array(xx, order='F')
+    yy = np.array(yy, order='F')
 
     return xx, yy
+
+
+def mesh_biconvex(domain):
+
+    import numpy as np
+    
+    # import domain values
+    domain.M = domain.M + int(domain.M%2 == 1)
+    M = domain.M
+    domain.N = domain.N + int(domain.N%2 == 1)
+    N = domain.N
+    length = domain.length
+    height = domain.height
+    c = domain.chord
+    obj_start = domain.obj_start
+    obj_end = domain.obj_end
+    a = domain.alpha
+
+    x = np.linspace(-(1/M)*length, length*(1+(1/M)), M+3)
+    y = np.linspace(-height/2*(1+(1/N)), height/2*(1+(1/N)), N+3)
+
+    # focus points around x-axis/centerline
+    nx = 1
+    half = int(N/2)
+    for j in range( 0, half ):
+        y[half-j] = y[half-j] - 0.5*y[half-j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
+        y[half+2+j] = y[half+2+j] - 0.5*y[half+2+j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
+
+    domain.obj_i = np.where(x>obj_start)
+    domain.obj_i = domain.obj_i[0][0]
+    domain.obj_f = np.where(x>obj_end)
+    domain.obj_f = domain.obj_f[0][0]
+
+    xaf = x[domain.obj_i:domain.obj_f]
+
+    yU = 0.1*xaf*( 1 - xaf )
+    yL = -0.1*xaf*( 1 - xaf )
+
+
+
 
 
 def NACA4symm( x, c, t ):
@@ -242,7 +279,7 @@ def NACA4( x, c, naca ):
     yU = yc + yt*np.cos(theta)
     yL = yc - yt*np.cos(theta)
 
-    return xL, xU, yL, yU
+    return xL, xU, yL, yU, yc
 
 
 def camber_angle( x, c, m, p):

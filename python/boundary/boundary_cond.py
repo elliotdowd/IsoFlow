@@ -121,7 +121,7 @@ def enforce_bc(domain, mesh, parameters, state, gas):
         state.T[:,0] = state.T[:,-1]
         state.Q[:,0,:] = state.Q[:,-1,:]
 
-    elif domain.name == 'NACA XXXX Airfoil':
+    elif domain.name == 'NACA XXXX Airfoil' or domain.name == 'Biconvex Airfoil':
 
         obj_i = domain.obj_i
         obj_f = domain.obj_f
@@ -158,8 +158,8 @@ def enforce_bc(domain, mesh, parameters, state, gas):
 
         # enforce inlet condition
         state.Q[0,:,0] = parameters.p_in / (gas.R_fn(gas.Cp[0,:], gas.Cv[0,:]) * parameters.T_in)
-        state.Q[0,:,1] = state.Q[0,:,0] * parameters.M_in * np.sqrt(gas.gamma_fn(gas.Cp[0,:], gas.Cv[0,:])*parameters.p_in/state.Q[0,:,0])
-        state.Q[0,:,2] = state.Q[0,:,0] * 0
+        state.Q[0,:,1] = state.Q[0,:,0] * parameters.M_in * np.cos(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[0,:], gas.Cv[0,:])*parameters.p_in/state.Q[0,:,0])
+        state.Q[0,:,2] = state.Q[0,:,0] * parameters.M_in * np.sin(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[0,:], gas.Cv[0,:])*parameters.p_in/state.Q[0,:,0])
         state.Q[0,:,3] = thermo.calc_rho_et(parameters.p_in, state.Q[0,:,0], state.Q[0,:,1]/state.Q[0,:,0], state.Q[0,:,2]/state.Q[0,:,0], gas.gamma_fn(gas.Cp[0,:], gas.Cv[0,:]))                       
 
     return state

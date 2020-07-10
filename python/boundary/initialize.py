@@ -11,8 +11,8 @@ def init_state(domain, mesh, parameters, gas):
     #soln_vars.init_q(Q, parameters.p_in, parameters.T_in, parameters.M_in, gas.R, gas.gamma, domain.M+2, domain.M+2)
 
     Q[:,:,0] = parameters.p_in / (gas.R_p * parameters.T_in)
-    Q[:,:,1] = Q[:,:,0] * parameters.M_in * np.sqrt(gas.gamma_p*parameters.p_in/Q[:,:,0])
-    Q[:,:,2] = Q[:,:,0] * 0
+    Q[:,:,1] = Q[:,:,0] * parameters.M_in * np.cos(domain.alpha) * np.sqrt(gas.gamma_p*parameters.p_in/Q[:,:,0])
+    Q[:,:,2] = Q[:,:,0] * parameters.M_in * np.sin(domain.alpha) * np.sqrt(gas.gamma_p*parameters.p_in/Q[:,:,0])
     Q[:,:,3] = thermo.calc_rho_et(parameters.p_in, Q[:,:,0], Q[:,:,1]/Q[:,:,0], Q[:,:,2]/Q[:,:,0], gas.gamma_p)
 
     class state:
