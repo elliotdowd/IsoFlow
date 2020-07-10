@@ -219,7 +219,7 @@ def mesh_biconvex(domain):
     N = domain.N
     length = domain.length
     height = domain.height
-    c = domain.chord
+    t = domain.thickness
     obj_start = domain.obj_start
     obj_end = domain.obj_end
     a = domain.alpha
@@ -239,15 +239,31 @@ def mesh_biconvex(domain):
     domain.obj_f = np.where(x>obj_end)
     domain.obj_f = domain.obj_f[0][0]
 
-    xaf = x[domain.obj_i:domain.obj_f]
+    xaf = x[domain.obj_i:domain.obj_f] - x[domain.obj_i]
+    c = x[domain.obj_f] - x[domain.obj_i]
 
-    yU = 0.1*xaf*( 1 - xaf )
-    yL = -0.1*xaf*( 1 - xaf )
+    yt = 2*t*(xaf)*( 1 - (xaf/c) )
+    yt = yt / c
+
+    domain.wallL = half
+    domain.wallU = half+2
+
+    xx, yy = np.meshgrid(x, y)
+    xx = np.transpose(xx)
+    yy = np.transpose(yy)
+
+    # focus points closer to airfoil
+    for j in range( 0, half ):
+        yy[domain.obj_i:domain.obj_f, half-j] = -yt*(np.sinh((half-j)/half)**1)/np.sinh(1)**1 + yy[domain.obj_i:domain.obj_f, half-j]
+        yy[domain.obj_i:domain.obj_f, half+2+j] = yt*(np.sinh((half-j)/half)**1)/np.sinh(1)**1 + yy[domain.obj_i:domain.obj_f, half+2+j]
+
+    xx = np.array(xx, order='F')
+    yy = np.array(yy, order='F')
+
+    return xx, yy
 
 
-
-
-
+## NACA related functions
 def NACA4symm( x, c, t ):
     import numpy as np
     y = 5*t*c * ( 0.2969*np.sqrt(x/c) - 0.126*(x/c) - 0.3516*(x/c)**2 + 0.2843*(x/c)**3 - 0.1015*(x/c)**4 )

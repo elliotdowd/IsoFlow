@@ -144,17 +144,18 @@ def enforce_bc(domain, mesh, parameters, state, gas):
         if parameters.botwall == 'Inviscid Wall':
             state.Q[obj_i:obj_f, wallU:wallU+2, :] = invisc_wall(state.Q[obj_i:obj_f, wallU:wallU+2, :], state.p[obj_i:obj_f, wallU], \
                                                                  state.T[obj_i:obj_f, wallU], mesh.s_proj[obj_i:obj_f, wallU:wallU+2, :], \
-                                                                 gas, obj_i, obj_f, wallL, False)
+                                                                 gas, obj_i, obj_f, wallU, False)
             state.Q[obj_i:obj_f, wallL-1:wallL+1, :] = invisc_wall(state.Q[obj_i:obj_f, wallL-1:wallL+1, :], state.p[obj_i:obj_f, wallL], \
                                                                  state.T[obj_i:obj_f, wallL], mesh.s_proj[obj_i:obj_f, wallL-1:wallL+1, :], \
                                                                  gas, obj_i, obj_f, wallL, True)
         elif parameters.botwall == 'Viscous Wall':
-            state.Q[obj_i:obj_f, wallU:wallU+2, :] = visc_wall(state.Q[obj_i:obj_f, wallU:wallU+2, :], \
-                    state.p[obj_i:obj_f, wallU], state.T[obj_i:obj_f, wallU], mesh.s_proj[obj_i:obj_f, wallU:wallU+2, :], \
-                                                    gas, obj_i-1, obj_f, wallU, False)
-            state.Q[obj_i:obj_f, wallL-1:wallL+1, :] = visc_wall(state.Q[obj_i:obj_f, wallL-1:wallL+1, :], \
-                    state.p[obj_i:obj_f, wallL], state.T[obj_i:obj_f, wallL], mesh.s_proj[obj_i:obj_f, wallL-1:wallL+1, :], \
-                                                    gas, obj_i-1, obj_f, wallL, True)
+            state.Q[obj_i:obj_f, wallU:wallU+2, :]  =  visc_wall(state.Q[obj_i:obj_f, wallU:wallU+2, :], state.p[obj_i:obj_f, wallU], \
+                                                                 state.T[obj_i:obj_f, wallU], mesh.s_proj[obj_i:obj_f, wallU:wallU+2, :], \
+                                                                 gas, obj_i-1, obj_f, wallU, False)
+            state.Q[obj_i:obj_f, wallL-1:wallL+1, :] = visc_wall(state.Q[obj_i:obj_f, wallL-1:wallL+1, :], state.p[obj_i:obj_f, wallL], \
+                                                                 state.T[obj_i:obj_f, wallL], mesh.s_proj[obj_i:obj_f, wallL-1:wallL+1, :], \
+                                                                 gas, obj_i-1, obj_f, wallL, True)
+            #state.Q[obj_i:obj_f, wallL-1:wallL+1, :] = np.array( (state.Q[obj_i:obj_f, wallL, :], state.Q[obj_i:obj_f, wallL-1, :]) ).reshape([obj_f-obj_i,2,4])
 
         # enforce inlet condition
         state.Q[0,:,0] = parameters.p_in / (gas.R_fn(gas.Cp[0,:], gas.Cv[0,:]) * parameters.T_in)

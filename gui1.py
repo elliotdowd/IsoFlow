@@ -59,13 +59,12 @@ class MainFrame ( wx.Frame ):
 		self.domainGrid.SetRowLabelSize( 112 )
 		self.domainGrid.SetRowLabelValue( 0, u"Length (m)" )
 		self.domainGrid.SetRowLabelValue( 1, u"Height (m)" )
-		self.domainGrid.SetRowLabelValue( 2, u"Wedge Start (m)" )
-		self.domainGrid.SetRowLabelValue( 3, u"Wedge End (m)" )
-		self.domainGrid.SetRowLabelValue( 4, u"Wedge Angle (°)" )
+		self.domainGrid.SetRowLabelValue( 2, u"Airfoil Start (m)" )
+		self.domainGrid.SetRowLabelValue( 3, u"Airfoil End (m)" )
+		self.domainGrid.SetRowLabelValue( 4, u"NACA XXXX" )
 		self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
 		self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
 		self.domainGrid.SetRowLabelValue( 7, u"Angle of Attack (°)" )
-		#self.domainGrid.HideRow( 7 )
 		self.domainGrid.SetRowLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
 		# Label Appearance
@@ -114,7 +113,7 @@ class MainFrame ( wx.Frame ):
 		self.parameterGrid.EnableDragRowSize( True )
 		self.parameterGrid.SetRowLabelSize( 100 )
 		self.parameterGrid.SetRowLabelValue( 0, u"Inlet Mach #" )
-		self.parameterGrid.SetRowLabelValue( 1, u"Inlet Pres. (Pa)" )
+		self.parameterGrid.SetRowLabelValue( 1, u"Inlet Pres. (kPa)" )
 		self.parameterGrid.SetRowLabelValue( 2, u"Inlet Temp. (K)" )
 		self.parameterGrid.SetRowLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
@@ -544,7 +543,6 @@ class MainFrame ( wx.Frame ):
 		import numpy as np
 		from python.mesh.grid.gen_grid import mesh_wedge, mesh_corner, mesh_cylinder, mesh_naca4, mesh_biconvex
 		from python.mesh.metrics.calc_cell_metrics import cellmetrics
-    	#import python.mesh.grid.rotate as rot
 		import matplotlib.pyplot as plt
 		import matplotlib as mpl
 		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
@@ -568,7 +566,7 @@ class MainFrame ( wx.Frame ):
 				naca = wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)
 				alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 7, 0)))
 			elif name == 'Biconvex Airfoil':
-				chord = float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0))
+				thickness = float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0))
 				alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 7, 0)))
 			else:
 				theta = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)))
@@ -636,6 +634,16 @@ class MainFrame ( wx.Frame ):
 
 		t = TicToc()
 
+		if self.domain.name == 'NACA XXXX Airfoil':
+			self.domain.naca = wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)
+			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 7, 0)))
+		elif self.domain.name == 'Biconvex Airfoil':
+			self.domain.thickness = float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0))
+			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 7, 0)))
+		else:
+			self.domain.theta = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)))
+			self.domain.alpha = 0
+
 		# initialize state vector, simulation parameters and fluid properties
 		class parameters:
 			M_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 0, 0))
@@ -695,6 +703,7 @@ class MainFrame ( wx.Frame ):
 
 	def call_scheme( self, event ):
 
+		import numpy as np
 		from pytictoc import TicToc
 		from python.finite_volume.AUSM.schemes import AUSM, AUSMmuscl, AUSMplusup, AUSMDV, SLAU
 		import python.finite_volume.gasdata as gasdata
@@ -704,6 +713,16 @@ class MainFrame ( wx.Frame ):
 		# run AUSM family scheme
 		t.tic()
 		scheme = self.schemeChoice.Strings[self.schemeChoice.Selection]
+
+		if self.domain.name == 'NACA XXXX Airfoil':
+			self.domain.naca = wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)
+			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 7, 0)))
+		elif self.domain.name == 'Biconvex Airfoil':
+			self.domain.thickness = float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0))
+			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 7, 0)))
+		else:
+			self.domain.theta = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)))
+			self.domain.alpha = 0
 
 		class parameters:
 			M_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 0, 0))
@@ -1270,6 +1289,21 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.SetRowLabelValue( 2, u"Airfoil Start (" + self.units.length + ')' )
 			self.domainGrid.SetRowLabelValue( 3, u"Airfoil End (" + self.units.length + ')' )
 			self.domainGrid.SetRowLabelValue( 4, u"NACA XXXX" )
+			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
+			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
+			self.domainGrid.SetRowLabelValue( 7, u"Angle of Attack (°)" )
+
+		elif self.gridChoice.StringSelection == 'Biconvex Airfoil':
+			self.domainGrid.ShowRow( 1 )
+			self.domainGrid.ShowRow( 3 )
+			self.domainGrid.ShowRow( 4 )
+			self.domainGrid.ShowRow( 7 )
+
+			self.domainGrid.SetRowLabelValue( 0, u"Length (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
+			self.domainGrid.SetRowLabelValue( 2, u"Airfoil Start (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 3, u"Airfoil End (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 4, u"Thickness (" + self.units.length + ')')
 			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
 			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
 			self.domainGrid.SetRowLabelValue( 7, u"Angle of Attack (°)" )
