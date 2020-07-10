@@ -140,21 +140,36 @@ def mesh_naca4(domain):
     x = np.linspace(-(1/M)*length, length*(1+(1/M)), M+3)
     y = np.linspace(-height/2*(1+(1/N)), height/2*(1+(1/N)), N+3)
 
+    domain.obj_i = np.where(x>obj_start)
+    domain.obj_i = domain.obj_i[0][0]
+    domain.obj_f = np.where(x>obj_end)
+    domain.obj_f = domain.obj_f[0][0]
+
     m = float( naca[0] ) / 100
     p = float( naca[1] ) / 10
     thick = float( naca[2:4] )
 
     # focus points around x-axis/centerline
-    nx = 1
+    nx = 1.5
     half = int(N/2)
     for j in range( 0, half ):
         y[half-j] = y[half-j] - 0.5*y[half-j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
         y[half+2+j] = y[half+2+j] - 0.5*y[half+2+j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
 
-    domain.obj_i = np.where(x>obj_start)
-    domain.obj_i = domain.obj_i[0][0]
-    domain.obj_f = np.where(x>obj_end)
-    domain.obj_f = domain.obj_f[0][0]
+    # concentrate x points near leading and trailing edges
+    nL = 1.5
+    front = int(5)
+    x_stored = x
+    for i in range( 1, front ):
+        x[domain.obj_i+i] = x_stored[domain.obj_i+i] + 0.5*(x[domain.obj_i]-x[domain.obj_i+i])*(np.sinh((front-i)/front))**nL/np.sinh(1)**nL
+        x[domain.obj_i-i] = x_stored[domain.obj_i-i] + 0.5*(x[domain.obj_i]-x[domain.obj_i-i])*(np.sinh((front-i)/front))**nL/np.sinh(1)**nL
+
+    nT = 1.5
+    back = int(5)
+    for i in range( 1, back ):
+        x[domain.obj_f+i] = x_stored[domain.obj_f+i] + 0.5*(x[domain.obj_f]-x[domain.obj_f+i])*(np.sinh((back-i)/back))**nT/np.sinh(1)**nT
+        x[domain.obj_f-i] = x_stored[domain.obj_f-i] + 0.5*(x[domain.obj_f]-x[domain.obj_f-i])*(np.sinh((back-i)/back))**nT/np.sinh(1)**nT
+
 
     xaf = x[domain.obj_i:domain.obj_f]
     c = np.max(xaf)-np.min(xaf)
@@ -227,6 +242,11 @@ def mesh_biconvex(domain):
     x = np.linspace(-(1/M)*length, length*(1+(1/M)), M+3)
     y = np.linspace(-height/2*(1+(1/N)), height/2*(1+(1/N)), N+3)
 
+    domain.obj_i = np.where(x>obj_start)
+    domain.obj_i = domain.obj_i[0][0]
+    domain.obj_f = np.where(x>obj_end)
+    domain.obj_f = domain.obj_f[0][0]
+
     # focus points around x-axis/centerline
     nx = 1
     half = int(N/2)
@@ -234,10 +254,19 @@ def mesh_biconvex(domain):
         y[half-j] = y[half-j] - 0.5*y[half-j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
         y[half+2+j] = y[half+2+j] - 0.5*y[half+2+j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
 
-    domain.obj_i = np.where(x>obj_start)
-    domain.obj_i = domain.obj_i[0][0]
-    domain.obj_f = np.where(x>obj_end)
-    domain.obj_f = domain.obj_f[0][0]
+    # concentrate x points near leading and trailing edges
+    nL = 1.5
+    front = int(5)
+    x_stored = x
+    for i in range( 1, front ):
+        x[domain.obj_i+i] = x_stored[domain.obj_i+i] + 0.5*(x[domain.obj_i]-x[domain.obj_i+i])*(np.sinh((front-i)/front))**nL/np.sinh(1)**nL
+        x[domain.obj_i-i] = x_stored[domain.obj_i-i] + 0.5*(x[domain.obj_i]-x[domain.obj_i-i])*(np.sinh((front-i)/front))**nL/np.sinh(1)**nL
+
+    nT = 1.5
+    back = int(5)
+    for i in range( 1, back ):
+        x[domain.obj_f+i] = x_stored[domain.obj_f+i] + 0.5*(x[domain.obj_f]-x[domain.obj_f+i])*(np.sinh((back-i)/back))**nT/np.sinh(1)**nT
+        x[domain.obj_f-i] = x_stored[domain.obj_f-i] + 0.5*(x[domain.obj_f]-x[domain.obj_f-i])*(np.sinh((back-i)/back))**nT/np.sinh(1)**nT
 
     xaf = x[domain.obj_i:domain.obj_f] - x[domain.obj_i]
     c = x[domain.obj_f] - x[domain.obj_i]
