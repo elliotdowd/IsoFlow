@@ -4,7 +4,7 @@ def MUSCL( Q ):
 
     import numpy as np
 
-    eps = 0
+    eps = 1/2
     kap = 1
 
     minmod = lambda r, b: np.maximum( 0, np.minimum(1, r) )
@@ -18,58 +18,62 @@ def MUSCL( Q ):
     QB_half = np.zeros( (M, N-1, 4) )
     QU_half = np.zeros( (M, N-1, 4) )
 
-    for i in range( 0, M-1 ):
+    for i in range( 1, M-1 ):
 
-        if i == 0:
-            Qm2= Q[i, :, :]
-            Qm1 = Q[i, :, :]
-            Qi = Q[i, :, :]
-            Qp1 = Q[i+1, :, :]
-        elif i == 1:
+        ih = i-1
+
+        if i == 1:
             Qm2 = Q[i-1, :, :]
             Qm1 = Q[i-1, :, :]
             Qi = Q[i, :, :]
             Qp1 = Q[i+1, :, :]
+            Qp2 = Q[i+2, :, :]
         elif i == M-2:
             Qm2 = Q[i-2, :, :]
             Qm1 = Q[i-1, :, :]
             Qi = Q[i, :, :]
-            Qp1 = Q[i, :, :]
+            Qp1 = Q[i+1, :, :]
+            Qp2 = Q[i+1, :, :]
         else:
             Qm2 = Q[i-2, :, :]
             Qm1 = Q[i-1, :, :]
             Qi = Q[i, :, :]
             Qp1 = Q[i+1, :, :]
+            Qp2 = Q[i+2, :, :]
 
-        QL_half[i, :, :] = QL( Qm2, Qm1, Qi, kap, eps, limiter )
-        QR_half[i, :, :] = QR( Qm1, Qi, Qp1, kap, eps, limiter )
+        QL_half[ih, :, :] = QL( Qm2, Qm1, Qi, kap, eps, limiter )
+        QR_half[ih, :, :] = QR( Qm1, Qi, Qp1, kap, eps, limiter )
+        QL_half[ih+1, :, :] = QL( Qm1, Qi, Qp1, kap, eps, limiter )
+        QR_half[ih+1, :, :] = QR( Qi, Qp1, Qp2, kap, eps, limiter )
 
 
-    for j in range( 0, N-1 ):
+    for j in range( 1, N-1 ):
 
-        if j == 0:
-            Qm2 = Q[:, j, :]
-            Qm1 = Q[:, j, :]
-            Qi = Q[:, j, :]
-            Qp1 = Q[:, j+1, :]
-        elif j == 1:
+        jh = j-1
+
+        if j == 1:
             Qm2 = Q[:, j-1, :]
             Qm1 = Q[:, j-1, :]
             Qi = Q[:, j, :]
             Qp1 = Q[:, j+1, :]
+            Qp2 = Q[:, j+2, :]
         elif j == N-2:
             Qm2 = Q[:, j-2, :]
             Qm1 = Q[:, j-1, :]
             Qi = Q[:, j, :]
-            Qp1 = Q[:, j, :]
+            Qp1 = Q[:, j+1, :]
+            Qp2 = Q[:, j+1, :]
         else: 
             Qm2 = Q[:, j-2, :]
             Qm1 = Q[:, j-1, :]
             Qi = Q[:, j, :]
             Qp1 = Q[:, j+1, :]
+            Qp2 = Q[:, j+2, :]
 
-        QB_half[:, j, :] = QL( Qm2, Qm1, Qi, kap, eps, limiter )
-        QU_half[:, j, :] = QR( Qm1, Qi, Qp1, kap, eps, limiter )
+        QB_half[:, jh, :] = QL( Qm2, Qm1, Qi, kap, eps, limiter )
+        QU_half[:, jh, :] = QR( Qm1, Qi, Qp1, kap, eps, limiter )
+        QB_half[:, jh+1, :] = QL( Qm1, Qi, Qp1, kap, eps, limiter )
+        QU_half[:, jh+1, :] = QR( Qi, Qp1, Qp2, kap, eps, limiter )
 
     return QL_half, QR_half, QB_half, QU_half
 

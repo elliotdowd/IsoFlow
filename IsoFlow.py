@@ -16,7 +16,7 @@ import gui1
 # initialize main frame  
 app = wx.App(False, useBestVisual=True)
 frame = gui1.MainFrame(None)
-frame.SetTitle('IsoFlow 0.3.0')
+frame.SetTitle('IsoFlow 0.4.0')
 #frame.SetIcon(wx.Icon("/Users/Elliot/Documents/Python/compressible_wedge/bmp/IsoFlow.ico"))
 frame.SetPosition(wx.Point(240, 0))
 frame.Show(True)

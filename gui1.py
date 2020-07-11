@@ -530,7 +530,7 @@ class MainFrame ( wx.Frame ):
 		self.parameterGrid.SetCellValue( 0, 0, "3.0")
 		self.parameterGrid.SetCellValue( 1, 0, "101.325")
 		self.parameterGrid.SetCellValue( 2, 0, "300")
-		self.parameterGrid.SetCellValue( 3, 0, "5")
+		self.parameterGrid.SetCellValue( 3, 0, "0")
 
 		# set initialization row values
 		self.simGrid.SetCellValue( 0, 0, "0.4")

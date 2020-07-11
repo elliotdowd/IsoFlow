@@ -737,31 +737,35 @@ def AUSMmuscl( domain, mesh, parameters, state, gas ):
                                       state.Q[:,:,0] + state.p/state.Q[:,:,0]
 
         # density at cell interfaces, upwinded
-        #rho_half_zeta = ( state.Q[0:-1,:,0] + state.Q[1:,:,0] ) / 2
-        #rho_half_eta =  ( state.Q[:,0:-1,0] + state.Q[:,1:,0] ) / 2
+        rho_half_zeta = ( QL + QR ) / 2
+        rho_half_eta =  ( QB + QT ) / 2
 
         # speed of sound at cell interfaces
         # from Liou 2006 (JCP 214)
 
         c_st = thermo.calc_c_star( state.ht, gas.gamma_fn(gas.Cp, gas.Cv) )
 
-        c_L = c_st[0:-1,:] / np.maximum( np.sqrt(c_st[0:-1,:]), UL )
-        c_R = c_st[1:,:] / np.maximum( np.sqrt(c_st[1:,:]), -UR ) 
-        c_D = c_st[:,0:-1] / np.maximum( np.sqrt(c_st[:,0:-1]), VB )
-        c_U = c_st[:,1:] / np.maximum( np.sqrt(c_st[:,1:]), -VT )
+        c_L = thermo.calc_c_star(QL[:,:,3]/QL[:,:,0], gas.gamma_fn(gas.Cp[0:-1,:], gas.Cv[0:-1,:])) / \
+                                 np.maximum( np.sqrt(thermo.calc_c_star(QL[:,:,3]/QL[:,:,0], gas.gamma_fn(gas.Cp[0:-1,:], gas.Cv[0:-1,:]))), UL )
+        c_R = thermo.calc_c_star(QR[:,:,3]/QR[:,:,0], gas.gamma_fn(gas.Cp[1:,:], gas.Cv[1:,:])) / \
+                                 np.maximum( np.sqrt(thermo.calc_c_star(QR[:,:,3]/QR[:,:,0], gas.gamma_fn(gas.Cp[1:,:], gas.Cv[1:,:]))), -UR )
+        c_B = thermo.calc_c_star(QB[:,:,3]/QB[:,:,0], gas.gamma_fn(gas.Cp[:,0:-1], gas.Cv[:,0:-1])) / \
+                                 np.maximum( np.sqrt(thermo.calc_c_star(QB[:,:,3]/QB[:,:,0], gas.gamma_fn(gas.Cp[:,0:-1], gas.Cv[:,0:-1]))), VB )
+        c_T = thermo.calc_c_star(QT[:,:,3]/QT[:,:,0], gas.gamma_fn(gas.Cp[:,1:], gas.Cv[:,1:])) / \
+                                 np.maximum( np.sqrt(thermo.calc_c_star(QT[:,:,3]/QT[:,:,0], gas.gamma_fn(gas.Cp[:,1:], gas.Cv[:,1:]))), -VT )
 
         c_half_zeta = np.minimum( c_L, c_R )
-        c_half_eta =  np.minimum( c_D, c_U )
+        c_half_eta =  np.minimum( c_B, c_T )
 
         # cell face Mach numbers
         M_L = UL / c_half_zeta
         M_R = UR / c_half_zeta
-        M_D = VB / c_half_eta
+        M_B = VB / c_half_eta
         M_U = VT / c_half_eta
 
         # split interface Mach numbers in the zeta and eta directions
         M_half_zeta = split.Mvp( M_L ) + split.Mvm( M_R )
-        M_half_eta = split.Mvp( M_D ) + split.Mvm( M_U )
+        M_half_eta = split.Mvp( M_B ) + split.Mvm( M_U )
 
         # calculate mass flux at cell interfaces
         mdot_half_zeta = c_half_zeta * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] )
@@ -770,7 +774,7 @@ def AUSMmuscl( domain, mesh, parameters, state, gas ):
         cr = 1e-60
         # calculate pressure flux at cell interfaces
         p_half_zeta = split.P1p( M_L+cr )*pL + split.P1m( M_R+cr )*pR
-        p_half_eta =  split.P1p( M_D+cr )*pB + split.P1m( M_U+cr )*pT
+        p_half_eta =  split.P1p( M_B+cr )*pB + split.P1m( M_U+cr )*pT
 
         # initialize Phi vector components
         Phi[:,:,1] = state.u
