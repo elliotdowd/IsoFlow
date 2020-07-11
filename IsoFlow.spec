@@ -26,7 +26,7 @@ exe = EXE(pyz,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=False )
+          console=False , icon='C:\\Users\\Elliot\\Documents\\Python\\compressible_wedge\\bmp\\IsoFlow.ico')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
