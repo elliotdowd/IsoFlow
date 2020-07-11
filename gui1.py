@@ -41,7 +41,7 @@ class MainFrame ( wx.Frame ):
 		self.domainGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
 		
 		# Grid
-		self.domainGrid.CreateGrid( 8, 1 )
+		self.domainGrid.CreateGrid( 7, 1 )
 		self.domainGrid.EnableEditing( True )
 		self.domainGrid.EnableGridLines( True )
 		self.domainGrid.EnableDragGridSize( False )
@@ -64,7 +64,6 @@ class MainFrame ( wx.Frame ):
 		self.domainGrid.SetRowLabelValue( 4, u"NACA XXXX" )
 		self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
 		self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
-		self.domainGrid.SetRowLabelValue( 7, u"Angle of Attack (°)" )
 		self.domainGrid.SetRowLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
 		# Label Appearance
@@ -96,7 +95,7 @@ class MainFrame ( wx.Frame ):
 		self.parameterGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
 		
 		# Grid
-		self.parameterGrid.CreateGrid( 3, 1 )
+		self.parameterGrid.CreateGrid( 4, 1 )
 		self.parameterGrid.EnableEditing( True )
 		self.parameterGrid.EnableGridLines( True )
 		self.parameterGrid.EnableDragGridSize( False )
@@ -115,6 +114,7 @@ class MainFrame ( wx.Frame ):
 		self.parameterGrid.SetRowLabelValue( 0, u"Inlet Mach #" )
 		self.parameterGrid.SetRowLabelValue( 1, u"Inlet Pres. (kPa)" )
 		self.parameterGrid.SetRowLabelValue( 2, u"Inlet Temp. (K)" )
+		self.parameterGrid.SetRowLabelValue( 3, u"< of Attack (°)" )
 		self.parameterGrid.SetRowLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
 		# Label Appearance
@@ -308,7 +308,7 @@ class MainFrame ( wx.Frame ):
 		self.musclinfo = wx.MenuItem( self.schemeOptions, wx.ID_ANY, u"Show More Information", wx.EmptyString, wx.ITEM_NORMAL )
 		self.schemeOptions.Append( self.musclinfo )
 		
-		#self.menuBar.Append( self.schemeOptions, u"Scheme" ) 
+		self.menuBar.Append( self.schemeOptions, u"Scheme" ) 
 		
 		self.plotOptions = wx.Menu()
 		self.contOptions = wx.Menu()
@@ -338,13 +338,13 @@ class MainFrame ( wx.Frame ):
 
 		self.contOptions.AppendSeparator()
 
-		self.coarse = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Coarse", wx.EmptyString, wx.ITEM_RADIO )
+		self.coarse = wx.MenuItem( self.contOptions, 31, u"Coarse", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.Append( self.coarse )
 		
-		self.medium = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Medium", wx.EmptyString, wx.ITEM_RADIO )
+		self.medium = wx.MenuItem( self.contOptions, 32, u"Medium", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.Append( self.medium )
 		
-		self.fine = wx.MenuItem( self.contOptions, wx.ID_ANY, u"Fine", wx.EmptyString, wx.ITEM_RADIO )
+		self.fine = wx.MenuItem( self.contOptions, 33, u"Fine", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.Append( self.fine )
 
 		self.contOptions.AppendSeparator()
@@ -504,7 +504,7 @@ class MainFrame ( wx.Frame ):
 				return conv
 		self.units = units
 		self.axisOption = 'equal'
-		self.contGrad = 8
+		self.contGrad = 512
 		self.labeled = False
 		self.gradient = ''
 		self.gasSelect = 'Air'
@@ -525,18 +525,21 @@ class MainFrame ( wx.Frame ):
 		self.domainGrid.SetCellValue( 4, 0, "0012")
 		self.domainGrid.SetCellValue( 5, 0, "48")
 		self.domainGrid.SetCellValue( 6, 0, "36")
-		self.domainGrid.SetCellValue( 7, 0, "5")
-		#self.domainGrid.HideRow( 7 )
 
 		# set initialization row values
 		self.parameterGrid.SetCellValue( 0, 0, "3.0")
 		self.parameterGrid.SetCellValue( 1, 0, "101.325")
 		self.parameterGrid.SetCellValue( 2, 0, "300")
+		self.parameterGrid.SetCellValue( 3, 0, "5")
 
 		# set initialization row values
 		self.simGrid.SetCellValue( 0, 0, "0.4")
 		self.simGrid.SetCellValue( 1, 0, "1000")
 		self.simGrid.SetCellValue( 2, 0, "-6")
+
+		# set contour gradient to fine
+		self.contOptions.Check(33, True)
+
 
 	# Virtual event handlers, overide them in your derived class
 	def call_grid( self, event ):
@@ -564,13 +567,13 @@ class MainFrame ( wx.Frame ):
 			height = float(wx.grid.Grid.GetCellValue(self.domainGrid, 1, 0)) / cl
 			if name == 'NACA XXXX Airfoil':
 				naca = wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)
-				alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 7, 0)))
+				alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
 			elif name == 'Biconvex Airfoil':
 				thickness = float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0))
-				alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 7, 0)))
+				alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
 			else:
 				theta = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)))
-				alpha = 0
+				alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
 
 		if domain.name == "Wedge":
 			xx, yy = mesh_wedge(domain)
@@ -636,13 +639,13 @@ class MainFrame ( wx.Frame ):
 
 		if self.domain.name == 'NACA XXXX Airfoil':
 			self.domain.naca = wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)
-			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 7, 0)))
+			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
 		elif self.domain.name == 'Biconvex Airfoil':
 			self.domain.thickness = float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0))
-			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 7, 0)))
+			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
 		else:
 			self.domain.theta = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)))
-			self.domain.alpha = 0
+			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
 
 		# initialize state vector, simulation parameters and fluid properties
 		class parameters:
@@ -716,13 +719,13 @@ class MainFrame ( wx.Frame ):
 
 		if self.domain.name == 'NACA XXXX Airfoil':
 			self.domain.naca = wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)
-			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 7, 0)))
+			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
 		elif self.domain.name == 'Biconvex Airfoil':
 			self.domain.thickness = float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0))
-			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 7, 0)))
+			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
 		else:
 			self.domain.theta = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)))
-			self.domain.alpha = 0
+			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
 
 		class parameters:
 			M_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 0, 0))
@@ -1257,7 +1260,7 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.ShowRow( 1 )
 			self.domainGrid.ShowRow( 3 )
 			self.domainGrid.ShowRow( 4 )
-			self.domainGrid.HideRow( 7 )
+			#self.domainGrid.HideRow( 7 )
 
 			self.domainGrid.SetRowLabelValue( 0, u"Length (" + self.units.length + ')' )
 			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
@@ -1270,7 +1273,7 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.HideRow( 1 )
 			self.domainGrid.HideRow( 3 )
 			self.domainGrid.HideRow( 4 )
-			self.domainGrid.HideRow( 7 )
+			#self.domainGrid.HideRow( 7 )
 
 			self.domainGrid.SetRowLabelValue( 0, u"Domain Diam. (" + self.units.length + ')' )
 			self.domainGrid.SetRowLabelValue( 2, u"Cylinder Diam. (" + self.units.length + ')' )
@@ -1282,7 +1285,7 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.ShowRow( 1 )
 			self.domainGrid.ShowRow( 3 )
 			self.domainGrid.ShowRow( 4 )
-			self.domainGrid.ShowRow( 7 )
+			#self.domainGrid.ShowRow( 7 )
 
 			self.domainGrid.SetRowLabelValue( 0, u"Length (" + self.units.length + ')' )
 			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
@@ -1291,13 +1294,13 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.SetRowLabelValue( 4, u"NACA XXXX" )
 			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
 			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
-			self.domainGrid.SetRowLabelValue( 7, u"Angle of Attack (°)" )
+			#self.domainGrid.SetRowLabelValue( 7, u"Angle of Attack (°)" )
 
 		elif self.gridChoice.StringSelection == 'Biconvex Airfoil':
 			self.domainGrid.ShowRow( 1 )
 			self.domainGrid.ShowRow( 3 )
 			self.domainGrid.ShowRow( 4 )
-			self.domainGrid.ShowRow( 7 )
+			#self.domainGrid.ShowRow( 7 )
 
 			self.domainGrid.SetRowLabelValue( 0, u"Length (" + self.units.length + ')' )
 			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
@@ -1306,7 +1309,7 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.SetRowLabelValue( 4, u"Thickness (" + self.units.length + ')')
 			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
 			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
-			self.domainGrid.SetRowLabelValue( 7, u"Angle of Attack (°)" )
+			#self.domainGrid.SetRowLabelValue( 7, u"Angle of Attack (°)" )
 
 	# open contour plot in new window
 	def expandWindow( self, event ):
