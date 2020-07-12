@@ -480,6 +480,7 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.axis_change, id = self.equal.GetId() )
 		self.Bind( wx.EVT_MENU, self.axis_change, id = self.tight.GetId() )
 		self.Bind( wx.EVT_MENU, self.axis_change, id = self.auto.GetId() )
+		self.Bind( wx. EVT_MENU, self.musclWindow, id = self.musclinfo.GetId() )
 
 
 		# initialize grid values and class attributes
@@ -1324,6 +1325,7 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
 			#self.domainGrid.SetRowLabelValue( 7, u"Angle of Attack (°)" )
 
+
 	# open contour plot in new window
 	def expandWindow( self, event ):
 		self.new = NewWindow(parent=None)
@@ -1340,9 +1342,15 @@ class MainFrame ( wx.Frame ):
 
 	# open informational window for gases
 	def infoWindow( self, event ):
-		self.new = tableWindow(  parent=self )
+		self.new = tableWindow( parent=self )
 		self.new.Show()
 
+	# open info window for MUSCL interpolation
+	def musclWindow( self, event ):
+		self.init_parameters()
+		self.new = musclWindow( parent=self )
+		self.new.Show()
+		event.Skip()
 
 class RedirectText:
 	def __init__(self,aWxTextCtrl):
@@ -1407,8 +1415,8 @@ class tableWindow(wx.Frame):
 		self.gasGrid.SetRowLabelValue( 3, u"Cv " + '(' + parent.units.energy + '/' + parent.units.mass + parent.units.temp + ')' )
 		self.gasGrid.SetRowLabelValue( 4, u"R " + '(' + parent.units.energy + '/' + parent.units.mass + parent.units.temp + ')')
 
-		self.gasPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-		self.gasPanel.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
+		# self.gasPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		# self.gasPanel.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
 
 		#sizer.Add( self.gasPanel, 0, wx.CENTER )
 
@@ -1525,3 +1533,47 @@ class thermalWindow(wx.Frame):
 	def wall_change( self, event ):
 		self.walltemp = self.wallGrid.GetCellValue( 0, 0 )
 
+
+class musclWindow(wx.Frame):
+	def __init__(self, parent):
+		wx.Frame.__init__( self, parent, title = parent.gasSelect + ' Properties',\
+						size = wx.Size( 256, 294 ), style=wx.DEFAULT_FRAME_STYLE )
+		import gui1
+		import python.finite_volume.gasdata as gasdata
+		import numpy as np
+		import matplotlib.pyplot as plt
+		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+
+		sizer = wx.BoxSizer(wx.VERTICAL)
+
+		# Gas information grid
+		self.musclGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.musclGrid.CreateGrid( 2, 1 )
+		self.musclGrid.SetRowLabelSize( 160 )
+		self.musclGrid.SetColLabelSize( 0 )
+		self.musclGrid.SetRowLabelValue( 0, u"\epsilon" )
+		self.musclGrid.SetRowLabelValue( 1, u"\kappa" )
+
+		if hasattr( parent.parameters, 'epsilon'):
+			self.musclGrid.SetCellValue( 0, 0, str(parent.parameters.epsilon) )
+			self.musclGrid.SetCellValue( 1, 0, str(parent.parameters.kappa) )
+		else:
+			self.musclGrid.SetCellValue( 0, 0, str(0) )
+			self.musclGrid.SetCellValue( 1, 0, str(0) )
+
+		self.musclGrid.EnableEditing( True )
+		self.musclGrid.EnableGridLines( True )
+		self.musclGrid.EnableDragGridSize( False )
+		self.musclGrid.SetMargins( 0, 0 )
+
+		#self.tvdPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+
+		self.musclGrid.SetDefaultCellAlignment( wx.ALIGN_LEFT, wx.ALIGN_TOP )
+		sizer.Add( self.musclGrid, 0, wx.EXPAND | wx.ALL, 0 )
+		self.tvdPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		sizer.Add( self.tvdPanel, 1, wx.EXPAND | wx.ALL, 0 )
+		self.tvdPanel.SetBackgroundColour( wx.Colour( 111, 111, 111 ) )
+		
+		self.SetSizer( sizer )
+		self.Layout()
+		self.Centre( wx.BOTH )
