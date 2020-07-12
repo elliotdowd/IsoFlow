@@ -3,8 +3,6 @@ import numpy as np
 
 def MUSCL( Q, eps, kap, limiter ):
 
-    import numpy as np
-
     M, N, void = Q.shape
 
     QL_half = np.zeros( (M-1, N, 4) )
@@ -70,4 +68,5 @@ class limiters:
     minmod = lambda r, b: np.maximum( 0, np.minimum(1, r) )
     koren = lambda r, b: np.maximum( 0, np.minimum(b, r) )
     vanalbada1 = lambda r, b: np.maximum( ( r**2 + r ) / ( r**2 + 1 ), 0 )
-    vanleer = lambda r, b: np.maximum( ( r + np.abs(r) ) / ( r**2 + 1 ), 0 )
+    vanleer = lambda r, b: np.maximum( ( r + np.abs(r) ) / ( 1 + np.abs(r) ), 0 )
+    #dowd = lambda r, b: np.maximum( ( r + np.abs(r) ) / ( r**2 + 1 ), 0 )

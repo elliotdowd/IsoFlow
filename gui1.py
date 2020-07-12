@@ -480,7 +480,11 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.axis_change, id = self.equal.GetId() )
 		self.Bind( wx.EVT_MENU, self.axis_change, id = self.tight.GetId() )
 		self.Bind( wx.EVT_MENU, self.axis_change, id = self.auto.GetId() )
-		self.Bind( wx. EVT_MENU, self.musclWindow, id = self.musclinfo.GetId() )
+		self.Bind( wx.EVT_MENU, self.musclWindow, id = self.musclinfo.GetId() )
+		self.Bind( wx.EVT_MENU, self.limiter_change, id = self.minmod.GetId() )
+		self.Bind( wx.EVT_MENU, self.limiter_change, id = self.koren.GetId() )
+		self.Bind( wx.EVT_MENU, self.limiter_change, id = self.vanleer.GetId() )
+		self.Bind( wx.EVT_MENU, self.limiter_change, id = self.vanalbada1.GetId() )
 
 
 		# initialize grid values and class attributes
@@ -1325,6 +1329,10 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
 			#self.domainGrid.SetRowLabelValue( 7, u"Angle of Attack (°)" )
 
+	def limiter_change( self, event ):
+		self.init_parameters()
+		event.Skip()
+
 
 	# open contour plot in new window
 	def expandWindow( self, event ):
@@ -1332,7 +1340,7 @@ class MainFrame ( wx.Frame ):
 		x = self.new.screenInX
 		y = self.new.screenInY
 
-		scx = x/5.6 * 0.9
+		scx = x/5.56 * 0.9
 		scy = y/4.0 * 0.9
 		#scale = min(scx, scy)
 
@@ -1536,8 +1544,8 @@ class thermalWindow(wx.Frame):
 
 class musclWindow(wx.Frame):
 	def __init__(self, parent):
-		wx.Frame.__init__( self, parent, title = parent.gasSelect + ' Properties',\
-						size = wx.Size( 256, 294 ), style=wx.DEFAULT_FRAME_STYLE )
+		wx.Frame.__init__( self, parent, title = 'Flux Limiter Function',\
+						size = wx.Size( 312, 264 ), style=wx.DEFAULT_FRAME_STYLE )
 		import gui1
 		import python.finite_volume.gasdata as gasdata
 		import numpy as np
@@ -1547,29 +1555,27 @@ class musclWindow(wx.Frame):
 		sizer = wx.BoxSizer(wx.VERTICAL)
 
 		# Gas information grid
-		self.musclGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.musclGrid.CreateGrid( 2, 1 )
-		self.musclGrid.SetRowLabelSize( 160 )
-		self.musclGrid.SetColLabelSize( 0 )
-		self.musclGrid.SetRowLabelValue( 0, u"\epsilon" )
-		self.musclGrid.SetRowLabelValue( 1, u"\kappa" )
+		# self.musclGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
+		# self.musclGrid.CreateGrid( 2, 1 )
+		# self.musclGrid.SetRowLabelSize( 160 )
+		# self.musclGrid.SetColLabelSize( 0 )
+		# self.musclGrid.SetRowLabelValue( 0, u"$\epsilon$" )
+		# self.musclGrid.SetRowLabelValue( 1, u"$\kappa$" )
 
-		if hasattr( parent.parameters, 'epsilon'):
-			self.musclGrid.SetCellValue( 0, 0, str(parent.parameters.epsilon) )
-			self.musclGrid.SetCellValue( 1, 0, str(parent.parameters.kappa) )
-		else:
-			self.musclGrid.SetCellValue( 0, 0, str(0) )
-			self.musclGrid.SetCellValue( 1, 0, str(0) )
+		# if hasattr( parent.parameters, 'epsilon'):
+		# 	self.musclGrid.SetCellValue( 0, 0, str(parent.parameters.epsilon) )
+		# 	self.musclGrid.SetCellValue( 1, 0, str(parent.parameters.kappa) )
+		# else:
+		# 	self.musclGrid.SetCellValue( 0, 0, str(0) )
+		# 	self.musclGrid.SetCellValue( 1, 0, str(0) )
 
-		self.musclGrid.EnableEditing( True )
-		self.musclGrid.EnableGridLines( True )
-		self.musclGrid.EnableDragGridSize( False )
-		self.musclGrid.SetMargins( 0, 0 )
+		# self.musclGrid.EnableEditing( True )
+		# self.musclGrid.EnableGridLines( True )
+		# self.musclGrid.EnableDragGridSize( False )
+		# self.musclGrid.SetMargins( 0, 0 )
 
-		#self.tvdPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-
-		self.musclGrid.SetDefaultCellAlignment( wx.ALIGN_LEFT, wx.ALIGN_TOP )
-		sizer.Add( self.musclGrid, 0, wx.EXPAND | wx.ALL, 0 )
+		# self.musclGrid.SetDefaultCellAlignment( wx.ALIGN_LEFT, wx.ALIGN_TOP )
+		# sizer.Add( self.musclGrid, 0, wx.EXPAND | wx.ALL, 0 )
 		self.tvdPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		sizer.Add( self.tvdPanel, 1, wx.EXPAND | wx.ALL, 0 )
 		self.tvdPanel.SetBackgroundColour( wx.Colour( 111, 111, 111 ) )
@@ -1577,3 +1583,22 @@ class musclWindow(wx.Frame):
 		self.SetSizer( sizer )
 		self.Layout()
 		self.Centre( wx.BOTH )
+
+		self.tvdPanel.fig = plt.figure( dpi=100, figsize=(2.99, 2.24), facecolor=(1, 1, 1) )
+		self.tvdPanel.ax = self.tvdPanel.fig.gca()
+
+		rplot = np.linspace(0, 4, 100)
+		self.tvdPanel.ax.plot( rplot, parent.parameters.limiter(rplot, 1.5), color='b', linewidth=2 )
+		self.tvdPanel.ax.plot( np.array([0, 1]), np.array([0, 2]), color='r', linestyle='--', linewidth=0.75 )
+		self.tvdPanel.ax.plot( np.array([0, 2]), np.array([0, 2]), color='r', linestyle='--', linewidth=0.75 )
+		self.tvdPanel.ax.plot( np.array([1, 4]), np.array([1, 1]), color='r', linestyle='--', linewidth=0.75 )
+		self.tvdPanel.ax.plot( np.array([1, 4]), np.array([2, 2]), color='r', linestyle='--', linewidth=0.75 )
+
+		self.tvdPanel.ax.set_xlabel('r', fontsize=8)
+		self.tvdPanel.ax.tick_params( axis='x', labelsize=8 )
+		self.tvdPanel.ax.set_ylabel('$\phi(r)$', fontsize=8)
+		self.tvdPanel.ax.tick_params( axis='y', labelsize=8 )
+		self.tvdPanel.ax.set_title( '2nd Order TVD Region' )
+		self.tvdPanel.ax.set_position([0.18, 0.18, 0.7, 0.7], which='both')
+		self.tvdPanel.ax.set_aspect('auto', adjustable='box', anchor='C')
+		self.tvdPanel.canvas = FigureCanvas(self.tvdPanel, -1, self.tvdPanel.fig)

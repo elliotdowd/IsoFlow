@@ -6,7 +6,6 @@ from python.finite_volume.timestepping import local_timestep
 import python.finite_volume.soln_vars as soln_vars
 import python.finite_volume.AUSM.flux as flux
 import python.finite_volume.muscl as muscl
-import python.finite_volume.prod3 as prod3
 from pytictoc import TicToc
 
 # AUSM flux vector splitting scheme 
@@ -489,7 +488,6 @@ def AUSMDV( domain, mesh, parameters, state, gas ):
 
 
 # Simple Low-dissipation AUSM (SLAU) scheme {Shima and Kitamura 2009}
-
 def SLAU( domain, mesh, parameters, state, gas ):
 
     print('AUSM+up Scheme: ' + 'CFL = ' + str(parameters.CFL))
@@ -672,6 +670,11 @@ def AUSMmuscl( domain, mesh, parameters, state, gas ):
 
     n = 0
 
+    QL = np.zeros( (domain.M+1, domain.N+2, 4) )
+    QR = np.zeros( (domain.M+1, domain.N+2, 4) )
+    QB = np.zeros( (domain.M+1, domain.N+2, 4) )
+    QT = np.zeros( (domain.M+1, domain.N+2, 4) )
+
     # initialize phi and p state vectors
     Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
     Phi[:,:,0] = np.ones( (domain.M+2, domain.N+2) )
@@ -777,18 +780,8 @@ def AUSMmuscl( domain, mesh, parameters, state, gas ):
         M_half_eta = split.Mvp( M_B ) + split.Mvm( M_U )
 
         # calculate mass flux at cell interfaces
-        mdot_half_zeta = np.dstack( ( c_half_zeta * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] ), \
-                                      c_half_zeta * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] ), \
-                                      c_half_zeta * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] ), \
-                                      c_half_zeta * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] ) ) )
-        mdot_half_eta =  np.dstack( ( c_half_eta  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] ), \
-                                      c_half_eta  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] ), \
-                                      c_half_eta  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] ), \
-                                      c_half_eta  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] ) ) )
-
-        # mdot_half_zeta = c_half_zeta * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] )
-        # mdot_half_eta =  c_half_eta  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] )
-
+        mdot_half_zeta = c_half_zeta * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] )
+        mdot_half_eta =  c_half_eta  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] )
 
         cr = 1e-60
         # calculate pressure flux at cell interfaces
@@ -820,27 +813,8 @@ def AUSMmuscl( domain, mesh, parameters, state, gas ):
         P_eta[:,:,1] = p_half_eta * mesh.s_proj[:,0:-1,2] / mesh.s_proj[:,0:-1,5]
         P_eta[:,:,2] = p_half_eta * mesh.s_proj[:,0:-1,3] / mesh.s_proj[:,0:-1,5]
 
-        # dissipative term (Liou_JCP_160_2000)
-        Dm_zeta = np.abs(mdot_half_zeta)
-        Dm_eta = np.abs(mdot_half_eta)
 
-        E_hat_left = (1/2) * mdot_half_zeta[0:-1,1:-1] * (PhiL[0:-1,1:-1,:]+PhiR[0:-1,1:-1,:]) \
-                - (1/2) * Dm_zeta[0:-1,1:-1]*(PhiR[0:-1,1:-1,:]-PhiL[0:-1,1:-1,:]) \
-                + P_zeta[0:-1,1:-1,:]
-
-        E_hat_right = (1/2) * mdot_half_zeta[1:,1:-1] * (PhiL[1:,1:-1,:]+PhiR[1:,1:-1,:]) \
-                - (1/2) * Dm_zeta[1:,1:-1]*(PhiR[1:,1:-1,:]-PhiL[1:,1:-1,:]) \
-                + P_zeta[1:,1:-1,:]
-
-        F_hat_bot = (1/2) * mdot_half_eta[1:-1,0:-1] * (PhiB[1:-1,0:-1,:]+PhiT[1:-1,0:-1,:]) \
-                - (1/2) * Dm_eta[1:-1,0:-1]*(PhiT[1:-1,0:-1,:]-PhiB[1:-1,0:-1,:]) \
-                + P_eta[1:-1,0:-1,:]
-            
-        F_hat_top = (1/2) * mdot_half_eta[1:-1,1:] * (PhiB[1:-1,1:,:]+PhiT[1:-1,1:,:]) \
-                - (1/2) * Dm_eta[1:-1,1:]*(PhiT[1:-1,1:,:]-PhiB[1:-1,1:,:]) \
-                + P_eta[1:-1,1:,:]
-
-        # flux.face_flux( mdot_half_zeta, mdot_half_eta, Phi, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
+        flux.face_flux_muscl( mdot_half_zeta, mdot_half_eta, PhiL, PhiR, PhiB, PhiT, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
 
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
         flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
@@ -894,6 +868,11 @@ def AUSMDVmuscl( domain, mesh, parameters, state, gas ):
     print('________________________________________________________________________________________________________________________________________')
 
     n = 0
+
+    QL = np.zeros( (domain.M+1, domain.N+2, 4) )
+    QR = np.zeros( (domain.M+1, domain.N+2, 4) )
+    QB = np.zeros( (domain.M+1, domain.N+2, 4) )
+    QT = np.zeros( (domain.M+1, domain.N+2, 4) )
 
     # initialize phi and p state vectors
     Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
@@ -1031,14 +1010,14 @@ def AUSMDVmuscl( domain, mesh, parameters, state, gas ):
         M_half_eta = split.Mvp( M_B ) + split.Mvm( M_U )
 
         # calculate mass flux at cell interfaces
-        mdot_half_zeta = np.dstack( ( c_half_zeta[:,:,0] * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] ), \
-                                      c_half_zeta[:,:,0] * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] ), \
-                                      c_half_zeta[:,:,0] * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] ), \
-                                      c_half_zeta[:,:,0] * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] ) ) )
-        mdot_half_eta =  np.dstack( ( c_half_eta[:,:,0]  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] ), \
-                                      c_half_eta[:,:,0]  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] ), \
-                                      c_half_eta[:,:,0]  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] ), \
-                                      c_half_eta[:,:,0]  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] ) ) )
+        mdot_half_zeta = c_half_zeta[:,:,0] * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] )
+                                    #   c_half_zeta[:,:,0] * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] ), \
+                                    #   c_half_zeta[:,:,0] * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] ), \
+                                    #   c_half_zeta[:,:,0] * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] ) ) )
+        mdot_half_eta = c_half_eta[:,:,0]  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] )
+                                    #   c_half_eta[:,:,0]  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] ), \
+                                    #   c_half_eta[:,:,0]  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] ), \
+                                    #   c_half_eta[:,:,0]  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] ) ) )
 
         # mdot_half_zeta = c_half_zeta * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] )
         # mdot_half_eta =  c_half_eta  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] )
@@ -1075,26 +1054,26 @@ def AUSMDVmuscl( domain, mesh, parameters, state, gas ):
         P_eta[:,:,2] = p_half_eta * mesh.s_proj[:,0:-1,3] / mesh.s_proj[:,0:-1,5]
 
         # dissipative term (Liou_JCP_160_2000)
-        Dm_zeta = np.abs(mdot_half_zeta)
-        Dm_eta = np.abs(mdot_half_eta)
+        # Dm_zeta = np.abs(mdot_half_zeta)
+        # Dm_eta = np.abs(mdot_half_eta)
 
-        E_hat_left = (1/2) * mdot_half_zeta[0:-1,1:-1] * (PhiL[0:-1,1:-1,:]+PhiR[0:-1,1:-1,:]) \
-                - (1/2) * Dm_zeta[0:-1,1:-1]*(PhiR[0:-1,1:-1,:]-PhiL[0:-1,1:-1,:]) \
-                + P_zeta[0:-1,1:-1,:]
+        # E_hat_left = (1/2) * mdot_half_zeta[0:-1,1:-1] * (PhiL[0:-1,1:-1,:]+PhiR[0:-1,1:-1,:]) \
+        #         - (1/2) * Dm_zeta[0:-1,1:-1]*(PhiR[0:-1,1:-1,:]-PhiL[0:-1,1:-1,:]) \
+        #         + P_zeta[0:-1,1:-1,:]
 
-        E_hat_right = (1/2) * mdot_half_zeta[1:,1:-1] * (PhiL[1:,1:-1,:]+PhiR[1:,1:-1,:]) \
-                - (1/2) * Dm_zeta[1:,1:-1]*(PhiR[1:,1:-1,:]-PhiL[1:,1:-1,:]) \
-                + P_zeta[1:,1:-1,:]
+        # E_hat_right = (1/2) * mdot_half_zeta[1:,1:-1] * (PhiL[1:,1:-1,:]+PhiR[1:,1:-1,:]) \
+        #         - (1/2) * Dm_zeta[1:,1:-1]*(PhiR[1:,1:-1,:]-PhiL[1:,1:-1,:]) \
+        #         + P_zeta[1:,1:-1,:]
 
-        F_hat_bot = (1/2) * mdot_half_eta[1:-1,0:-1] * (PhiB[1:-1,0:-1,:]+PhiT[1:-1,0:-1,:]) \
-                - (1/2) * Dm_eta[1:-1,0:-1]*(PhiT[1:-1,0:-1,:]-PhiB[1:-1,0:-1,:]) \
-                + P_eta[1:-1,0:-1,:]
+        # F_hat_bot = (1/2) * mdot_half_eta[1:-1,0:-1] * (PhiB[1:-1,0:-1,:]+PhiT[1:-1,0:-1,:]) \
+        #         - (1/2) * Dm_eta[1:-1,0:-1]*(PhiT[1:-1,0:-1,:]-PhiB[1:-1,0:-1,:]) \
+        #         + P_eta[1:-1,0:-1,:]
             
-        F_hat_top = (1/2) * mdot_half_eta[1:-1,1:] * (PhiB[1:-1,1:,:]+PhiT[1:-1,1:,:]) \
-                - (1/2) * Dm_eta[1:-1,1:]*(PhiT[1:-1,1:,:]-PhiB[1:-1,1:,:]) \
-                + P_eta[1:-1,1:,:]
+        # F_hat_top = (1/2) * mdot_half_eta[1:-1,1:] * (PhiB[1:-1,1:,:]+PhiT[1:-1,1:,:]) \
+        #         - (1/2) * Dm_eta[1:-1,1:]*(PhiT[1:-1,1:,:]-PhiB[1:-1,1:,:]) \
+        #         + P_eta[1:-1,1:,:]
 
-        # flux.face_flux( mdot_half_zeta, mdot_half_eta, Phi, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
+        flux.face_flux_muscl( mdot_half_zeta, mdot_half_eta, PhiL, PhiR, PhiB, PhiT, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
 
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
         flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
