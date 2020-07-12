@@ -14,6 +14,7 @@ wx.version()
 
 import sys
 from matplotlib import cm
+import numpy as np
 
 # import gi
 # gi.require_version('Gtk', '3.0')
@@ -279,10 +280,14 @@ class MainFrame ( wx.Frame ):
 		self.schemeOptions.Append( self.higherorder )
 		
 		self.higherorderscheme = wx.Menu()
+
+		self.firstupwind = wx.MenuItem( self.higherorderscheme, wx.ID_ANY, u"First Order Upwind", wx.EmptyString, wx.ITEM_RADIO )
+		self.higherorderscheme.Append( self.firstupwind )
+
 		self.secondfullupwind = wx.MenuItem( self.higherorderscheme, wx.ID_ANY, u"Second Order \"Full\" Upwind", wx.EmptyString, wx.ITEM_RADIO )
 		self.higherorderscheme.Append( self.secondfullupwind )
 		
-		self.secondupwindbiased = wx.MenuItem( self.higherorderscheme, wx.ID_ANY, u"Second Order \"Full\" Upwind", wx.EmptyString, wx.ITEM_RADIO )
+		self.secondupwindbiased = wx.MenuItem( self.higherorderscheme, wx.ID_ANY, u"Second Order Upwind Biased", wx.EmptyString, wx.ITEM_RADIO )
 		self.higherorderscheme.Append( self.secondupwindbiased )
 		
 		self.secondcentral = wx.MenuItem( self.higherorderscheme, wx.ID_ANY, u"Second Order Central", wx.EmptyString, wx.ITEM_RADIO )
@@ -546,23 +551,10 @@ class MainFrame ( wx.Frame ):
 		# set contour gradient to fine
 		self.contOptions.Check(33, True)
 
-
-	# Virtual event handlers, overide them in your derived class
-	def call_grid( self, event ):
-		import numpy as np
-		from python.mesh.grid.gen_grid import mesh_wedge, mesh_corner, mesh_cylinder, mesh_naca4, mesh_biconvex
-		from python.mesh.metrics.calc_cell_metrics import cellmetrics
-		import matplotlib.pyplot as plt
-		import matplotlib as mpl
-		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-		from pytictoc import TicToc
-
-		t = TicToc()
-		t.tic()
-
+	# initialize domain, boundary, and parameter classes
+	def init_domain( self ): 
 		# length unit conversion
 		cl = self.units.conv_length(1)
-
 		class domain:
 			name = self.gridChoice.Strings[self.gridChoice.Selection]
 			M = int(wx.grid.Grid.GetCellValue(self.domainGrid, 5, 0))
@@ -581,77 +573,19 @@ class MainFrame ( wx.Frame ):
 				theta = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)))
 				alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
 
-		if domain.name == "Wedge":
-			xx, yy = mesh_wedge(domain)
-		elif domain.name == "Corner":
-			xx, yy = mesh_corner(domain)
-		elif domain.name == "Cylinder":
-			xx, yy = mesh_cylinder(domain)
-		elif domain.name == "NACA XXXX Airfoil":
-			xx, yy = mesh_naca4(domain)
-		elif domain.name == "Biconvex Airfoil":
-			xx, yy = mesh_biconvex(domain)
-		self.mesh = cellmetrics(xx, yy, domain)
-		# self.mesh.xxp = self.mesh.xxc
-		# self.mesh.yyp = self.mesh.yyc
+		if domain.name == 'NACA XXXX Airfoil':
+			domain.naca = wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)
+			domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
+		elif domain.name == 'Biconvex Airfoil':
+			domain.thickness = float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0))
+			domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
+		else:
+			domain.theta = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)))
+			domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
+				
 		self.domain = domain
 
-		# if hasattr(self.mesh, 'alpha')
-    	# 	rot.rotate(self.mesh.xxp, self.mesh.yyp, -self.domain.alpha, domain.M+2, domain.N+2)
-
-		print('________________________________________________________________________________________________________________________________________')
-		print('Mesh elements: ' + str((domain.M+2) * (domain.N*2)))
-		t.toc('Meshing time:')
-
-		# mesh plotting
-		plt.close(fig=self.contourPanel.figure)
-		self.contourPanel.figure = plt.figure( dpi=100, figsize=(5.6, 4), facecolor=(222/256,222/256,222/256) )
-		self.contourPanel.cax = self.contourPanel.figure.gca()
-		self.contourPanel.cax.set_position([0.08, 0.11, 0.84, 0.78])
-
-		#mpl.axes.Axes.clear(self.contourPanel.cax)
-		self.contourPanel.cax.plot(self.mesh.xx * cl, self.mesh.yy * cl, color='blue', linewidth=0.5)
-		self.contourPanel.cax.plot(np.transpose(self.mesh.xx) * cl, np.transpose(self.mesh.yy) * cl, color='blue', linewidth=0.5)
-		self.contourPanel.cax.plot(self.mesh.xxc * cl, self.mesh.yyc * cl, 'gx', markersize=0.25)
-
-		# plot settings
-		if self.topwall_out.IsChecked():
-			self.contourPanel.cax.set(xlim=[np.min(self.mesh.xx) * cl, np.max(self.mesh.xx) * cl], \
-					  	  			  ylim=[np.min(self.mesh.yy) * cl, np.max(self.mesh.yy) * cl])
-		else:
-			self.contourPanel.cax.set(xlim=[np.min(self.mesh.xx) * cl, np.max(self.mesh.xx) * cl], \
-					  	  			  ylim=[np.min(self.mesh.yy[:,0:-1]) * cl, np.max(self.mesh.yy[:,0:-1]) * cl])
-
-		self.contourPanel.cax.set_xlabel('x-coordinate ' + '(' + self.units.length + ')')
-		self.contourPanel.cax.set_ylabel('y-coordinate ' + '(' + self.units.length + ')')
-		self.contourPanel.cax.set_aspect(self.axisOption, adjustable='box', anchor='C')
-		self.contourPanel.canvas = FigureCanvas(self.contourPanel, -1, self.contourPanel.figure)
-
-		sizer = wx.BoxSizer(wx.HORIZONTAL)
-		sizer.Add(self.contourPanel.canvas, proportion=1, flag=wx.LEFT | wx.TOP | wx.GROW)
-		self.SetSizer(sizer)
-
-		event.Skip()
-
-	def call_init( self, event ):
-		import numpy as np
-		from python.mesh.grid.gen_grid import mesh_wedge, mesh_corner, mesh_cylinder
-		from python.mesh.metrics.calc_cell_metrics import cellmetrics
-		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-		from pytictoc import TicToc
-		import python.finite_volume.gasdata as gasdata
-
-		t = TicToc()
-
-		if self.domain.name == 'NACA XXXX Airfoil':
-			self.domain.naca = wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)
-			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
-		elif self.domain.name == 'Biconvex Airfoil':
-			self.domain.thickness = float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0))
-			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
-		else:
-			self.domain.theta = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)))
-			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
+	def init_parameters( self ):
 
 		# initialize state vector, simulation parameters and fluid properties
 		class parameters:
@@ -695,91 +629,13 @@ class MainFrame ( wx.Frame ):
 				botwall_thermal = 'Fixed Temperature'
 				botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
 
-		self.parameters = parameters
-		self.gas = gasdata.air_tpg
-
-		# initialize state vector, thermodynamic variables
-		t.tic()
-		from python.boundary.initialize import init_state
-		self.state = init_state(self.domain, self.mesh, self.parameters, self.gas)
-
-		print('________________________________________________________________________________________________________________________________________')
-		t.toc('Initialize time:')
-
-		self.call_contplot(self.contourPanel, 1, 1)
-
-		event.Skip()
-
-	def call_scheme( self, event ):
-
-		import numpy as np
-		from pytictoc import TicToc
-		from python.finite_volume.AUSM.schemes import AUSM, AUSMmuscl, AUSMplusup, AUSMDV, SLAU
-		import python.finite_volume.gasdata as gasdata
-
-		t = TicToc()
-
-		# run AUSM family scheme
-		t.tic()
-		scheme = self.schemeChoice.Strings[self.schemeChoice.Selection]
-
-		if self.domain.name == 'NACA XXXX Airfoil':
-			self.domain.naca = wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)
-			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
-		elif self.domain.name == 'Biconvex Airfoil':
-			self.domain.thickness = float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0))
-			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
-		else:
-			self.domain.theta = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)))
-			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
-
-		class parameters:
-			M_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 0, 0))
-			p_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 1, 0)) / self.units.conv_press(1)
-			if self.units.temp == '°C':
-				T_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 2, 0)) + self.units.conv_temp(0)
-			elif self.units.temp == '°F':
-				T_in = (float(wx.grid.Grid.GetCellValue(self.parameterGrid, 2, 0))-32)*(5/9) + 273.15
-			else:
-				T_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 2, 0)) * self.units.conv_temp(1)
-			iterations = int(wx.grid.Grid.GetCellValue(self.simGrid, 1, 0))
-			tolerance = float(wx.grid.Grid.GetCellValue(self.simGrid, 2, 0))
-			CFL = float(wx.grid.Grid.GetCellValue(self.simGrid, 0, 0))
-
-			# top wall parameters
-			if self.topwall_out.IsChecked():
-				topwall = 'Outflow'
-			elif self.topwall_visc.IsChecked():
-				topwall = 'Viscous Wall'
-			elif self.topwall_invisc.IsChecked():
-				topwall = 'Inviscid Wall'
-			if self.topwall_adiabatic.IsChecked():
-				topwall_thermal = 'Adiabatic'
-			elif self.topwall_isothermal.IsChecked():
-				topwall_thermal = 'Isothermal'
-				topwall_temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
-			elif self.topwall_fixed.IsChecked():
-				topwall_thermal = 'Fixed Temperature'
-				topwall_temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
-
-			# bottom wall parameters
-			if self.botwall_visc.IsChecked():
-				botwall = 'Viscous Wall'
-			elif self.botwall_invisc.IsChecked():
-				botwall = 'Inviscid Wall'
-			if self.botwall_adiabatic.IsChecked():
-				botwall_thermal = 'Adiabatic'
-			elif self.botwall_isothermal.IsChecked():
-				botwall_thermal = 'Isothermal'
-				botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
-			elif self.botwall_fixed.IsChecked():
-				botwall_thermal = 'Fixed Temperature'
-				botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
-
 			# MUSCL interpolation parameters
 			from python.finite_volume.muscl import limiters
 			if self.higherorder.IsChecked():
-				if self.secondfullupwind.IsChecked():
+				if self.firstupwind.IsChecked():
+					epsilon = 0
+					kappa = 0
+				elif self.secondfullupwind.IsChecked():
 					epsilon = 1
 					kappa = -1
 				elif self.secondupwindbiased.IsChecked():
@@ -802,10 +658,126 @@ class MainFrame ( wx.Frame ):
 			elif self.vanleer.IsChecked(): 
 				limiter = limiters.vanleer
 			elif self.vanalbada1.IsChecked():
-				limiter = limiters.vanalbada1		
+				limiter = limiters.vanalbada1
 
 		self.parameters = parameters
 
+
+	# Virtual event handlers, overide them in your derived class
+	def call_grid( self, event ):
+		import numpy as np
+		from python.mesh.grid.gen_grid import mesh_wedge, mesh_corner, mesh_cylinder, mesh_naca4, mesh_biconvex
+		from python.mesh.metrics.calc_cell_metrics import cellmetrics
+		import matplotlib.pyplot as plt
+		import matplotlib as mpl
+		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+		from pytictoc import TicToc
+
+		t = TicToc()
+		t.tic()
+
+		# length unit conversion
+		cl = self.units.conv_length(1)
+
+		self.init_domain()
+
+		if self.domain.name == "Wedge":
+			xx, yy = mesh_wedge(self.domain)
+		elif self.domain.name == "Corner":
+			xx, yy = mesh_corner(self.domain)
+		elif self.domain.name == "Cylinder":
+			xx, yy = mesh_cylinder(self.domain)
+		elif self.domain.name == "NACA XXXX Airfoil":
+			xx, yy = mesh_naca4(self.domain)
+		elif self.domain.name == "Biconvex Airfoil":
+			xx, yy = mesh_biconvex(self.domain)
+		self.mesh = cellmetrics(xx, yy, self.domain)
+		#self.domain = domain
+
+		print('________________________________________________________________________________________________________________________________________')
+		print('Mesh elements: ' + str((self.domain.M+2) * (self.domain.N*2)))
+		t.toc('Meshing time:')
+
+		# mesh plotting
+		plt.close(fig=self.contourPanel.figure)
+		self.contourPanel.figure = plt.figure( dpi=100, figsize=(5.6, 4), facecolor=(222/256,222/256,222/256) )
+		self.contourPanel.cax = self.contourPanel.figure.gca()
+		self.contourPanel.cax.set_position([0.08, 0.11, 0.84, 0.78])
+
+		#mpl.axes.Axes.clear(self.contourPanel.cax)
+		self.contourPanel.cax.plot(self.mesh.xx * cl, self.mesh.yy * cl, color='blue', linewidth=0.5)
+		self.contourPanel.cax.plot(np.transpose(self.mesh.xx) * cl, np.transpose(self.mesh.yy) * cl, color='blue', linewidth=0.5)
+		self.contourPanel.cax.plot(self.mesh.xxc * cl, self.mesh.yyc * cl, 'gx', markersize=0.25)
+
+		# plot settings
+		if self.topwall_out.IsChecked():
+			self.contourPanel.cax.set(xlim=[np.min(self.mesh.xx) * cl, np.max(self.mesh.xx) * cl], \
+					  	  			  ylim=[np.min(self.mesh.yy) * cl, np.max(self.mesh.yy) * cl])
+		else:
+			self.contourPanel.cax.set(xlim=[np.min(self.mesh.xx) * cl, np.max(self.mesh.xx) * cl], \
+					  	  			  ylim=[np.min(self.mesh.yy[:,0:-1]) * cl, np.max(self.mesh.yy[:,0:-1]) * cl])
+
+		self.contourPanel.cax.set_xlabel('x-coordinate ' + '(' + self.units.length + ')')
+		self.contourPanel.cax.set_ylabel('y-coordinate ' + '(' + self.units.length + ')')
+		self.contourPanel.cax.set_aspect(self.axisOption, adjustable='box', anchor='C')
+		self.contourPanel.canvas = FigureCanvas(self.contourPanel, -1, self.contourPanel.figure)
+
+		sizer = wx.BoxSizer(wx.HORIZONTAL)
+		sizer.Add(self.contourPanel.canvas, proportion=1, flag=wx.LEFT | wx.TOP | wx.GROW)
+		self.SetSizer(sizer)
+
+		event.Skip()
+
+	def call_init( self, event ):
+		import numpy as np
+		from python.mesh.grid.gen_grid import mesh_wedge, mesh_corner, mesh_cylinder
+		from python.mesh.metrics.calc_cell_metrics import cellmetrics
+		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+		from pytictoc import TicToc
+		import python.finite_volume.gasdata as gasdata
+
+		t = TicToc()
+
+		self.init_parameters()
+
+		self.gas = gasdata.air_tpg
+
+		# initialize state vector, thermodynamic variables
+		t.tic()
+		from python.boundary.initialize import init_state
+		self.state = init_state(self.domain, self.mesh, self.parameters, self.gas)
+
+		print('________________________________________________________________________________________________________________________________________')
+		t.toc('Initialize time:')
+
+		self.call_contplot(self.contourPanel, 1, 1)
+
+		event.Skip()
+
+	def call_scheme( self, event ):
+
+		import numpy as np
+		from pytictoc import TicToc
+		from python.finite_volume.AUSM.schemes import AUSM, AUSMmuscl, AUSMplusup, AUSMDV, AUSMDVmuscl, SLAU
+		import python.finite_volume.gasdata as gasdata
+
+		t = TicToc()
+
+		# run AUSM family scheme
+		t.tic()
+		scheme = self.schemeChoice.Strings[self.schemeChoice.Selection]
+
+		if self.domain.name == 'NACA XXXX Airfoil':
+			self.domain.naca = wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)
+			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
+		elif self.domain.name == 'Biconvex Airfoil':
+			self.domain.thickness = float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0))
+			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
+		else:
+			self.domain.theta = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)))
+			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
+	
+		self.init_parameters()
 
 		if self.thermoModel == 'cpg':
 			if self.air.IsChecked() == True:
@@ -830,7 +802,10 @@ class MainFrame ( wx.Frame ):
 		elif scheme == 'AUSM+up':
 			self.state = AUSMplusup( self.domain, self.mesh, self.parameters, self.state, self.gas )
 		elif scheme == 'AUSMDV':
-			self.state = AUSMDV( self.domain, self.mesh, self.parameters, self.state, self.gas )
+			if self.higherorder.IsChecked():
+				self.state = AUSMDVmuscl( self.domain, self.mesh, self.parameters, self.state, self.gas )
+			else:
+				self.state = AUSMDV( self.domain, self.mesh, self.parameters, self.state, self.gas )
 		elif scheme == 'SLAU':
 			self.state = SLAU( self.domain, self.mesh, self.parameters, self.state, self.gas )
 
