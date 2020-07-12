@@ -302,6 +302,12 @@ class MainFrame ( wx.Frame ):
 		
 		self.koren = wx.MenuItem( self.limiterOptions, wx.ID_ANY, u"Koren", wx.EmptyString, wx.ITEM_RADIO )
 		self.limiterOptions.Append( self.koren )
+
+		self.vanalbada1 = wx.MenuItem( self.limiterOptions, wx.ID_ANY, u"Van Albada 1", wx.EmptyString, wx.ITEM_RADIO )
+		self.limiterOptions.Append( self.vanalbada1 )
+
+		self.vanleer = wx.MenuItem( self.limiterOptions, wx.ID_ANY, u"Van Leer", wx.EmptyString, wx.ITEM_RADIO )
+		self.limiterOptions.Append( self.vanleer )
 		
 		self.schemeOptions.AppendSubMenu( self.limiterOptions, u"Flux Limiter Function" )
 		
@@ -739,6 +745,8 @@ class MainFrame ( wx.Frame ):
 			iterations = int(wx.grid.Grid.GetCellValue(self.simGrid, 1, 0))
 			tolerance = float(wx.grid.Grid.GetCellValue(self.simGrid, 2, 0))
 			CFL = float(wx.grid.Grid.GetCellValue(self.simGrid, 0, 0))
+
+			# top wall parameters
 			if self.topwall_out.IsChecked():
 				topwall = 'Outflow'
 			elif self.topwall_visc.IsChecked():
@@ -754,6 +762,7 @@ class MainFrame ( wx.Frame ):
 				topwall_thermal = 'Fixed Temperature'
 				topwall_temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
 
+			# bottom wall parameters
 			if self.botwall_visc.IsChecked():
 				botwall = 'Viscous Wall'
 			elif self.botwall_invisc.IsChecked():
@@ -767,7 +776,36 @@ class MainFrame ( wx.Frame ):
 				botwall_thermal = 'Fixed Temperature'
 				botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
 
+			# MUSCL interpolation parameters
+			from python.finite_volume.muscl import limiters
+			if self.higherorder.IsChecked():
+				if self.secondfullupwind.IsChecked():
+					epsilon = 1
+					kappa = -1
+				elif self.secondupwindbiased.IsChecked():
+					epsilon = 1
+					kappa = 0
+				elif self.secondcentral.IsChecked():
+					epsilon = 1
+					kappa = 1
+				elif self.thirdfull.IsChecked():
+					epsilon = 1
+					kappa = 1/3
+				elif self.thirdupwind.IsChecked():
+					epsilon = 1
+					kappa = 1/2
+
+			if self.minmod.IsChecked():
+				limiter = limiters.minmod
+			elif self.koren.IsChecked():
+				limiter = limiters.koren
+			elif self.vanleer.IsChecked(): 
+				limiter = limiters.vanleer
+			elif self.vanalbada1.IsChecked():
+				limiter = limiters.vanalbada1		
+
 		self.parameters = parameters
+
 
 		if self.thermoModel == 'cpg':
 			if self.air.IsChecked() == True:
@@ -1357,7 +1395,7 @@ class NewWindow( wx.Frame ):
 		self.screenInY = float(screenMM[1]) * 0.0393701
 
 		wx.Frame.__init__( self, parent, title = 'Fullscreen Contour Plot',\
-						   size = wx.Size( int(screenSize[0]*0.96), int(screenSize[1]*0.96) ), style=wx.DEFAULT_FRAME_STYLE )
+						   size = wx.Size( int(screenSize[0]*0.95), int(screenSize[1]*0.95) ), style=wx.DEFAULT_FRAME_STYLE )
 
 		self.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
 

@@ -1,16 +1,10 @@
+import numpy as np
 
 
-def MUSCL( Q ):
+def MUSCL( Q, eps, kap, limiter ):
 
     import numpy as np
 
-    eps = 1/2
-    kap = 1
-
-    minmod = lambda r, b: np.maximum( 0, np.minimum(1, r) )
-    koren = lambda r, b: np.maximum( 0, np.minimum(b, r) )
-
-    limiter = minmod
     M, N, void = Q.shape
 
     QL_half = np.zeros( (M-1, N, 4) )
@@ -18,89 +12,62 @@ def MUSCL( Q ):
     QB_half = np.zeros( (M, N-1, 4) )
     QU_half = np.zeros( (M, N-1, 4) )
 
-    for i in range( 1, M-1 ):
+    Qm2 = np.zeros( (M-1, N, 4) )
+    Qm1 = np.zeros( (M-1, N, 4) )
+    Qi = np.zeros( (M-1, N, 4) )
+    Qp1 = np.zeros( (M-1, N, 4) )
 
-        ih = i-1
+    Qm2 = np.vstack( ( Q[[0],:,:], Q[[0],:,:], Q[1:M-2,:,:] ) )
+    Qm1 = np.vstack( ( Q[[0],:,:], Q[[1],:,:], Q[2:M-1,:,:] ) )
+    Qi =  Q[1:M,:,:]
+    Qp1 = np.vstack( ( Q[2:M,:,:], Q[[M-1],:,:] ) )
 
-        if i == 1:
-            Qm2 = Q[i-1, :, :]
-            Qm1 = Q[i-1, :, :]
-            Qi = Q[i, :, :]
-            Qp1 = Q[i+1, :, :]
-            Qp2 = Q[i+2, :, :]
-        elif i == M-2:
-            Qm2 = Q[i-2, :, :]
-            Qm1 = Q[i-1, :, :]
-            Qi = Q[i, :, :]
-            Qp1 = Q[i+1, :, :]
-            Qp2 = Q[i+1, :, :]
-        else:
-            Qm2 = Q[i-2, :, :]
-            Qm1 = Q[i-1, :, :]
-            Qi = Q[i, :, :]
-            Qp1 = Q[i+1, :, :]
-            Qp2 = Q[i+2, :, :]
+    QL_half[:, :, :] = QL( Qm2, Qm1, Qi, kap, eps, limiter )
+    QR_half[:, :, :] = QR( Qm1, Qi, Qp1, kap, eps, limiter )
 
-        QL_half[ih, :, :] = QL( Qm2, Qm1, Qi, kap, eps, limiter )
-        QR_half[ih, :, :] = QR( Qm1, Qi, Qp1, kap, eps, limiter )
-        QL_half[ih+1, :, :] = QL( Qm1, Qi, Qp1, kap, eps, limiter )
-        QR_half[ih+1, :, :] = QR( Qi, Qp1, Qp2, kap, eps, limiter )
+    Qm2 = np.zeros( (M, N-1, 4) )
+    Qm1 = np.zeros( (M, N-1, 4) )
+    Qi = np.zeros( (M, N-1, 4) )
+    Qp1 = np.zeros( (M, N-1, 4) )
 
+    Qm2 = np.hstack( ( Q[:,[0],:], Q[:,[0],:], Q[:,1:N-2,:] ) )
+    Qm1 = np.hstack( ( Q[:,[0],:], Q[:,[1],:], Q[:,2:N-1,:] ) )
+    Qi =  Q[:,1:N,:]
+    Qp1 = np.hstack( ( Q[:,2:M,:], Q[:,[N-1],:] ) )
 
-    for j in range( 1, N-1 ):
-
-        jh = j-1
-
-        if j == 1:
-            Qm2 = Q[:, j-1, :]
-            Qm1 = Q[:, j-1, :]
-            Qi = Q[:, j, :]
-            Qp1 = Q[:, j+1, :]
-            Qp2 = Q[:, j+2, :]
-        elif j == N-2:
-            Qm2 = Q[:, j-2, :]
-            Qm1 = Q[:, j-1, :]
-            Qi = Q[:, j, :]
-            Qp1 = Q[:, j+1, :]
-            Qp2 = Q[:, j+1, :]
-        else: 
-            Qm2 = Q[:, j-2, :]
-            Qm1 = Q[:, j-1, :]
-            Qi = Q[:, j, :]
-            Qp1 = Q[:, j+1, :]
-            Qp2 = Q[:, j+2, :]
-
-        QB_half[:, jh, :] = QL( Qm2, Qm1, Qi, kap, eps, limiter )
-        QU_half[:, jh, :] = QR( Qm1, Qi, Qp1, kap, eps, limiter )
-        QB_half[:, jh+1, :] = QL( Qm1, Qi, Qp1, kap, eps, limiter )
-        QU_half[:, jh+1, :] = QR( Qi, Qp1, Qp2, kap, eps, limiter )
+    QB_half[:, :, :] = QL( Qm2, Qm1, Qi, kap, eps, limiter )
+    QU_half[:, :, :] = QR( Qm1, Qi, Qp1, kap, eps, limiter )
 
     return QL_half, QR_half, QB_half, QU_half
 
 
 # left or bottom face
 def QL( Qm2, Qm1, Qi, kap, eps, limiter ):
-    import numpy as np
     qL = Qm1 + (eps/4) * ( (1-kap)*(Qm1-Qm2)*limiter(rL(Qm2, Qm1, Qi), 1.5) + \
-                        (1+kap)*(Qi-Qm1)*limiter(1/rL(Qm2, Qm1, Qi), 1.5) )
+                        (1+kap)*(Qi-Qm1)*limiter(1/(rL(Qm2, Qm1, Qi)+1e-60), 1.5) )
     return qL
 
 def QR( Qm1, Qi, Qp1, kap, eps, limiter ):
-    import numpy as np
-    qR = Qi - (eps/4) * ( (1+kap)*(Qi-Qm1)*limiter(1/rR(Qm1, Qi, Qp1), 1.5) + \
+    qR = Qi - (eps/4) * ( (1+kap)*(Qi-Qm1)*limiter(1/(rR(Qm1, Qi, Qp1)+1e-60), 1.5) + \
                         (1-kap)*(Qp1-Qi)*limiter(rR(Qm1, Qi, Qp1), 1.5 ) )
     return qR
 
 def rL( Qm2, Qm1, Qi ):
-    import numpy as np
     r = (Qi-Qm1) / (Qm1-Qm2)
     r[np.isnan(r)] = 1
     r[np.isinf(r)] = 1
     return r
 
 def rR( Qm1, Qi, Qp1 ):
-    import numpy as np
     r = (Qi-Qm1) / (Qp1-Qi)
     r[np.isnan(r)] = 1
     r[np.isinf(r)] = 1
     return r
+
+
+# flux limiter function class
+class limiters:
+    minmod = lambda r, b: np.maximum( 0, np.minimum(1, r) )
+    koren = lambda r, b: np.maximum( 0, np.minimum(b, r) )
+    vanalbada1 = lambda r, b: np.maximum( ( r**2 + r ) / ( r**2 + 1 ), 0 )
+    vanleer = lambda r, b: np.maximum( ( r + np.abs(r) ) / ( r**2 + 1 ), 0 )
