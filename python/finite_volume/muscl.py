@@ -31,7 +31,7 @@ def MUSCL( Q, eps, kap, limiter ):
     Qm2 = np.hstack( ( Q[:,[0],:], Q[:,[0],:], Q[:,1:N-2,:] ) )
     Qm1 = np.hstack( ( Q[:,[0],:], Q[:,[1],:], Q[:,2:N-1,:] ) )
     Qi =  Q[:,1:N,:]
-    Qp1 = np.hstack( ( Q[:,2:M,:], Q[:,[N-1],:] ) )
+    Qp1 = np.hstack( ( Q[:,2:N,:], Q[:,[N-1],:] ) )
 
     QB_half[:, :, :] = QL( Qm2, Qm1, Qi, kap, eps, limiter )
     QU_half[:, :, :] = QR( Qm1, Qi, Qp1, kap, eps, limiter )
@@ -65,8 +65,11 @@ def rR( Qm1, Qi, Qp1 ):
 
 # flux limiter function class
 class limiters:
+    hquick = lambda r, b: np.maximum( 0, (2*(r+np.abs(r)) / (r+3)) )
     minmod = lambda r, b: np.maximum( 0, np.minimum(1, r) )
-    koren = lambda r, b: np.maximum( 0, np.minimum(b, r) )
-    vanalbada1 = lambda r, b: np.maximum( ( r**2 + r ) / ( r**2 + 1 ), 0 )
+    osher = lambda r, b: np.maximum( 0, np.minimum(b, r) )
+    ospre = lambda r, b: np.maximum( 0, 1.5*(r**2+r) / (r**2+r+1) )
+    vanalbada1 = lambda r, b: np.maximum( 0, ( r**2 + r ) / ( r**2 + 1 ) )
+    vanalbada2 = lambda r, b: np.maximum( 0, (2*r) / (r**2 + 1) )
     vanleer = lambda r, b: np.maximum( ( r + np.abs(r) ) / ( 1 + np.abs(r) ), 0 )
     #dowd = lambda r, b: np.maximum( ( r + np.abs(r) ) / ( r**2 + 1 ), 0 )

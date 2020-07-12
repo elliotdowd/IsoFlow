@@ -31,6 +31,9 @@ def init_state(domain, mesh, parameters, gas):
     state.T0 = (1+((gas.gamma_p-1)/2)*state.Mach**2) * state.T
     state.n = 1
 
+    # specific heat ratio calculation
+    gas.Cp = gas.Cp_fn( gas.gamma_p, gas.Cp_p, gas.theta, state.T )
+    gas.Cv = gas.Cv_fn( gas.gamma_p, gas.Cv_p, gas.theta, state.T )
 
     # boundary conditions
     from python.boundary.boundary_cond import enforce_bc, covariant

@@ -13,7 +13,15 @@ import wx.grid
 wx.version()
 
 import sys
+
 from matplotlib import cm
+import matplotlib.pyplot as plt
+from matplotlib import cm
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+import matplotlib.ticker as ticker
+
 import numpy as np
 
 # import gi
@@ -296,20 +304,30 @@ class MainFrame ( wx.Frame ):
 		self.thirdfull = wx.MenuItem( self.higherorderscheme, wx.ID_ANY, u"Third Order \"Full\" Upwind", wx.EmptyString, wx.ITEM_RADIO )
 		self.higherorderscheme.Append( self.thirdfull )
 		
-		self.thirdupwind = wx.MenuItem( self.higherorderscheme, wx.ID_ANY, u"Third Order Upwind", wx.EmptyString, wx.ITEM_RADIO )
+		self.thirdupwind = wx.MenuItem( self.higherorderscheme, wx.ID_ANY, u"Third Order Upwind Biased", wx.EmptyString, wx.ITEM_RADIO )
 		self.higherorderscheme.Append( self.thirdupwind )
 		
 		self.schemeOptions.AppendSubMenu( self.higherorderscheme, u"Higher Order Scheme" )
 		
 		self.limiterOptions = wx.Menu()
-		self.minmod = wx.MenuItem( self.limiterOptions, wx.ID_ANY, u"Minmod", wx.EmptyString, wx.ITEM_RADIO )
+
+		self.hquick = wx.MenuItem( self.limiterOptions, wx.ID_ANY, u"HQUICK", wx.EmptyString, wx.ITEM_RADIO )
+		self.limiterOptions.Append( self.hquick )
+
+		self.minmod = wx.MenuItem( self.limiterOptions, 71, u"Minmod", wx.EmptyString, wx.ITEM_RADIO )
 		self.limiterOptions.Append( self.minmod )
-		
-		self.koren = wx.MenuItem( self.limiterOptions, wx.ID_ANY, u"Koren", wx.EmptyString, wx.ITEM_RADIO )
-		self.limiterOptions.Append( self.koren )
+
+		self.osher = wx.MenuItem( self.limiterOptions, wx.ID_ANY, u"Osher", wx.EmptyString, wx.ITEM_RADIO )
+		self.limiterOptions.Append( self.osher )
+
+		self.ospre = wx.MenuItem( self.limiterOptions, wx.ID_ANY, u"Ospre", wx.EmptyString, wx.ITEM_RADIO )
+		self.limiterOptions.Append( self.ospre )
 
 		self.vanalbada1 = wx.MenuItem( self.limiterOptions, wx.ID_ANY, u"Van Albada 1", wx.EmptyString, wx.ITEM_RADIO )
 		self.limiterOptions.Append( self.vanalbada1 )
+
+		self.vanalbada2 = wx.MenuItem( self.limiterOptions, wx.ID_ANY, u"Van Albada 2", wx.EmptyString, wx.ITEM_RADIO )
+		self.limiterOptions.Append( self.vanalbada2 )
 
 		self.vanleer = wx.MenuItem( self.limiterOptions, wx.ID_ANY, u"Van Leer", wx.EmptyString, wx.ITEM_RADIO )
 		self.limiterOptions.Append( self.vanleer )
@@ -481,11 +499,13 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.axis_change, id = self.tight.GetId() )
 		self.Bind( wx.EVT_MENU, self.axis_change, id = self.auto.GetId() )
 		self.Bind( wx.EVT_MENU, self.musclWindow, id = self.musclinfo.GetId() )
+		self.Bind( wx.EVT_MENU, self.limiter_change, id = self.hquick.GetId() )
+		self.Bind( wx.EVT_MENU, self.limiter_change, id = self.osher.GetId() )
 		self.Bind( wx.EVT_MENU, self.limiter_change, id = self.minmod.GetId() )
-		self.Bind( wx.EVT_MENU, self.limiter_change, id = self.koren.GetId() )
+		self.Bind( wx.EVT_MENU, self.limiter_change, id = self.ospre.GetId() )
 		self.Bind( wx.EVT_MENU, self.limiter_change, id = self.vanleer.GetId() )
 		self.Bind( wx.EVT_MENU, self.limiter_change, id = self.vanalbada1.GetId() )
-
+		self.Bind( wx.EVT_MENU, self.limiter_change, id = self.vanalbada2.GetId() )
 
 		# initialize grid values and class attributes
 		self.init_grids()
@@ -555,6 +575,8 @@ class MainFrame ( wx.Frame ):
 
 		# set contour gradient to fine
 		self.contOptions.Check(33, True)
+		# set limiter to minmod
+		self.limiterOptions.Check(71, True)
 
 	# initialize domain, boundary, and parameter classes
 	def init_domain( self ): 
@@ -658,19 +680,29 @@ class MainFrame ( wx.Frame ):
 
 			if self.minmod.IsChecked():
 				limiter = limiters.minmod
-			elif self.koren.IsChecked():
-				limiter = limiters.koren
+			elif self.hquick.IsChecked():
+				limiter = limiters.hquick
+			elif self.osher.IsChecked():
+				limiter = limiters.osher
+			elif self.ospre.IsChecked():
+				limiter = limiters.ospre
 			elif self.vanleer.IsChecked(): 
 				limiter = limiters.vanleer
 			elif self.vanalbada1.IsChecked():
 				limiter = limiters.vanalbada1
+			elif self.vanalbada2.IsChecked():
+				limiter = limiters.vanalbada2
 
 		self.parameters = parameters
 
+	def init_boundary( self ):
+		pass
 
+	class boundary( wall ):
+		pass
+	
 	# Virtual event handlers, overide them in your derived class
 	def call_grid( self, event ):
-		import numpy as np
 		from python.mesh.grid.gen_grid import mesh_wedge, mesh_corner, mesh_cylinder, mesh_naca4, mesh_biconvex
 		from python.mesh.metrics.calc_cell_metrics import cellmetrics
 		import matplotlib.pyplot as plt
@@ -734,7 +766,7 @@ class MainFrame ( wx.Frame ):
 		event.Skip()
 
 	def call_init( self, event ):
-		import numpy as np
+
 		from python.mesh.grid.gen_grid import mesh_wedge, mesh_corner, mesh_cylinder
 		from python.mesh.metrics.calc_cell_metrics import cellmetrics
 		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
@@ -761,7 +793,6 @@ class MainFrame ( wx.Frame ):
 
 	def call_scheme( self, event ):
 
-		import numpy as np
 		from pytictoc import TicToc
 		from python.finite_volume.AUSM.schemes import AUSM, AUSMmuscl, AUSMplusup, AUSMDV, AUSMDVmuscl, SLAU
 		import python.finite_volume.gasdata as gasdata
@@ -822,14 +853,6 @@ class MainFrame ( wx.Frame ):
 		event.Skip()
 
 	def call_contplot(self, panel, scalex, scaley):
-
-		import numpy as np
-		import matplotlib.pyplot as plt
-		from matplotlib import cm
-		import matplotlib as mpl
-		import matplotlib.pyplot as plt
-		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-		import matplotlib.ticker as ticker
 
 		# panel input as self.contourPanel
 
@@ -992,12 +1015,6 @@ class MainFrame ( wx.Frame ):
 
 	def call_resplot(self):
 
-		import numpy as np
-		import matplotlib.pyplot as plt
-		from matplotlib import cm
-		import matplotlib as mpl
-		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-
 		# residual plotting
 		self.iterPanel.figure.clf()
 		self.iterPanel.iax = self.iterPanel.figure.gca()
@@ -1037,7 +1054,6 @@ class MainFrame ( wx.Frame ):
 		event.Skip()
 
 	def cm_change( self, event ):
-		from matplotlib import cm
 		if self.jet.IsChecked():
 			self.cmOption = cm.jet
 		elif self.magma.IsChecked():
@@ -1356,7 +1372,7 @@ class MainFrame ( wx.Frame ):
 	# open info window for MUSCL interpolation
 	def musclWindow( self, event ):
 		self.init_parameters()
-		self.new = musclWindow( parent=self )
+		self.new = tvdWindow( parent=self )
 		self.new.Show()
 		event.Skip()
 
@@ -1542,10 +1558,10 @@ class thermalWindow(wx.Frame):
 		self.walltemp = self.wallGrid.GetCellValue( 0, 0 )
 
 
-class musclWindow(wx.Frame):
+class tvdWindow(wx.Frame):
 	def __init__(self, parent):
 		wx.Frame.__init__( self, parent, title = 'Flux Limiter Function',\
-						size = wx.Size( 312, 264 ), style=wx.DEFAULT_FRAME_STYLE )
+						size = wx.Size( 376, 264 ), style=wx.DEFAULT_FRAME_STYLE )
 		import gui1
 		import python.finite_volume.gasdata as gasdata
 		import numpy as np
@@ -1578,13 +1594,13 @@ class musclWindow(wx.Frame):
 		# sizer.Add( self.musclGrid, 0, wx.EXPAND | wx.ALL, 0 )
 		self.tvdPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		sizer.Add( self.tvdPanel, 1, wx.EXPAND | wx.ALL, 0 )
-		self.tvdPanel.SetBackgroundColour( wx.Colour( 111, 111, 111 ) )
+		self.tvdPanel.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
 		
 		self.SetSizer( sizer )
 		self.Layout()
 		self.Centre( wx.BOTH )
 
-		self.tvdPanel.fig = plt.figure( dpi=100, figsize=(2.99, 2.24), facecolor=(1, 1, 1) )
+		self.tvdPanel.fig = plt.figure( dpi=100, figsize=(3.64, 2.24), facecolor=(1, 1, 1) )
 		self.tvdPanel.ax = self.tvdPanel.fig.gca()
 
 		rplot = np.linspace(0, 4, 100)
@@ -1599,6 +1615,6 @@ class musclWindow(wx.Frame):
 		self.tvdPanel.ax.set_ylabel('$\phi(r)$', fontsize=8)
 		self.tvdPanel.ax.tick_params( axis='y', labelsize=8 )
 		self.tvdPanel.ax.set_title( '2nd Order TVD Region' )
-		self.tvdPanel.ax.set_position([0.18, 0.18, 0.7, 0.7], which='both')
+		self.tvdPanel.ax.set_position([0.152, 0.174, 0.74, 0.7], which='both')
 		self.tvdPanel.ax.set_aspect('auto', adjustable='box', anchor='C')
 		self.tvdPanel.canvas = FigureCanvas(self.tvdPanel, -1, self.tvdPanel.fig)

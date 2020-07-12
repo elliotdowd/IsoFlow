@@ -7,9 +7,6 @@ def enforce_bc(domain, mesh, parameters, state, gas):
     import numpy as np
     from python.finite_volume.helper import thermo
 
-    gas.Cp = gas.Cp_fn( gas.gamma_p, gas.Cp_p, gas.theta, state.T )
-    gas.Cv = gas.Cv_fn( gas.gamma_p, gas.Cv_p, gas.theta, state.T )
-
     if domain.name == 'Wedge' or domain.name == 'Corner':
 
         if domain.name == 'Wedge':

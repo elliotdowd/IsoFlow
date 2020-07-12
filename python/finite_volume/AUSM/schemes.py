@@ -165,13 +165,7 @@ def AUSM( domain, mesh, parameters, state, gas ):
     print('________________________________________________________________________________________________________________________________________')
 
     # post processing variables
-    state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / \
-                           thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv) )
-    state.vel = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 )
-    state.p0 = (1+((gas.gamma_fn(gas.Cp, gas.Cv)-1)/2)*state.Mach**2)** \
-                   (gas.gamma_fn(gas.Cp, gas.Cv)/(gas.gamma_fn(gas.Cp, gas.Cv)-1)) * state.p
-    state.T0 = (1+((gas.gamma_fn(gas.Cp, gas.Cv)-1)/2)*state.Mach**2) * state.T
-    state.n = n
+    state = calc_postvars(state, gas, n)
 
     return state
 
@@ -324,13 +318,7 @@ def AUSMplusup( domain, mesh, parameters, state, gas ):
     print('________________________________________________________________________________________________________________________________________')
 
     # post processing variables
-    state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / \
-                           thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv) )
-    state.vel = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 )
-    state.p0 = (1+((gas.gamma_fn(gas.Cp, gas.Cv)-1)/2)*state.Mach**2)** \
-                   (gas.gamma_fn(gas.Cp, gas.Cv)/(gas.gamma_fn(gas.Cp, gas.Cv)-1)) * state.p
-    state.T0 = (1+((gas.gamma_fn(gas.Cp, gas.Cv)-1)/2)*state.Mach**2) * state.T
-    state.n = n
+    state = calc_postvars(state, gas, n)
 
     return state
 
@@ -476,13 +464,7 @@ def AUSMDV( domain, mesh, parameters, state, gas ):
 
 
     # post processing variables
-    state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / \
-                           thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv) )
-    state.vel = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 )
-    state.p0 = (1+((gas.gamma_fn(gas.Cp, gas.Cv)-1)/2)*state.Mach**2)** \
-                   (gas.gamma_fn(gas.Cp, gas.Cv)/(gas.gamma_fn(gas.Cp, gas.Cv)-1)) * state.p
-    state.T0 = (1+((gas.gamma_fn(gas.Cp, gas.Cv)-1)/2)*state.Mach**2) * state.T
-    state.n = n
+    state = calc_postvars(state, gas, n)
     
     return state
 
@@ -649,13 +631,7 @@ def SLAU( domain, mesh, parameters, state, gas ):
     print('________________________________________________________________________________________________________________________________________')
 
     # post processing variables
-    state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / \
-                           thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv) )
-    state.vel = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 )
-    state.p0 = (1+((gas.gamma_fn(gas.Cp, gas.Cv)-1)/2)*state.Mach**2)** \
-                   (gas.gamma_fn(gas.Cp, gas.Cv)/(gas.gamma_fn(gas.Cp, gas.Cv)-1)) * state.p
-    state.T0 = (1+((gas.gamma_fn(gas.Cp, gas.Cv)-1)/2)*state.Mach**2) * state.T
-    state.n = n
+    state = calc_postvars(state, gas, n)
 
     return state
 
@@ -849,13 +825,7 @@ def AUSMmuscl( domain, mesh, parameters, state, gas ):
     print('________________________________________________________________________________________________________________________________________')
 
     # post processing variables
-    state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / \
-                           thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv) )
-    state.vel = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 )
-    state.p0 = (1+((gas.gamma_fn(gas.Cp, gas.Cv)-1)/2)*state.Mach**2)** \
-                   (gas.gamma_fn(gas.Cp, gas.Cv)/(gas.gamma_fn(gas.Cp, gas.Cv)-1)) * state.p
-    state.T0 = (1+((gas.gamma_fn(gas.Cp, gas.Cv)-1)/2)*state.Mach**2) * state.T
-    state.n = n
+    state = calc_postvars(state, gas, n)
 
     return state
 
@@ -1003,7 +973,6 @@ def AUSMDVmuscl( domain, mesh, parameters, state, gas ):
                                          M_half_zeta_minus * QR )
         mdot_half_zeta = c_half_eta * ( M_half_eta_plus * QB + \
                                          M_half_eta_minus * QT )
-        #mdot_half_eta = c_half_eta * ( QB*M_half_eta_plus + QT*M_half_eta_minus )
 
         # split interface Mach numbers in the zeta and eta directions
         M_half_zeta = split.Mvp( M_L ) + split.Mvm( M_R )
@@ -1011,17 +980,7 @@ def AUSMDVmuscl( domain, mesh, parameters, state, gas ):
 
         # calculate mass flux at cell interfaces
         mdot_half_zeta = c_half_zeta[:,:,0] * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] )
-                                    #   c_half_zeta[:,:,0] * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] ), \
-                                    #   c_half_zeta[:,:,0] * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] ), \
-                                    #   c_half_zeta[:,:,0] * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] ) ) )
         mdot_half_eta = c_half_eta[:,:,0]  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] )
-                                    #   c_half_eta[:,:,0]  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] ), \
-                                    #   c_half_eta[:,:,0]  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] ), \
-                                    #   c_half_eta[:,:,0]  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] ) ) )
-
-        # mdot_half_zeta = c_half_zeta * M_half_zeta * ( np.double(M_half_zeta>0) * QL[:,:,0] + np.double(M_half_zeta<=0) * QR[:,:,0] )
-        # mdot_half_eta =  c_half_eta  * M_half_eta  * ( np.double(M_half_eta>0)  * QB[:,:,0] + np.double(M_half_eta<=0)  * QT[:,:,0] )
-
 
         cr = 1e-60
         # calculate pressure flux at cell interfaces
@@ -1053,25 +1012,6 @@ def AUSMDVmuscl( domain, mesh, parameters, state, gas ):
         P_eta[:,:,1] = p_half_eta * mesh.s_proj[:,0:-1,2] / mesh.s_proj[:,0:-1,5]
         P_eta[:,:,2] = p_half_eta * mesh.s_proj[:,0:-1,3] / mesh.s_proj[:,0:-1,5]
 
-        # dissipative term (Liou_JCP_160_2000)
-        # Dm_zeta = np.abs(mdot_half_zeta)
-        # Dm_eta = np.abs(mdot_half_eta)
-
-        # E_hat_left = (1/2) * mdot_half_zeta[0:-1,1:-1] * (PhiL[0:-1,1:-1,:]+PhiR[0:-1,1:-1,:]) \
-        #         - (1/2) * Dm_zeta[0:-1,1:-1]*(PhiR[0:-1,1:-1,:]-PhiL[0:-1,1:-1,:]) \
-        #         + P_zeta[0:-1,1:-1,:]
-
-        # E_hat_right = (1/2) * mdot_half_zeta[1:,1:-1] * (PhiL[1:,1:-1,:]+PhiR[1:,1:-1,:]) \
-        #         - (1/2) * Dm_zeta[1:,1:-1]*(PhiR[1:,1:-1,:]-PhiL[1:,1:-1,:]) \
-        #         + P_zeta[1:,1:-1,:]
-
-        # F_hat_bot = (1/2) * mdot_half_eta[1:-1,0:-1] * (PhiB[1:-1,0:-1,:]+PhiT[1:-1,0:-1,:]) \
-        #         - (1/2) * Dm_eta[1:-1,0:-1]*(PhiT[1:-1,0:-1,:]-PhiB[1:-1,0:-1,:]) \
-        #         + P_eta[1:-1,0:-1,:]
-            
-        # F_hat_top = (1/2) * mdot_half_eta[1:-1,1:] * (PhiB[1:-1,1:,:]+PhiT[1:-1,1:,:]) \
-        #         - (1/2) * Dm_eta[1:-1,1:]*(PhiT[1:-1,1:,:]-PhiB[1:-1,1:,:]) \
-        #         + P_eta[1:-1,1:,:]
 
         flux.face_flux_muscl( mdot_half_zeta, mdot_half_eta, PhiL, PhiR, PhiB, PhiT, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
 
@@ -1108,6 +1048,13 @@ def AUSMDVmuscl( domain, mesh, parameters, state, gas ):
     print('________________________________________________________________________________________________________________________________________')
 
     # post processing variables
+    state = calc_postvars(state, gas, n)
+
+    return state
+
+
+def calc_postvars(state, gas, n):
+
     state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / \
                            thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv) )
     state.vel = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 )
