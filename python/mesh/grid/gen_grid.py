@@ -136,6 +136,15 @@ def mesh_cylinder(domain):
     xx = np.transpose(xx)
     yy = np.transpose(yy)
 
+    # initialize list
+    walls = []
+
+    # set boundary class values
+    walls.append( wall( 'domain', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'domain', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
+    walls.append( wall( 'domain', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
+    walls.append( wall( 'domain', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
+
     return xx, yy
 
 

@@ -176,9 +176,9 @@ class MainFrame ( wx.Frame ):
 		
 		MainSizer.Add( self.m_staticText111, wx.GBPosition( 10, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
-		gridChoiceChoices = [ u"Wedge", u"Corner", u"Cylinder", u'NACA XXXX Airfoil', u'Biconvex Airfoil' ]
+		gridChoiceChoices = [ u"Wedge", u"Corner", u'NACA XXXX Airfoil', u'Biconvex Airfoil' ]
 		self.gridChoice = wx.Choice( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, gridChoiceChoices, 0 )
-		self.gridChoice.SetSelection( 3 )
+		self.gridChoice.SetSelection( 2 )
 		MainSizer.Add( self.gridChoice, wx.GBPosition( 3, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
 		
 		self.schemeButton = wx.Button( self, wx.ID_ANY, u"Run Simulation", wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -237,33 +237,33 @@ class MainFrame ( wx.Frame ):
 
 		self.boundOptions = wx.Menu()
 
-		self.objwall_invisc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Object Wall: Inviscid Wall", wx.EmptyString, wx.ITEM_RADIO )
+		self.objwall_invisc = wx.MenuItem( self.boundOptions, 330, u"Object Wall: Inviscid Wall", wx.EmptyString, wx.ITEM_RADIO )
 		self.boundOptions.Append( self.objwall_invisc )
 		
-		self.objwall_visc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Object Wall: Viscous Wall", wx.EmptyString, wx.ITEM_RADIO )
+		self.objwall_visc = wx.MenuItem( self.boundOptions, 331, u"Object Wall: Viscous Wall", wx.EmptyString, wx.ITEM_RADIO )
 		self.boundOptions.Append( self.objwall_visc )
 
 		self.objwall_thermal = wx.Menu()
-		self.objwall_adiabatic = wx.MenuItem( self.objwall_thermal, wx.ID_ANY, u"Adiabatic", wx.EmptyString, wx.ITEM_RADIO )
+		self.objwall_adiabatic = wx.MenuItem( self.objwall_thermal, 340, u"Adiabatic", wx.EmptyString, wx.ITEM_RADIO )
 		self.objwall_thermal.Append( self.objwall_adiabatic )
 		
-		self.objwall_isothermal = wx.MenuItem( self.objwall_thermal, wx.ID_ANY, u"Isothermal", wx.EmptyString, wx.ITEM_RADIO )
+		self.objwall_isothermal = wx.MenuItem( self.objwall_thermal, 341, u"Isothermal", wx.EmptyString, wx.ITEM_RADIO )
 		self.objwall_thermal.Append( self.objwall_isothermal )
 
-		self.objwall_fixed = wx.MenuItem( self.objwall_thermal, wx.ID_ANY, u"Fixed Temperature", wx.EmptyString, wx.ITEM_RADIO )
+		self.objwall_fixed = wx.MenuItem( self.objwall_thermal, 342, u"Fixed Temperature", wx.EmptyString, wx.ITEM_RADIO )
 		self.objwall_thermal.Append( self.objwall_fixed )
 
 		self.boundOptions.AppendSubMenu( self.objwall_thermal, u"Object Wall Thermal Options" )
 
 		self.boundOptions.AppendSeparator()
 
-		self.botwall_out = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Bottom Wall: Outflow", wx.EmptyString, wx.ITEM_RADIO )
+		self.botwall_out = wx.MenuItem( self.boundOptions, 430, u"Bottom Wall: Outflow", wx.EmptyString, wx.ITEM_RADIO )
 		self.boundOptions.Append( self.botwall_out )
 
-		self.botwall_invisc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Bottom Wall: Inviscid Wall", wx.EmptyString, wx.ITEM_RADIO )
+		self.botwall_invisc = wx.MenuItem( self.boundOptions, 431, u"Bottom Wall: Inviscid Wall", wx.EmptyString, wx.ITEM_RADIO )
 		self.boundOptions.Append( self.botwall_invisc )
 		
-		self.botwall_visc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Bottom Wall: Viscous Wall", wx.EmptyString, wx.ITEM_RADIO )
+		self.botwall_visc = wx.MenuItem( self.boundOptions, 432, u"Bottom Wall: Viscous Wall", wx.EmptyString, wx.ITEM_RADIO )
 		self.boundOptions.Append( self.botwall_visc )
 
 		self.botwall_thermal = wx.Menu()
@@ -1353,11 +1353,23 @@ class MainFrame ( wx.Frame ):
 
 	def grid_change( self, event ):
 
-		if self.gridChoice.StringSelection == 'Wedge' or self.gridChoice.StringSelection == 'Corner':
+		if self.gridChoice.StringSelection == 'Wedge':
 			self.domainGrid.ShowRow( 1 )
 			self.domainGrid.ShowRow( 3 )
 			self.domainGrid.ShowRow( 4 )
-			#self.domainGrid.HideRow( 7 )
+
+			# disable object wall options
+			wx.MenuBar.Enable(self.menuBar, 330, False)
+			wx.MenuBar.Enable(self.menuBar, 331, False)
+			wx.MenuBar.Enable(self.menuBar, 340, False)
+			wx.MenuBar.Enable(self.menuBar, 341, False)
+			wx.MenuBar.Enable(self.menuBar, 342, False)
+
+			# check inviscid wall
+			if self.botwall_visc.IsChecked():
+				pass
+			else:
+				self.boundOptions.Check(431, True)
 
 			self.domainGrid.SetRowLabelValue( 0, u"Length (" + self.units.length + ')' )
 			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
@@ -1366,11 +1378,36 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.SetRowLabelValue( 4, u"Wedge Angle (°)" )
 			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
 			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
+
+		elif self.gridChoice.StringSelection == 'Corner':
+			self.domainGrid.ShowRow( 1 )
+			self.domainGrid.ShowRow( 3 )
+			self.domainGrid.ShowRow( 4 )
+
+			wx.MenuBar.Enable(self.menuBar, 330, False)
+			wx.MenuBar.Enable(self.menuBar, 331, False)
+			wx.MenuBar.Enable(self.menuBar, 340, False)
+			wx.MenuBar.Enable(self.menuBar, 341, False)
+			wx.MenuBar.Enable(self.menuBar, 342, False)
+
+			# check inviscid wall
+			if self.botwall_visc.IsChecked():
+				pass
+			else:
+				self.boundOptions.Check(431, True)
+
+			self.domainGrid.SetRowLabelValue( 0, u"Length (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
+			self.domainGrid.SetRowLabelValue( 2, u"Corner Start (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 3, u"Corner End (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 4, u"Corner Angle (°)" )
+			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
+			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
+
 		elif self.gridChoice.StringSelection == 'Cylinder':
 			self.domainGrid.HideRow( 1 )
 			self.domainGrid.HideRow( 3 )
 			self.domainGrid.HideRow( 4 )
-			#self.domainGrid.HideRow( 7 )
 
 			self.domainGrid.SetRowLabelValue( 0, u"Domain Diam. (" + self.units.length + ')' )
 			self.domainGrid.SetRowLabelValue( 2, u"Cylinder Diam. (" + self.units.length + ')' )
@@ -1382,7 +1419,15 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.ShowRow( 1 )
 			self.domainGrid.ShowRow( 3 )
 			self.domainGrid.ShowRow( 4 )
-			#self.domainGrid.ShowRow( 7 )
+
+			wx.MenuBar.Enable(self.menuBar, 330, True)
+			wx.MenuBar.Enable(self.menuBar, 331, True)
+			wx.MenuBar.Enable(self.menuBar, 340, True)
+			wx.MenuBar.Enable(self.menuBar, 341, True)
+			wx.MenuBar.Enable(self.menuBar, 342, True)
+
+			# check inviscid wall
+			self.boundOptions.Check(430, True)
 
 			self.domainGrid.SetRowLabelValue( 0, u"Length (" + self.units.length + ')' )
 			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
@@ -1391,13 +1436,20 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.SetRowLabelValue( 4, u"NACA XXXX" )
 			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
 			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
-			#self.domainGrid.SetRowLabelValue( 7, u"Angle of Attack (°)" )
 
 		elif self.gridChoice.StringSelection == 'Biconvex Airfoil':
 			self.domainGrid.ShowRow( 1 )
 			self.domainGrid.ShowRow( 3 )
 			self.domainGrid.ShowRow( 4 )
-			#self.domainGrid.ShowRow( 7 )
+
+			wx.MenuBar.Enable(self.menuBar, 330, True)
+			wx.MenuBar.Enable(self.menuBar, 331, True)
+			wx.MenuBar.Enable(self.menuBar, 340, True)
+			wx.MenuBar.Enable(self.menuBar, 341, True)
+			wx.MenuBar.Enable(self.menuBar, 342, True)
+
+			# check inviscid wall
+			self.boundOptions.Check(430, True)
 
 			self.domainGrid.SetRowLabelValue( 0, u"Length (" + self.units.length + ')' )
 			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
@@ -1406,7 +1458,6 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.SetRowLabelValue( 4, u"Thickness (" + self.units.length + ')')
 			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
 			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
-			#self.domainGrid.SetRowLabelValue( 7, u"Angle of Attack (°)" )
 
 	def limiter_change( self, event ):
 		self.init_parameters()
