@@ -698,36 +698,36 @@ class MainFrame ( wx.Frame ):
 
 	# def init_boundary( self, wall ):
 
-		class boundary:
-			if self.topwall_out.IsChecked():
-				topwall = 'Outflow'
-			elif self.topwall_visc.IsChecked():
-				topwall = 'Viscous Wall'
-			elif self.topwall_invisc.IsChecked():
-				topwall = 'Inviscid Wall'
-			if self.topwall_adiabatic.IsChecked():
-				topwall_thermal = 'Adiabatic'
-			elif self.topwall_isothermal.IsChecked():
-				topwall_thermal = 'Isothermal'
-				topwall_temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
-			elif self.topwall_fixed.IsChecked():
-				topwall_thermal = 'Fixed Temperature'
-				topwall_temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
+		# class boundary:
+		# 	if self.topwall_out.IsChecked():
+		# 		topwall = 'Outflow'
+		# 	elif self.topwall_visc.IsChecked():
+		# 		topwall = 'Viscous Wall'
+		# 	elif self.topwall_invisc.IsChecked():
+		# 		topwall = 'Inviscid Wall'
+		# 	if self.topwall_adiabatic.IsChecked():
+		# 		topwall_thermal = 'Adiabatic'
+		# 	elif self.topwall_isothermal.IsChecked():
+		# 		topwall_thermal = 'Isothermal'
+		# 		topwall_temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
+		# 	elif self.topwall_fixed.IsChecked():
+		# 		topwall_thermal = 'Fixed Temperature'
+		# 		topwall_temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
 
-			if self.botwall_visc.IsChecked():
-				botwall = 'Viscous Wall'
-			elif self.botwall_invisc.IsChecked():
-				botwall = 'Inviscid Wall'
-			if self.botwall_adiabatic.IsChecked():
-				botwall_thermal = 'Adiabatic'
-			elif self.botwall_isothermal.IsChecked():
-				botwall_thermal = 'Isothermal'
-				botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
-			elif self.botwall_fixed.IsChecked():
-				botwall_thermal = 'Fixed Temperature'
-				botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
+		# 	if self.botwall_visc.IsChecked():
+		# 		botwall = 'Viscous Wall'
+		# 	elif self.botwall_invisc.IsChecked():
+		# 		botwall = 'Inviscid Wall'
+		# 	if self.botwall_adiabatic.IsChecked():
+		# 		botwall_thermal = 'Adiabatic'
+		# 	elif self.botwall_isothermal.IsChecked():
+		# 		botwall_thermal = 'Isothermal'
+		# 		botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
+		# 	elif self.botwall_fixed.IsChecked():
+		# 		botwall_thermal = 'Fixed Temperature'
+		# 		botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
 
-		self.boundary = boundary
+		# self.boundary = boundary
 	
 	# Virtual event handlers, overide them in your derived class
 	def call_grid( self, event ):
