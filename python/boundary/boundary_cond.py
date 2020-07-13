@@ -3,7 +3,7 @@ from python.finite_volume.helper import thermo
 
 # set boundary conditions (inviscid walls at bottom, outlet at top and right)
 
-def enforce_bc2(domain, mesh, parameters, state, gas):
+def enforce_bc_old(domain, mesh, parameters, state, gas):
 
     if domain.name == 'Wedge' or domain.name == 'Corner':
 
@@ -204,8 +204,6 @@ def enforce_bc(domain, mesh, boundary, parameters, state, gas):
     return state
 
 
-
-
 # compute velocities at inviscid slip wall, input Qwall[M+2, 2, 4]
 def invisc_wall(Qwall, pwall, Twall, s_proj, gas, M, N, flip):
 
@@ -265,8 +263,8 @@ def visc_wall(Qwall, pwall, Twall, s_proj, gas, M, N, flip):
     Qwall[:, i, 0] = pwall / (gas.R_fn(gas.Cp[M,N], gas.Cv[M,N]) * Twall)
     Qwall[:, i, 1] = u0 * Qwall[:, i, 0]
     Qwall[:, i, 2] = v0 * Qwall[:, i, 0]
-    Qwall[:, i, 3] = thermo.calc_rho_et( pwall, Qwall[:, i, 0], Qwall[:, i, 1]/Qwall[:, i, 0], Qwall[:, i, 2]/Qwall[:, i, 0], \
-                                         gas.gamma_fn(gas.Cp[M,N], gas.Cv[M,N]) )
+    Qwall[:, i, 3] = thermo.calc_rho_et( pwall, Qwall[:, i, 0], Qwall[:, i, 1]/Qwall[:, i, 0], \
+                                         Qwall[:, i, 2]/Qwall[:, i, 0], gas.gamma_fn(gas.Cp[M,N], gas.Cv[M,N]) )
     
     return Qwall
 

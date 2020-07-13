@@ -525,13 +525,13 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.axis_change, id = self.tight.GetId() )
 		self.Bind( wx.EVT_MENU, self.axis_change, id = self.auto.GetId() )
 		self.Bind( wx.EVT_MENU, self.musclWindow, id = self.musclinfo.GetId() )
-		self.Bind( wx.EVT_MENU, self.limiter_change, id = self.hquick.GetId() )
-		self.Bind( wx.EVT_MENU, self.limiter_change, id = self.osher.GetId() )
-		self.Bind( wx.EVT_MENU, self.limiter_change, id = self.minmod.GetId() )
-		self.Bind( wx.EVT_MENU, self.limiter_change, id = self.ospre.GetId() )
-		self.Bind( wx.EVT_MENU, self.limiter_change, id = self.vanleer.GetId() )
-		self.Bind( wx.EVT_MENU, self.limiter_change, id = self.vanalbada1.GetId() )
-		self.Bind( wx.EVT_MENU, self.limiter_change, id = self.vanalbada2.GetId() )
+		self.Bind( wx.EVT_MENU, self.init_parameters, id = self.hquick.GetId() )
+		self.Bind( wx.EVT_MENU, self.init_parameters, id = self.osher.GetId() )
+		self.Bind( wx.EVT_MENU, self.init_parameters, id = self.minmod.GetId() )
+		self.Bind( wx.EVT_MENU, self.init_parameters, id = self.ospre.GetId() )
+		self.Bind( wx.EVT_MENU, self.init_parameters, id = self.vanleer.GetId() )
+		self.Bind( wx.EVT_MENU, self.init_parameters, id = self.vanalbada1.GetId() )
+		self.Bind( wx.EVT_MENU, self.init_parameters, id = self.vanalbada2.GetId() )
 
 		# initialize grid values and class attributes
 		self.init_grids()
@@ -1458,10 +1458,6 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.SetRowLabelValue( 4, u"Thickness (" + self.units.length + ')')
 			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
 			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
-
-	def limiter_change( self, event ):
-		self.init_parameters()
-		event.Skip()
 
 
 	# open contour plot in new window
