@@ -243,6 +243,18 @@ class MainFrame ( wx.Frame ):
 		self.objwall_visc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Object Wall: Viscous Wall", wx.EmptyString, wx.ITEM_RADIO )
 		self.boundOptions.Append( self.objwall_visc )
 
+		self.objwall_thermal = wx.Menu()
+		self.objwall_adiabatic = wx.MenuItem( self.objwall_thermal, wx.ID_ANY, u"Adiabatic", wx.EmptyString, wx.ITEM_RADIO )
+		self.objwall_thermal.Append( self.objwall_adiabatic )
+		
+		self.objwall_isothermal = wx.MenuItem( self.objwall_thermal, wx.ID_ANY, u"Isothermal", wx.EmptyString, wx.ITEM_RADIO )
+		self.objwall_thermal.Append( self.objwall_isothermal )
+
+		self.objwall_fixed = wx.MenuItem( self.objwall_thermal, wx.ID_ANY, u"Fixed Temperature", wx.EmptyString, wx.ITEM_RADIO )
+		self.objwall_thermal.Append( self.objwall_fixed )
+
+		self.boundOptions.AppendSubMenu( self.objwall_thermal, u"Object Wall Thermal Options" )
+
 		self.boundOptions.AppendSeparator()
 
 		self.botwall_out = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Bottom Wall: Outflow", wx.EmptyString, wx.ITEM_RADIO )
@@ -478,6 +490,8 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.topwall_change, id = self.topwall_invisc.GetId() )
 		self.Bind( wx.EVT_MENU, self.topwall_change, id = self.topwall_visc.GetId() )
 
+		self.Bind( wx.EVT_MENU, self.objwall_thermal_change, id = self.objwall_isothermal.GetId() )
+		self.Bind( wx.EVT_MENU, self.objwall_thermal_change, id = self.objwall_fixed.GetId() )
 		self.Bind( wx.EVT_MENU, self.botwall_thermal_change, id = self.botwall_isothermal.GetId() )
 		self.Bind( wx.EVT_MENU, self.botwall_thermal_change, id = self.botwall_fixed.GetId() )
 		self.Bind( wx.EVT_MENU, self.topwall_thermal_change, id = self.topwall_isothermal.GetId() )
@@ -713,10 +727,10 @@ class MainFrame ( wx.Frame ):
 						obj.thermal = 'Adiabatic'
 					elif self.topwall_isothermal.IsChecked():
 						obj.thermal = 'Isothermal'
-						obj.temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
+						obj.Tw = self.units.conv_temp(float(self.top_thermal_window.walltemp))
 					elif self.topwall_fixed.IsChecked():
 						obj.thermal = 'Fixed Temperature'
-						obj.temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
+						obj.Tw = self.units.conv_temp(float(self.top_thermal_window.walltemp))
 
 				else:
 					obj.type = 'Outflow'
@@ -725,19 +739,17 @@ class MainFrame ( wx.Frame ):
 			else:
 				if self.objwall_visc.IsChecked():
 					obj.type = 'Viscous Wall'
-				#elif self.objwall_visc.IsChecked():
-				obj.type = 'Inviscid Wall'
+				elif self.objwall_invisc.IsChecked():
+					obj.type = 'Inviscid Wall'
 
-				obj.thermal = 'Adiabatic'
-
-				# if self.botwall_adiabatic.IsChecked():
-				# 	botwall_thermal = 'Adiabatic'
-				# elif self.botwall_isothermal.IsChecked():
-				# 	botwall_thermal = 'Isothermal'
-				# 	botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
-				# elif self.botwall_fixed.IsChecked():
-				# 	botwall_thermal = 'Fixed Temperature'
-				# 	botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
+				if self.objwall_adiabatic.IsChecked():
+					obj.thermal = 'Adiabatic'
+				elif self.objwall_isothermal.IsChecked():
+					obj.thermal = 'Isothermal'
+					obj.Tw = self.units.conv_temp(float(self.obj_thermal_window.walltemp))
+				elif self.objwall_fixed.IsChecked():
+					obj.thermal = 'Fixed Temperature'
+					obj.Tw = self.units.conv_temp(float(self.obj_thermal_window.walltemp))
 
 		self.boundary = wall
 
@@ -760,15 +772,15 @@ class MainFrame ( wx.Frame ):
 		self.init_domain()
 
 		if self.domain.name == "Wedge":
-			xx, yy = mesh_wedge(self.domain)
+			xx, yy, walls = mesh_wedge(self.domain)
 		elif self.domain.name == "Corner":
-			xx, yy = mesh_corner(self.domain)
+			xx, yy, walls = mesh_corner(self.domain)
 		elif self.domain.name == "Cylinder":
-			xx, yy = mesh_cylinder(self.domain)
+			xx, yy, walls = mesh_cylinder(self.domain)
 		elif self.domain.name == "NACA XXXX Airfoil":
 			xx, yy, walls = mesh_naca4(self.domain)
 		elif self.domain.name == "Biconvex Airfoil":
-			xx, yy = mesh_biconvex(self.domain)
+			xx, yy, walls = mesh_biconvex(self.domain)
 		self.mesh = cellmetrics(xx, yy, self.domain)
 
 		self.init_boundary(walls)
@@ -819,6 +831,7 @@ class MainFrame ( wx.Frame ):
 		t = TicToc()
 
 		self.init_parameters()
+		self.init_boundary(self.boundary)
 
 		self.gas = gasdata.air_tpg
 
@@ -857,6 +870,7 @@ class MainFrame ( wx.Frame ):
 			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
 	
 		self.init_parameters()
+		self.init_boundary(self.boundary)
 
 		if self.thermoModel == 'cpg':
 			if self.air.IsChecked() == True:
@@ -875,18 +889,18 @@ class MainFrame ( wx.Frame ):
 		
 		if scheme == 'AUSM':
 			if self.higherorder.IsChecked():
-				self.state = AUSMmuscl( self.domain, self.mesh, self.parameters, self.state, self.gas )
+				self.state = AUSMmuscl( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 			else:
 				self.state = AUSM( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 		elif scheme == 'AUSM+up':
-			self.state = AUSMplusup( self.domain, self.mesh, self.parameters, self.state, self.gas )
+			self.state = AUSMplusup( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 		elif scheme == 'AUSMDV':
 			if self.higherorder.IsChecked():
-				self.state = AUSMDVmuscl( self.domain, self.mesh, self.parameters, self.state, self.gas )
+				self.state = AUSMDVmuscl( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 			else:
-				self.state = AUSMDV( self.domain, self.mesh, self.parameters, self.state, self.gas )
+				self.state = AUSMDV( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 		elif scheme == 'SLAU':
-			self.state = SLAU( self.domain, self.mesh, self.parameters, self.state, self.gas )
+			self.state = SLAU( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 
 		t.toc('simulation time:')
 
@@ -1308,6 +1322,12 @@ class MainFrame ( wx.Frame ):
 			self.thermoModel = 'tpg'
 		event.Skip()
 
+	def objwall_thermal_change( self, event ):
+		self.faceselect = 'obj'
+		self.obj_thermal_window = thermalWindow(parent=self)
+		self.obj_thermal_window.Show()
+		event.Skip()
+
 	def botwall_thermal_change( self, event ):
 		self.faceselect = 'bot'
 		self.bot_thermal_window = thermalWindow(parent=self)
@@ -1418,6 +1438,7 @@ class MainFrame ( wx.Frame ):
 		self.new = tvdWindow( parent=self )
 		self.new.Show()
 		event.Skip()
+
 
 class RedirectText:
 	def __init__(self,aWxTextCtrl):
@@ -1591,6 +1612,8 @@ class thermalWindow(wx.Frame):
 			self.wallGrid.SetCellValue( 0, 0, str(parent.bot_thermal_window.walltemp))
 		elif parent.faceselect == 'top' and hasattr(parent, 'top_thermal_window'):
 			self.wallGrid.SetCellValue( 0, 0, str(parent.top_thermal_window.walltemp))
+		elif parent.faceselect == 'obj' and hasattr(parent, 'obj_thermal_window'):
+			self.wallGrid.SetCellValue( 0, 0, str(parent.obj_thermal_window.walltemp))
 		else:
 			self.wallGrid.SetCellValue( 0, 0, '300')
 

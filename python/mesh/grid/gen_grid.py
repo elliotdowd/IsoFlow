@@ -25,7 +25,16 @@ def mesh_wedge(domain):
     yy = np.fliplr(yy)
     #yy[:,-1] = height*(1+(1/(N)))
 
-    return xx, yy
+    # initialize list
+    walls = []
+
+    # set boundary class values
+    walls.append( wall( 'domain', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'domain', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
+    walls.append( wall( 'domain', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
+    walls.append( wall( 'domain', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
+
+    return xx, yy, walls
 
 
 def mesh_corner(domain):
@@ -85,7 +94,16 @@ def mesh_corner(domain):
 
     domain.M = M*2
 
-    return xx, yy
+    # initialize list
+    walls = []
+
+    # set boundary class values
+    walls.append( wall( 'domain', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'domain', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
+    walls.append( wall( 'domain', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
+    walls.append( wall( 'domain', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
+
+    return xx, yy, walls
 
 
 def mesh_cylinder(domain):
@@ -300,7 +318,18 @@ def mesh_biconvex(domain):
     xx = np.array(xx, order='F')
     yy = np.array(yy, order='F')
 
-    return xx, yy
+    # initialize list
+    walls = []
+
+    # set boundary class values
+    walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallL, domain.wallL, np.array( ( 0, -1 ) ) ) )
+    walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallU-1, domain.wallU-1, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'domain', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'domain', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
+    walls.append( wall( 'domain', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
+    walls.append( wall( 'domain', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
+
+    return xx, yy, walls
 
 
 ## NACA related functions

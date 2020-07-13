@@ -196,10 +196,10 @@ def enforce_bc(domain, mesh, boundary, parameters, state, gas):
             flip = n[1] == -1
             if obj.type == 'Inviscid Wall':
                 state.Q[x0, y[0]:y[1]+1, :] = invisc_wall(state.Q[x0, y[0]:y[1]+1, :], state.p[x0, y0], state.T[x0, y0], mesh.s_proj[x0, y[0]:y[1]+1, :], \
-                                                          gas, x0[0]-1, x0[-1], y0, flip)
+                                                          gas, x0, y0, flip)
             elif obj.type == 'Viscous Wall':
                 state.Q[x0, y[0]:y[1]+1, :] = visc_wall(state.Q[x0, y[0]:y[1]+1, :], state.p[x0, y0], state.T[x0, y0], mesh.s_proj[x0, y[0]:y[1]+1, :], \
-                                                        gas, x0[0]-1, x0[-1], y0, flip)
+                                                        gas, x0, y0, flip)
 
     return state
 
@@ -207,7 +207,7 @@ def enforce_bc(domain, mesh, boundary, parameters, state, gas):
 
 
 # compute velocities at inviscid slip wall, input Qwall[M+2, 2, 4]
-def invisc_wall(Qwall, pwall, Twall, s_proj, gas, obj_i, obj_f, N, flip):
+def invisc_wall(Qwall, pwall, Twall, s_proj, gas, M, N, flip):
 
     import numpy as np
 
@@ -230,19 +230,19 @@ def invisc_wall(Qwall, pwall, Twall, s_proj, gas, obj_i, obj_f, N, flip):
     v0 = Qwall[:, i, 2] / Qwall[:, i, 0]
 
     # run Fortran 90 subroutine to determine wall velocities
-    boundary.slip(u0, v0, u1, v1, s_proj, obj_f-obj_i)
+    boundary.slip(u0, v0, u1, v1, s_proj, len(M))
 
-    Qwall[:, i, 0] = pwall / (gas.R_fn(gas.Cp[obj_i:obj_f,N], gas.Cv[obj_i:obj_f, N]) * Twall)
+    Qwall[:, i, 0] = pwall / (gas.R_fn(gas.Cp[M,N], gas.Cv[M, N]) * Twall)
     Qwall[:, i, 1] = u0 * Qwall[:, i, 0]
     Qwall[:, i, 2] = v0 * Qwall[:, i, 0]
     Qwall[:, i, 3] = thermo.calc_rho_et( pwall, Qwall[:, i, 0], Qwall[:, i, 1]/Qwall[:, i, 0], \
-                                         Qwall[:, i, 2]/Qwall[:, i, 0], gas.gamma_fn(gas.Cp[obj_i:obj_f,N], gas.Cv[obj_i:obj_f,N]) )
+                                         Qwall[:, i, 2]/Qwall[:, i, 0], gas.gamma_fn(gas.Cp[M,N], gas.Cv[M,N]) )
     
     return Qwall
 
 
 # compute velocities at viscous no-slip wall, input Qwall[M+2, 2, 4]
-def visc_wall(Qwall, pwall, Twall, s_proj, gas, obj_i, obj_f, N, flip):
+def visc_wall(Qwall, pwall, Twall, s_proj, gas, M, N, flip):
 
     import numpy as np
     from python.finite_volume.helper import thermo
@@ -262,11 +262,11 @@ def visc_wall(Qwall, pwall, Twall, s_proj, gas, obj_i, obj_f, N, flip):
     u0 = -u1
     v0 = -v1
 
-    Qwall[:, i, 0] = pwall / (gas.R_fn(gas.Cp[obj_i+1:obj_f,N], gas.Cv[obj_i+1:obj_f,N]) * Twall)
+    Qwall[:, i, 0] = pwall / (gas.R_fn(gas.Cp[M,N], gas.Cv[M,N]) * Twall)
     Qwall[:, i, 1] = u0 * Qwall[:, i, 0]
     Qwall[:, i, 2] = v0 * Qwall[:, i, 0]
     Qwall[:, i, 3] = thermo.calc_rho_et( pwall, Qwall[:, i, 0], Qwall[:, i, 1]/Qwall[:, i, 0], Qwall[:, i, 2]/Qwall[:, i, 0], \
-                                         gas.gamma_fn(gas.Cp[obj_i+1:obj_f,N], gas.Cv[obj_i+1:obj_f,N]) )
+                                         gas.gamma_fn(gas.Cp[M,N], gas.Cv[M,N]) )
     
     return Qwall
 
