@@ -628,6 +628,7 @@ class MainFrame ( wx.Frame ):
 			iterations = int(wx.grid.Grid.GetCellValue(self.simGrid, 1, 0))
 			tolerance = float(wx.grid.Grid.GetCellValue(self.simGrid, 2, 0))
 			CFL = float(wx.grid.Grid.GetCellValue(self.simGrid, 0, 0))
+
 			if self.topwall_out.IsChecked():
 				topwall = 'Outflow'
 			elif self.topwall_visc.IsChecked():
@@ -695,11 +696,38 @@ class MainFrame ( wx.Frame ):
 
 		self.parameters = parameters
 
-	def init_boundary( self ):
-		pass
+	# def init_boundary( self, wall ):
 
-	class boundary:
-		pass
+		class boundary:
+			if self.topwall_out.IsChecked():
+				topwall = 'Outflow'
+			elif self.topwall_visc.IsChecked():
+				topwall = 'Viscous Wall'
+			elif self.topwall_invisc.IsChecked():
+				topwall = 'Inviscid Wall'
+			if self.topwall_adiabatic.IsChecked():
+				topwall_thermal = 'Adiabatic'
+			elif self.topwall_isothermal.IsChecked():
+				topwall_thermal = 'Isothermal'
+				topwall_temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
+			elif self.topwall_fixed.IsChecked():
+				topwall_thermal = 'Fixed Temperature'
+				topwall_temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
+
+			if self.botwall_visc.IsChecked():
+				botwall = 'Viscous Wall'
+			elif self.botwall_invisc.IsChecked():
+				botwall = 'Inviscid Wall'
+			if self.botwall_adiabatic.IsChecked():
+				botwall_thermal = 'Adiabatic'
+			elif self.botwall_isothermal.IsChecked():
+				botwall_thermal = 'Isothermal'
+				botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
+			elif self.botwall_fixed.IsChecked():
+				botwall_thermal = 'Fixed Temperature'
+				botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
+
+		self.boundary = boundary
 	
 	# Virtual event handlers, overide them in your derived class
 	def call_grid( self, event ):
@@ -725,13 +753,12 @@ class MainFrame ( wx.Frame ):
 		elif self.domain.name == "Cylinder":
 			xx, yy = mesh_cylinder(self.domain)
 		elif self.domain.name == "NACA XXXX Airfoil":
-			xx, yy, walls = mesh_naca4(self.domain)
+			xx, yy = mesh_naca4(self.domain)
 		elif self.domain.name == "Biconvex Airfoil":
 			xx, yy = mesh_biconvex(self.domain)
 		self.mesh = cellmetrics(xx, yy, self.domain)
-		#self.domain = domain
 
-		self.boundary = walls
+		#self.init_boundary(walls)
 
 		print('________________________________________________________________________________________________________________________________________')
 		print('Mesh elements: ' + str((self.domain.M+2) * (self.domain.N*2)))
