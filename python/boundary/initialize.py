@@ -1,7 +1,7 @@
 
 
 # initialize Q vector given simulation parameters
-def init_state(domain, mesh, parameters, gas):
+def init_state(domain, mesh, boundary, parameters, gas):
 
     import numpy as np
     from python.finite_volume.helper import thermo
@@ -37,7 +37,7 @@ def init_state(domain, mesh, parameters, gas):
 
     # boundary conditions
     from python.boundary.boundary_cond import enforce_bc, covariant
-    state = enforce_bc(domain, mesh, parameters, state, gas)
+    state = enforce_bc(domain, mesh, boundary, parameters, state, gas)
 
     state = covariant(mesh, state)
 

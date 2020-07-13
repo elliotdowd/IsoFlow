@@ -236,6 +236,18 @@ class MainFrame ( wx.Frame ):
 		self.menuBar.Append( self.gasOptions, u"Gas" ) 
 
 		self.boundOptions = wx.Menu()
+
+		self.objwall_invisc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Object Wall: Inviscid Wall", wx.EmptyString, wx.ITEM_RADIO )
+		self.boundOptions.Append( self.objwall_invisc )
+		
+		self.objwall_visc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Object Wall: Viscous Wall", wx.EmptyString, wx.ITEM_RADIO )
+		self.boundOptions.Append( self.objwall_visc )
+
+		self.boundOptions.AppendSeparator()
+
+		self.botwall_out = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Bottom Wall: Outflow", wx.EmptyString, wx.ITEM_RADIO )
+		self.boundOptions.Append( self.botwall_out )
+
 		self.botwall_invisc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Bottom Wall: Inviscid Wall", wx.EmptyString, wx.ITEM_RADIO )
 		self.boundOptions.Append( self.botwall_invisc )
 		
@@ -629,34 +641,6 @@ class MainFrame ( wx.Frame ):
 			tolerance = float(wx.grid.Grid.GetCellValue(self.simGrid, 2, 0))
 			CFL = float(wx.grid.Grid.GetCellValue(self.simGrid, 0, 0))
 
-			if self.topwall_out.IsChecked():
-				topwall = 'Outflow'
-			elif self.topwall_visc.IsChecked():
-				topwall = 'Viscous Wall'
-			elif self.topwall_invisc.IsChecked():
-				topwall = 'Inviscid Wall'
-			if self.topwall_adiabatic.IsChecked():
-				topwall_thermal = 'Adiabatic'
-			elif self.topwall_isothermal.IsChecked():
-				topwall_thermal = 'Isothermal'
-				topwall_temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
-			elif self.topwall_fixed.IsChecked():
-				topwall_thermal = 'Fixed Temperature'
-				topwall_temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
-
-			if self.botwall_visc.IsChecked():
-				botwall = 'Viscous Wall'
-			elif self.botwall_invisc.IsChecked():
-				botwall = 'Inviscid Wall'
-			if self.botwall_adiabatic.IsChecked():
-				botwall_thermal = 'Adiabatic'
-			elif self.botwall_isothermal.IsChecked():
-				botwall_thermal = 'Isothermal'
-				botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
-			elif self.botwall_fixed.IsChecked():
-				botwall_thermal = 'Fixed Temperature'
-				botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
-
 			# MUSCL interpolation parameters
 			from python.finite_volume.muscl import limiters
 			if self.higherorder.IsChecked():
@@ -696,39 +680,68 @@ class MainFrame ( wx.Frame ):
 
 		self.parameters = parameters
 
-	# def init_boundary( self, wall ):
+	def init_boundary( self, wall ):
 
-		# class boundary:
-		# 	if self.topwall_out.IsChecked():
-		# 		topwall = 'Outflow'
-		# 	elif self.topwall_visc.IsChecked():
-		# 		topwall = 'Viscous Wall'
-		# 	elif self.topwall_invisc.IsChecked():
-		# 		topwall = 'Inviscid Wall'
-		# 	if self.topwall_adiabatic.IsChecked():
-		# 		topwall_thermal = 'Adiabatic'
-		# 	elif self.topwall_isothermal.IsChecked():
-		# 		topwall_thermal = 'Isothermal'
-		# 		topwall_temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
-		# 	elif self.topwall_fixed.IsChecked():
-		# 		topwall_thermal = 'Fixed Temperature'
-		# 		topwall_temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
+		for obj in wall:
+			if obj.region == 'domain':
+				# domain bottom wall
+				if obj.wall_n[1] == 1:
+					if self.botwall_out.IsChecked():
+						obj.type = 'Outflow'
+					elif self.botwall_visc.IsChecked():
+						obj.type = 'Viscous Wall'
+					elif self.botwall_invisc.IsChecked():
+						obj.type = 'Inviscid Wall'
+					if self.botwall_adiabatic.IsChecked():
+						obj.thermal = 'Adiabatic'
+					elif self.botwall_isothermal.IsChecked():
+						obj.thermal = 'Isothermal'
+						obj.Tw = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
+					elif self.botwall_fixed.IsChecked():
+						obj.thermal = 'Fixed Temperature'
+						obj.Tw = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
 
-		# 	if self.botwall_visc.IsChecked():
-		# 		botwall = 'Viscous Wall'
-		# 	elif self.botwall_invisc.IsChecked():
-		# 		botwall = 'Inviscid Wall'
-		# 	if self.botwall_adiabatic.IsChecked():
-		# 		botwall_thermal = 'Adiabatic'
-		# 	elif self.botwall_isothermal.IsChecked():
-		# 		botwall_thermal = 'Isothermal'
-		# 		botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
-		# 	elif self.botwall_fixed.IsChecked():
-		# 		botwall_thermal = 'Fixed Temperature'
-		# 		botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
+				# domain top wall
+				elif obj.wall_n[1] == -1:
+					if self.topwall_out.IsChecked():
+						obj.type = 'Outflow'
+					elif self.topwall_visc.IsChecked():
+						obj.type = 'Viscous Wall'
+					elif self.topwall_invisc.IsChecked():
+						obj.type = 'Inviscid Wall'
+					if self.topwall_adiabatic.IsChecked():
+						obj.thermal = 'Adiabatic'
+					elif self.topwall_isothermal.IsChecked():
+						obj.thermal = 'Isothermal'
+						obj.temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
+					elif self.topwall_fixed.IsChecked():
+						obj.thermal = 'Fixed Temperature'
+						obj.temp = self.units.conv_temp(float(self.top_thermal_window.walltemp))
 
-		# self.boundary = boundary
-	
+				else:
+					obj.type = 'Outflow'
+
+			# object wall(s)
+			else:
+				if self.objwall_visc.IsChecked():
+					obj.type = 'Viscous Wall'
+				#elif self.objwall_visc.IsChecked():
+				obj.type = 'Inviscid Wall'
+
+				obj.thermal = 'Adiabatic'
+
+				# if self.botwall_adiabatic.IsChecked():
+				# 	botwall_thermal = 'Adiabatic'
+				# elif self.botwall_isothermal.IsChecked():
+				# 	botwall_thermal = 'Isothermal'
+				# 	botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
+				# elif self.botwall_fixed.IsChecked():
+				# 	botwall_thermal = 'Fixed Temperature'
+				# 	botwall_temp = self.units.conv_temp(float(self.bot_thermal_window.walltemp))
+
+		self.boundary = wall
+
+
 	# Virtual event handlers, overide them in your derived class
 	def call_grid( self, event ):
 		from python.mesh.grid.gen_grid import mesh_wedge, mesh_corner, mesh_cylinder, mesh_naca4, mesh_biconvex
@@ -753,12 +766,13 @@ class MainFrame ( wx.Frame ):
 		elif self.domain.name == "Cylinder":
 			xx, yy = mesh_cylinder(self.domain)
 		elif self.domain.name == "NACA XXXX Airfoil":
-			xx, yy = mesh_naca4(self.domain)
+			xx, yy, walls = mesh_naca4(self.domain)
 		elif self.domain.name == "Biconvex Airfoil":
 			xx, yy = mesh_biconvex(self.domain)
 		self.mesh = cellmetrics(xx, yy, self.domain)
 
-		#self.init_boundary(walls)
+		self.init_boundary(walls)
+		#self.boundary = walls
 
 		print('________________________________________________________________________________________________________________________________________')
 		print('Mesh elements: ' + str((self.domain.M+2) * (self.domain.N*2)))
@@ -811,7 +825,7 @@ class MainFrame ( wx.Frame ):
 		# initialize state vector, thermodynamic variables
 		t.tic()
 		from python.boundary.initialize import init_state
-		self.state = init_state(self.domain, self.mesh, self.parameters, self.gas)
+		self.state = init_state(self.domain, self.mesh, self.boundary, self.parameters, self.gas)
 
 		print('________________________________________________________________________________________________________________________________________')
 		t.toc('Initialize time:')
@@ -863,7 +877,7 @@ class MainFrame ( wx.Frame ):
 			if self.higherorder.IsChecked():
 				self.state = AUSMmuscl( self.domain, self.mesh, self.parameters, self.state, self.gas )
 			else:
-				self.state = AUSM( self.domain, self.mesh, self.parameters, self.state, self.gas )
+				self.state = AUSM( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 		elif scheme == 'AUSM+up':
 			self.state = AUSMplusup( self.domain, self.mesh, self.parameters, self.state, self.gas )
 		elif scheme == 'AUSMDV':

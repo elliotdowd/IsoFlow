@@ -1,11 +1,9 @@
-
+import numpy as np
+from python.finite_volume.helper import thermo
 
 # set boundary conditions (inviscid walls at bottom, outlet at top and right)
 
-def enforce_bc(domain, mesh, parameters, state, gas):
-
-    import numpy as np
-    from python.finite_volume.helper import thermo
+def enforce_bc2(domain, mesh, parameters, state, gas):
 
     if domain.name == 'Wedge' or domain.name == 'Corner':
 
@@ -161,6 +159,51 @@ def enforce_bc(domain, mesh, parameters, state, gas):
         state.Q[0,:,3] = thermo.calc_rho_et(parameters.p_in, state.Q[0,:,0], state.Q[0,:,1]/state.Q[0,:,0], state.Q[0,:,2]/state.Q[0,:,0], gas.gamma_fn(gas.Cp[0,:], gas.Cv[0,:]))                       
 
     return state
+
+
+def enforce_bc(domain, mesh, boundary, parameters, state, gas):
+
+    for obj in boundary:
+        n = obj.wall_n
+        x0 = obj.wall_x
+        x1 = obj.wall_x + n[0]
+        y0 = obj.wall_y
+        y1 = obj.wall_y + n[1]
+
+        if obj.type == 'Outflow':
+            state.Q[x0,y0,0] = parameters.p_in / (gas.R_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]) * parameters.T_in)
+            state.Q[x0,y0,1] = state.Q[x0,y0,0] * parameters.M_in * np.cos(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_in/state.Q[x0,y0,0])
+            state.Q[x0,y0,2] = state.Q[x0,y0,0] * parameters.M_in * np.sin(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_in/state.Q[x0,y0,0])
+            state.Q[x0,y0,3] = thermo.calc_rho_et(parameters.p_in, state.Q[x0,y0,0], state.Q[x0,y0,1]/state.Q[x0,y0,0], state.Q[x0,y0,2]/state.Q[x0,y0,0], gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]))                       
+        
+        else:
+            if y0 > y1:
+                y = np.array( (y1, y0) )
+            else: 
+                y = np.array( (y0, y1) )
+
+            # zero pressure gradient at wall
+            state.p[x0,y0] = state.p[x1,y1]
+
+            # thermal condition
+            if obj.thermal == 'Adiabatic':
+                state.T[x0,y0] = state.T[x1,y1]
+            elif obj.thermal == 'Isothermal':
+                state.T[x0,y0] = 2 * obj.Tw - state.T[x1,y1]
+            elif obj.thermal == 'Fixed Temperature':
+                state.T[x0,y0] = obj.Tw
+
+            flip = n[1] == -1
+            if obj.type == 'Inviscid Wall':
+                state.Q[x0, y[0]:y[1]+1, :] = invisc_wall(state.Q[x0, y[0]:y[1]+1, :], state.p[x0, y0], state.T[x0, y0], mesh.s_proj[x0, y[0]:y[1]+1, :], \
+                                                          gas, x0[0]-1, x0[-1], y0, flip)
+            elif obj.type == 'Viscous Wall':
+                state.Q[x0, y[0]:y[1]+1, :] = visc_wall(state.Q[x0, y[0]:y[1]+1, :], state.p[x0, y0], state.T[x0, y0], mesh.s_proj[x0, y[0]:y[1]+1, :], \
+                                                        gas, x0[0]-1, x0[-1], y0, flip)
+
+    return state
+
+
 
 
 # compute velocities at inviscid slip wall, input Qwall[M+2, 2, 4]

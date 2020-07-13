@@ -9,7 +9,7 @@ import python.finite_volume.muscl as muscl
 from pytictoc import TicToc
 
 # AUSM flux vector splitting scheme 
-def AUSM( domain, mesh, parameters, state, gas ):
+def AUSM( domain, mesh, boundary, parameters, state, gas ):
 
     print('AUSM Scheme: ' + 'CFL = ' + str(parameters.CFL))
     print('________________________________________________________________________________________________________________________________________')
@@ -154,7 +154,7 @@ def AUSM( domain, mesh, parameters, state, gas ):
         soln_vars.calc_covariant(mesh.s_proj, state.u, state.v, state.U, state.V, domain.M+2, domain.N+2)
 
         # enforce boundary conditions
-        state = enforce_bc(domain, mesh, parameters, state, gas)
+        state = enforce_bc(domain, mesh, boundary, parameters, state, gas)
 
         # print iteration output
         if n % 10 == 0:
@@ -171,7 +171,7 @@ def AUSM( domain, mesh, parameters, state, gas ):
 
 
 # AUSM+up flux vector splitting scheme
-def AUSMplusup( domain, mesh, parameters, state, gas ):
+def AUSMplusup( domain, mesh, boundary, parameters, state, gas ):
 
     print('AUSM+up Scheme: ' + 'CFL = ' + str(parameters.CFL))
     print('________________________________________________________________________________________________________________________________________')
@@ -307,7 +307,7 @@ def AUSMplusup( domain, mesh, parameters, state, gas ):
         soln_vars.calc_covariant(mesh.s_proj, state.u, state.v, state.U, state.V, domain.M+2, domain.N+2)
 
         # enforce boundary conditions
-        state = enforce_bc(domain, mesh, parameters, state, gas)
+        state = enforce_bc(domain, mesh, boundary, parameters, state, gas)
 
         # print iteration output
         if n % 10 == 0:
@@ -324,7 +324,7 @@ def AUSMplusup( domain, mesh, parameters, state, gas ):
 
 
 # AUSMDV flux vector splitting scheme 
-def AUSMDV( domain, mesh, parameters, state, gas ):
+def AUSMDV( domain, mesh, boundary, parameters, state, gas ):
 
     print('AUSMDV Scheme: ' + 'CFL = ' + str(parameters.CFL))
     print('________________________________________________________________________________________________________________________________________')
@@ -452,7 +452,7 @@ def AUSMDV( domain, mesh, parameters, state, gas ):
         soln_vars.calc_covariant(mesh.s_proj, state.u, state.v, state.U, state.V, domain.M+2, domain.N+2)
 
         # enforce boundary conditions
-        state = enforce_bc(domain, mesh, parameters, state, gas)
+        state = enforce_bc(domain, mesh, boundary, parameters, state, gas)
 
         # print iteration output
         if n % 10 == 0:
@@ -470,7 +470,7 @@ def AUSMDV( domain, mesh, parameters, state, gas ):
 
 
 # Simple Low-dissipation AUSM (SLAU) scheme {Shima and Kitamura 2009}
-def SLAU( domain, mesh, parameters, state, gas ):
+def SLAU( domain, mesh, boundary, parameters, state, gas ):
 
     print('AUSM+up Scheme: ' + 'CFL = ' + str(parameters.CFL))
     print('________________________________________________________________________________________________________________________________________')
@@ -620,7 +620,7 @@ def SLAU( domain, mesh, parameters, state, gas ):
         soln_vars.calc_covariant(mesh.s_proj, state.u, state.v, state.U, state.V, domain.M+2, domain.N+2)
 
         # enforce boundary conditions
-        state = enforce_bc(domain, mesh, parameters, state, gas)
+        state = enforce_bc(domain, mesh, boundary, parameters, state, gas)
 
         # print iteration output
         if n % 10 == 0:
@@ -637,7 +637,7 @@ def SLAU( domain, mesh, parameters, state, gas ):
 
 
 # AUSM flux vector splitting scheme with MUSCL interpolation
-def AUSMmuscl( domain, mesh, parameters, state, gas ):
+def AUSMmuscl( domain, mesh, boundary, parameters, state, gas ):
 
     print('AUSM Scheme: ' + 'CFL = ' + str(parameters.CFL))
     print('________________________________________________________________________________________________________________________________________')
@@ -814,7 +814,7 @@ def AUSMmuscl( domain, mesh, parameters, state, gas ):
         soln_vars.calc_covariant(mesh.s_proj, state.u, state.v, state.U, state.V, domain.M+2, domain.N+2)
 
         # enforce boundary conditions
-        state = enforce_bc(domain, mesh, parameters, state, gas)
+        state = enforce_bc(domain, mesh, boundary, parameters, state, gas)
 
         # print iteration output
         if n % 10 == 0:
@@ -830,7 +830,7 @@ def AUSMmuscl( domain, mesh, parameters, state, gas ):
     return state
 
 
-def AUSMDVmuscl( domain, mesh, parameters, state, gas ):
+def AUSMDVmuscl( domain, mesh, boundary, parameters, state, gas ):
 
     print('AUSM Scheme: ' + 'CFL = ' + str(parameters.CFL))
     print('________________________________________________________________________________________________________________________________________')
@@ -1037,7 +1037,7 @@ def AUSMDVmuscl( domain, mesh, parameters, state, gas ):
         soln_vars.calc_covariant(mesh.s_proj, state.u, state.v, state.U, state.V, domain.M+2, domain.N+2)
 
         # enforce boundary conditions
-        state = enforce_bc(domain, mesh, parameters, state, gas)
+        state = enforce_bc(domain, mesh, boundary, parameters, state, gas)
 
         # print iteration output
         if n % 10 == 0:

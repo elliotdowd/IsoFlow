@@ -220,40 +220,18 @@ def mesh_naca4(domain):
     xx = np.array(xx, order='F')
     yy = np.array(yy, order='F')
 
-    # class walls:
+    # initialize list
+    walls = []
 
-    #     class object_walls:
-            
-    #         class wall_afbot:
-    #             pass
-    #         class wall_aftop:
-    #             pass
-        
-    #     class domain_walls:
+    # set class values
+    walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallL, domain.wallL, np.array( ( 0, -1 ) ) ) )
+    walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallU-1, domain.wallU-1, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'domain', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'domain', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
+    walls.append( wall( 'domain', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
+    walls.append( wall( 'domain', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
 
-    #         class wall_bot:
-    #             pass
-    #         class wall_top:
-    #             pass
-
-    # # set class values
-    # walls.object_walls.wall_afbot.wall_x = np.arange( domain.obj_i, domain.obj_f, 1 )
-    # walls.object_walls.wall_afbot.wall_y = np.zeros( len(walls.object_walls.wall_afbot.wall_x) ) + domain.wallL
-    # walls.object_walls.wall_afbot.wall_n = np.array( ( 0, -1 ) )
-
-    # walls.object_walls.wall_aftop.wall_x = np.arange( domain.obj_i, domain.obj_f, 1 )
-    # walls.object_walls.wall_aftop.wall_y = np.zeros( len(walls.object_walls.wall_aftop.wall_x) ) + domain.wallU-1
-    # walls.object_walls.wall_aftop.wall_n = np.array( ( 0, 1 ) )
-
-    # walls.domain_walls.wall_bot.wall_x = np.arange(0, domain.M+2, 1)
-    # walls.domain_walls.wall_bot.wall_y = np.zeros( len(walls.domain_walls.wall_bot.wall_x) )
-    # walls.domain_walls.wall_bot.wall_n = np.array( (0, 1) )
-
-    # walls.domain_walls.wall_top.wall_x = np.arange(0, domain.M+2, 1)
-    # walls.domain_walls.wall_top.wall_y = np.zeros( len(walls.domain_walls.wall_top.wall_x) ) + domain.N+2
-    # walls.domain_walls.wall_top.wall_n = np.array( (0, -1) )
-
-    return xx, yy#, walls
+    return xx, yy, walls
 
 
 def mesh_biconvex(domain):
@@ -372,3 +350,18 @@ def camber_angle( x, c, m, p):
     theta = np.arctan(dy)
 
     return theta
+
+
+class wall:
+    def __init__(self, region, xi, xf, yi, yf, n):
+        import numpy as np
+
+        self.region = region
+        self.wall_n = n
+
+        if xi == xf:
+            self.wall_y = np.arange( yi, yf )
+            self.wall_x = xi
+        else:
+            self.wall_x = np.arange( xi, xf )
+            self.wall_y = yi
