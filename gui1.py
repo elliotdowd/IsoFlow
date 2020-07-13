@@ -698,7 +698,7 @@ class MainFrame ( wx.Frame ):
 	def init_boundary( self ):
 		pass
 
-	class boundary( wall ):
+	class boundary:
 		pass
 	
 	# Virtual event handlers, overide them in your derived class
@@ -725,11 +725,13 @@ class MainFrame ( wx.Frame ):
 		elif self.domain.name == "Cylinder":
 			xx, yy = mesh_cylinder(self.domain)
 		elif self.domain.name == "NACA XXXX Airfoil":
-			xx, yy = mesh_naca4(self.domain)
+			xx, yy, walls = mesh_naca4(self.domain)
 		elif self.domain.name == "Biconvex Airfoil":
 			xx, yy = mesh_biconvex(self.domain)
 		self.mesh = cellmetrics(xx, yy, self.domain)
 		#self.domain = domain
+
+		self.boundary = walls
 
 		print('________________________________________________________________________________________________________________________________________')
 		print('Mesh elements: ' + str((self.domain.M+2) * (self.domain.N*2)))

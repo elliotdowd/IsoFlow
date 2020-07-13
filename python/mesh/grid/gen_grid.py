@@ -220,7 +220,40 @@ def mesh_naca4(domain):
     xx = np.array(xx, order='F')
     yy = np.array(yy, order='F')
 
-    return xx, yy
+    class walls:
+
+        class object_walls:
+            
+            class wall_afbot:
+                pass
+            class wall_aftop:
+                pass
+        
+        class domain_walls:
+
+            class wall_bot:
+                pass
+            class wall_top:
+                pass
+
+    # set class values
+    walls.object_walls.wall_afbot.wall_x = np.arange( domain.obj_i, domain.obj_f, 1 )
+    walls.object_walls.wall_afbot.wall_y = np.zeros( len(walls.object_walls.wall_afbot.wall_x) ) + domain.wallL
+    walls.object_walls.wall_afbot.wall_n = np.array( ( 0, -1 ) )
+
+    walls.object_walls.wall_aftop.wall_x = np.arange( domain.obj_i, domain.obj_f, 1 )
+    walls.object_walls.wall_aftop.wall_y = np.zeros( len(walls.object_walls.wall_aftop.wall_x) ) + domain.wallU-1
+    walls.object_walls.wall_aftop.wall_n = np.array( ( 0, 1 ) )
+
+    walls.domain_walls.wall_bot.wall_x = np.arange(0, domain.M+2, 1)
+    walls.domain_walls.wall_bot.wall_y = np.zeros( len(walls.domain_walls.wall_bot.wall_x) )
+    walls.domain_walls.wall_bot.wall_n = np.array( (0, 1) )
+
+    walls.domain_walls.wall_top.wall_x = np.arange(0, domain.M+2, 1)
+    walls.domain_walls.wall_top.wall_y = np.zeros( len(walls.domain_walls.wall_top.wall_x) ) + domain.N+2
+    walls.domain_walls.wall_top.wall_n = np.array( (0, -1) )
+
+    return xx, yy, walls
 
 
 def mesh_biconvex(domain):
