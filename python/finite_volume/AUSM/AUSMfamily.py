@@ -4,7 +4,7 @@ from python.finite_volume.helper import thermo, split
 from python.boundary.boundary_cond import enforce_bc, covariant
 from python.finite_volume.timestepping import local_timestep
 import python.finite_volume.soln_vars as soln_vars
-import python.finite_volume.AUSM.flux as flux
+import python.finite_volume.flux as flux
 import python.finite_volume.muscl as muscl
 from pytictoc import TicToc
 
@@ -52,17 +52,13 @@ def AUSM( domain, mesh, boundary, parameters, state, gas ):
         state.Qn = state.Q
 
         # local timestepping
-        state = local_timestep( mesh, state, parameters, gas )
+        state = local_timestep( domain, mesh, state, parameters, gas )
 
         # simplify variable notation from state vector
         state.u = state.Q[:,:,1] / state.Q[:,:,0]
         state.v = state.Q[:,:,2] / state.Q[:,:,0]
         state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / \
                                       state.Q[:,:,0] + state.p/state.Q[:,:,0]
-
-        # density at cell interfaces, upwinded
-        #rho_half_zeta = ( state.Q[0:-1,:,0] + state.Q[1:,:,0] ) / 2
-        #rho_half_eta =  ( state.Q[:,0:-1,0] + state.Q[:,1:,0] ) / 2
 
         # speed of sound at cell interfaces
         # from Liou 2006 (JCP 214)
@@ -214,7 +210,7 @@ def AUSMplusup( domain, mesh, boundary, parameters, state, gas ):
         state.Qn = state.Q
 
         # local timestepping
-        state = local_timestep( mesh, state, parameters, gas )
+        state = local_timestep( domain, mesh, state, parameters, gas )
 
         # simplify variable notation from state vector
         state.u = state.Q[:,:,1] / state.Q[:,:,0]
@@ -368,7 +364,7 @@ def AUSMDV( domain, mesh, boundary, parameters, state, gas ):
         state.Qn = state.Q
 
         # local timestepping
-        state = local_timestep( mesh, state, parameters, gas )
+        state = local_timestep( domain, mesh, state, parameters, gas )
 
         # simplify variable notation from state vector
         state.u = state.Q[:,:,1] / state.Q[:,:,0]
@@ -513,7 +509,7 @@ def SLAU( domain, mesh, boundary, parameters, state, gas ):
         state.Qn = state.Q
 
         # local timestepping
-        state = local_timestep( mesh, state, parameters, gas )
+        state = local_timestep( domain, mesh, state, parameters, gas )
 
         # simplify variable notation from state vector
         state.u = state.Q[:,:,1] / state.Q[:,:,0]
@@ -694,7 +690,7 @@ def AUSMmuscl( domain, mesh, boundary, parameters, state, gas ):
         state.Qn = state.Q
 
         # local timestepping
-        state = local_timestep( mesh, state, parameters, gas )
+        state = local_timestep( domain, mesh, state, parameters, gas )
 
         # MUSCL interpolation
 
@@ -887,7 +883,7 @@ def AUSMDVmuscl( domain, mesh, boundary, parameters, state, gas ):
         state.Qn = state.Q
 
         # local timestepping
-        state = local_timestep( mesh, state, parameters, gas )
+        state = local_timestep( domain, mesh, state, parameters, gas )
 
         # MUSCL interpolation
 

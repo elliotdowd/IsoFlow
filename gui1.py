@@ -184,7 +184,7 @@ class MainFrame ( wx.Frame ):
 		self.schemeButton = wx.Button( self, wx.ID_ANY, u"Run Simulation", wx.DefaultPosition, wx.DefaultSize, 0 )
 		MainSizer.Add( self.schemeButton, wx.GBPosition( 13, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
 		
-		schemeChoiceChoices = [ u"AUSM", u"AUSM+up", u"AUSMDV", u"SLAU" ]
+		schemeChoiceChoices = [ u"AUSM", u"AUSM+up", u"AUSMDV", u"SLAU", u"Roe FDS" ]
 		self.schemeChoice = wx.Choice( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, schemeChoiceChoices, 0 )
 		self.schemeChoice.SetSelection( 0 )
 		MainSizer.Add( self.schemeChoice, wx.GBPosition( 12, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
@@ -852,7 +852,8 @@ class MainFrame ( wx.Frame ):
 	def call_scheme( self, event ):
 
 		from pytictoc import TicToc
-		from python.finite_volume.AUSM.schemes import AUSM, AUSMmuscl, AUSMplusup, AUSMDV, AUSMDVmuscl, SLAU
+		from python.finite_volume.AUSM.AUSMfamily import AUSM, AUSMmuscl, AUSMplusup, AUSMDV, AUSMDVmuscl, SLAU
+		from python.finite_volume.Roe.RoeFDS import RoeFDS
 		import python.finite_volume.gasdata as gasdata
 
 		t = TicToc()
@@ -903,6 +904,8 @@ class MainFrame ( wx.Frame ):
 				self.state = AUSMDV( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 		elif scheme == 'SLAU':
 			self.state = SLAU( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
+		elif scheme == 'Roe FDS':
+			self.state = RoeFDS( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 
 		t.toc('simulation time:')
 

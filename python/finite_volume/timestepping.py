@@ -1,13 +1,14 @@
 import numpy as np   
 from python.finite_volume.helper import thermo
 
-def local_timestep( mesh, state, parameters, gas ):
+def local_timestep( domain, mesh, state, parameters, gas ):
 
     gas.Cp = gas.Cp_fn( gas.gamma_p, gas.Cp_p, gas.theta, state.T )
     gas.Cv = gas.Cv_fn( gas.gamma_p, gas.Cv_p, gas.theta, state.T )
 
     # use ideal gas law to find temperature at centroids
     c = thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv) )
+    state.c = c
 
     # function for calculating spectral radius in each computational direction
     Sx = mesh.s_proj[:,:,0] / mesh.dV
@@ -22,5 +23,9 @@ def local_timestep( mesh, state, parameters, gas ):
     spec2 = np.abs(V) + c*np.sqrt(Nx**2 + Ny**2)
 
     state.dt = parameters.CFL*np.minimum( 1/spec1, 1/spec2 )
+
+    # calculate Roe eigenvalues, zeta eigenvalues in first row, eta in second
+    state.eig = np.array( ( np.abs(state.U), np.abs(state.U), np.abs(state.U), np.abs(state.U-c), np.abs(state.U+c), \
+                            np.abs(state.V), np.abs(state.V), np.abs(state.V), np.abs(state.V-c), np.abs(state.V+c) ) ).reshape( (2, 5, domain.M+2, domain.N+2) )
 
     return state

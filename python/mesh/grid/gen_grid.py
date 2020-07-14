@@ -392,7 +392,9 @@ def mesh_capsule(domain):
     yL = 2*t*(xaf)*( 1 - (xaf/c) )
     yL = yL / c
 
-    yU = 6*t*( 0.5 - np.abs( 0.5 - xaf/c ) )
+    yU = 0.5 - np.abs( 0.5 - xaf/c )
+    yU[yU>0.42] = 0.42
+    yU = 6*t*yU
 
 
     domain.wallL = half
