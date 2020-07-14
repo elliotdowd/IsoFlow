@@ -341,6 +341,90 @@ def mesh_biconvex(domain):
     return xx, yy, walls
 
 
+def mesh_capsule(domain):
+
+    import numpy as np
+    
+    # import domain values
+    domain.M = domain.M + int(domain.M%2 == 1)
+    M = domain.M
+    domain.N = domain.N + int(domain.N%2 == 1)
+    N = domain.N
+    length = domain.length
+    height = domain.height
+    t = domain.thickness
+    obj_start = domain.obj_start
+    obj_end = domain.obj_end
+    a = domain.alpha
+
+    x = np.linspace(-(1/M)*length, length*(1+(1/M)), M+3)
+    y = np.linspace(-height/2*(1+(1/N)), height/2*(1+(1/N)), N+3)
+
+    domain.obj_i = np.where(x>obj_start)
+    domain.obj_i = domain.obj_i[0][0]
+    domain.obj_f = np.where(x>obj_end)
+    domain.obj_f = domain.obj_f[0][0]
+
+    # focus points around x-axis/centerline
+    nx = 3
+    half = int(N/2)
+    for j in range( 0, half ):
+        y[half-j] = y[half-j] - 0.5*y[half-j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
+        y[half+2+j] = y[half+2+j] - 0.5*y[half+2+j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
+
+    # concentrate x points near leading and trailing edges
+    nL = 2
+    front = int(5)
+    x_stored = x
+    for i in range( 1, front ):
+        x[domain.obj_i+i] = x_stored[domain.obj_i+i] + 0.5*(x[domain.obj_i]-x[domain.obj_i+i])*(np.sinh((front-i)/front))**nL/np.sinh(1)**nL
+        x[domain.obj_i-i] = x_stored[domain.obj_i-i] + 0.5*(x[domain.obj_i]-x[domain.obj_i-i])*(np.sinh((front-i)/front))**nL/np.sinh(1)**nL
+
+    nT = 1.5
+    back = int(5)
+    for i in range( 1, back ):
+        x[domain.obj_f+i] = x_stored[domain.obj_f+i] + 0.5*(x[domain.obj_f]-x[domain.obj_f+i])*(np.sinh((back-i)/back))**nT/np.sinh(1)**nT
+        x[domain.obj_f-i] = x_stored[domain.obj_f-i] + 0.5*(x[domain.obj_f]-x[domain.obj_f-i])*(np.sinh((back-i)/back))**nT/np.sinh(1)**nT
+
+    xaf = x[domain.obj_i:domain.obj_f] - x[domain.obj_i]
+    c = x[domain.obj_f] - x[domain.obj_i]
+
+    yL = 2*t*(xaf)*( 1 - (xaf/c) )
+    yL = yL / c
+
+    yU = 6*t*( 0.5 - np.abs( 0.5 - xaf/c ) )
+
+
+    domain.wallL = half
+    domain.wallU = half+2
+
+    xx, yy = np.meshgrid(x, y)
+    xx = np.transpose(xx)
+    yy = np.transpose(yy)
+
+    # focus points closer to capsule
+    nC = 1
+    for j in range( 0, half ):
+        yy[domain.obj_i:domain.obj_f, half-j] = -yL*(np.sinh((half-j)/half)**nC)/np.sinh(1)**nC + yy[domain.obj_i:domain.obj_f, half-j]
+        yy[domain.obj_i:domain.obj_f, half+2+j] = yU*(half-j)/half + yy[domain.obj_i:domain.obj_f, half+2+j]#*(np.sinh((half-j)/half)**nC)/np.sinh(1)**nC 
+
+    xx = np.array(xx, order='F')
+    yy = np.array(yy, order='F')
+
+    # initialize list
+    walls = []
+
+    # set boundary class values
+    walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallL, domain.wallL, np.array( ( 0, -1 ) ) ) )
+    walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallU-1, domain.wallU-1, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'domain', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'domain', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
+    walls.append( wall( 'domain', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
+    walls.append( wall( 'domain', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
+
+    return xx, yy, walls
+
+
 ## NACA related functions
 def NACA4symm( x, c, t ):
     import numpy as np

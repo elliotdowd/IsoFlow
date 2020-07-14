@@ -171,10 +171,13 @@ def enforce_bc(domain, mesh, boundary, parameters, state, gas):
         y1 = obj.wall_y + n[1]
 
         if obj.type == 'Outflow':
-            state.Q[x0,y0,0] = parameters.p_in / (gas.R_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]) * parameters.T_in)
-            state.Q[x0,y0,1] = state.Q[x0,y0,0] * parameters.M_in * np.cos(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_in/state.Q[x0,y0,0])
-            state.Q[x0,y0,2] = state.Q[x0,y0,0] * parameters.M_in * np.sin(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_in/state.Q[x0,y0,0])
-            state.Q[x0,y0,3] = thermo.calc_rho_et(parameters.p_in, state.Q[x0,y0,0], state.Q[x0,y0,1]/state.Q[x0,y0,0], state.Q[x0,y0,2]/state.Q[x0,y0,0], gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]))                       
+            if n[0] == -1:
+                state.Q[x0,y0,:] = state.Qn[x0,y0,:]
+            else:
+                state.Q[x0,y0,0] = parameters.p_in / (gas.R_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]) * parameters.T_in)
+                state.Q[x0,y0,1] = state.Q[x0,y0,0] * parameters.M_in * np.cos(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_in/state.Q[x0,y0,0])
+                state.Q[x0,y0,2] = state.Q[x0,y0,0] * parameters.M_in * np.sin(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_in/state.Q[x0,y0,0])
+                state.Q[x0,y0,3] = thermo.calc_rho_et(parameters.p_in, state.Q[x0,y0,0], state.Q[x0,y0,1]/state.Q[x0,y0,0], state.Q[x0,y0,2]/state.Q[x0,y0,0], gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]))                       
         
         else:
             if y0 > y1:

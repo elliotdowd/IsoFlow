@@ -176,7 +176,7 @@ class MainFrame ( wx.Frame ):
 		
 		MainSizer.Add( self.m_staticText111, wx.GBPosition( 10, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
-		gridChoiceChoices = [ u"Wedge", u"Corner", u'NACA XXXX Airfoil', u'Biconvex Airfoil' ]
+		gridChoiceChoices = [ u"Wedge", u"Corner", u'NACA XXXX Airfoil', u'Biconvex Airfoil', u'Capsule' ]
 		self.gridChoice = wx.Choice( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, gridChoiceChoices, 0 )
 		self.gridChoice.SetSelection( 2 )
 		MainSizer.Add( self.gridChoice, wx.GBPosition( 3, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
@@ -629,7 +629,7 @@ class MainFrame ( wx.Frame ):
 		if domain.name == 'NACA XXXX Airfoil':
 			domain.naca = wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)
 			domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
-		elif domain.name == 'Biconvex Airfoil':
+		elif domain.name == 'Biconvex Airfoil' or domain.name == 'Capsule':
 			domain.thickness = float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0))
 			domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
 		else:
@@ -756,7 +756,7 @@ class MainFrame ( wx.Frame ):
 
 	# Virtual event handlers, overide them in your derived class
 	def call_grid( self, event ):
-		from python.mesh.grid.gen_grid import mesh_wedge, mesh_corner, mesh_cylinder, mesh_naca4, mesh_biconvex
+		from python.mesh.grid.gen_grid import mesh_wedge, mesh_corner, mesh_cylinder, mesh_naca4, mesh_biconvex, mesh_capsule
 		from python.mesh.metrics.calc_cell_metrics import cellmetrics
 		import matplotlib.pyplot as plt
 		import matplotlib as mpl
@@ -781,6 +781,8 @@ class MainFrame ( wx.Frame ):
 			xx, yy, walls = mesh_naca4(self.domain)
 		elif self.domain.name == "Biconvex Airfoil":
 			xx, yy, walls = mesh_biconvex(self.domain)
+		elif self.domain.name == "Capsule":
+			xx, yy, walls = mesh_capsule(self.domain)
 		self.mesh = cellmetrics(xx, yy, self.domain)
 
 		self.init_boundary(walls)
@@ -1051,7 +1053,9 @@ class MainFrame ( wx.Frame ):
 					self.contourPanel.cax.clabel(cont, fmt='%2.3f', colors='w', fontsize=8)
 
 		# add airfoil if needed
-		if self.gridChoice.StringSelection == 'NACA XXXX Airfoil' or self.gridChoice.StringSelection == 'Biconvex Airfoil':
+		if self.gridChoice.StringSelection == 'NACA XXXX Airfoil' or \
+		   self.gridChoice.StringSelection == 'Biconvex Airfoil' or \
+		   self.gridChoice.StringSelection == 'Capsule':
 			panel.cax.contourf(cl*self.mesh.xxc[self.domain.obj_i:self.domain.obj_f,self.domain.wallL:self.domain.wallU], \
 							   cl*self.mesh.yyc[self.domain.obj_i:self.domain.obj_f,self.domain.wallL:self.domain.wallU], \
 							    		      	self.state.Mach[self.domain.obj_i:self.domain.obj_f,self.domain.wallL:self.domain.wallU], self.contGrad, colors = 'gray')
