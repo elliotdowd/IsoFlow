@@ -676,6 +676,9 @@ class MainFrame ( wx.Frame ):
 				elif self.thirdupwind.IsChecked():
 					epsilon = 1
 					kappa = 1/2
+			else: 
+				epsilon = 0
+				kappa = 0
 
 			if self.minmod.IsChecked():
 				limiter = limiters.minmod
@@ -853,7 +856,7 @@ class MainFrame ( wx.Frame ):
 
 		from pytictoc import TicToc
 		from python.finite_volume.AUSM.AUSMfamily import AUSM, AUSMmuscl, AUSMplusup, AUSMDV, AUSMDVmuscl, SLAU
-		from python.finite_volume.Roe.Roefamily import RoeFVS, RoeFVSimproved
+		from python.finite_volume.Roe.Roefamily import RoeFDS, RoeFVS, RoeFVSimproved
 		import python.finite_volume.gasdata as gasdata
 
 		t = TicToc()
@@ -905,7 +908,7 @@ class MainFrame ( wx.Frame ):
 		elif scheme == 'SLAU':
 			self.state = SLAU( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 		elif scheme == 'Roe FVS':
-			self.state = RoeFVS( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
+			self.state = RoeFDS( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 		elif scheme == 'Improved Roe FVS':
 			self.state = RoeFVSimproved( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 

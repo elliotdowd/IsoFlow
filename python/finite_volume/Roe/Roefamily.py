@@ -48,6 +48,9 @@ def RoeFDS( domain, mesh, boundary, parameters, state, gas ):
     N_eta[:,:,1] = mesh.s_proj[:,0:-1,2]/mesh.s_proj[:,0:-1,5]
     N_eta[:,:,2] = mesh.s_proj[:,0:-1,3]/mesh.s_proj[:,0:-1,5]
 
+    # flux jacobian
+    A = np.zeros( (domain.M+2, domain.N+2, 4, 4), dtype='float', order='F' )
+
     E_hat_left = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
     E_hat_right = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
     F_hat_bot = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
@@ -84,20 +87,51 @@ def RoeFDS( domain, mesh, boundary, parameters, state, gas ):
         state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / \
                                       state.Q[:,:,0] + state.p/state.Q[:,:,0]
 
+        # Roe averaged variables
+        rho_half_zeta = np.sqrt(state.Q[0:-1,:,0]*state.Q[1:,:,0])
+        rho_half_eta = np.sqrt(state.Q[:,0:-1,0]*state.Q[:,1:,0])
+
+        QL, QR, QB, QT = muscl.MUSCL( state.Q, parameters.epsilon, parameters.kappa, parameters.limiter )
+
+        # QL = state.Q[0:-1,:,:]
+        # QR = state.Q[1:,:,:]
+        # QB = state.Q[:,0:-1,:]
+        # QT = state.Q[:,1:,:]
+
         # cell normal vectors
         nx = mesh.s_proj[1:,:,0]/mesh.s_proj[1:,:,4]
+        t.tic()
+
         # calculate flux jacobian matrix
-        Aroe = flux_jacobian( state.u, state.v, nx, ny, gam, E, M, N )
+        for i in range(0, domain.M+2):
+
+            for j in range(0, domain.N+2):
+
+                A[i,j,:,:] = flux_jacobian( state.u[i,j], state.v[i,j], \
+                                            mesh.s_proj[i,j,0]/mesh.s_proj[i,j,4], mesh.s_proj[i,j,1]/mesh.s_proj[i,j,4], \
+                                            gas.gamma_fn(gas.Cp[i,j], gas.Cv[i,j]), state.Q[i,j,3]/state.Q[i,j,0] )
+
+                # A[i,j,:,:] = A[i,j,:,:] / mesh.dV[i,j]
+                
+
+        for i in range(1, domain.M+1):
+
+            for j in range(1, domain.N+1):
+
+                ih = i-1
+                jh = j-1
+
+                E_hat_left[ih,jh,:] =  np.matmul( A[i-1,j,:,:], state.Q[i-1,j,:] )
+                E_hat_right[ih,jh,:] = np.matmul( A[i,j,:,:], state.Q[i,j,:] )
+                F_hat_bot[ih,jh,:]  =  np.matmul( A[i,j-1,:,:], state.Q[i,j-1,:] )
+                F_hat_top[ih,jh,:]  =  np.matmul( A[i,j,:,:], state.Q[i,j,:] )
 
 
+        t.toc('Flux Jacobian time:')
 
-
-
-        # flux vector reconstruction
-        # flux.face_flux( mdot_half_zeta, mdot_half_eta, Phi, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
 
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
-        flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
+        flux.residual( state.residual, state.dt[1:-1, 1:-1]*mesh.dV[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
                           mesh.s_proj[1:-1,1:-1,:], domain.M, domain.N ) 
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
 
@@ -528,7 +562,7 @@ def roe_average( rhoL, rhoR, phiL, phiR ):
     return avg
 
 # see appendix A.7 in Computational Fluid Dynamics: Principles and Applications (Blazek, 2004)
-def flux_jacobian( u, v, nx, ny, gam, E, M, N ):
+def flux_jacobian( u, v, nx, ny, gam, E ):
 
     phi = (1/2) * (gam-1) * (u**2 + v**2)
     a1 = gam*E - phi
@@ -540,7 +574,7 @@ def flux_jacobian( u, v, nx, ny, gam, E, M, N ):
                     nx*phi-u*V,     V-a3*nx*u,          ny*u-a2*nx*v,       a2*nx,          \
                     ny*phi*v*V,     nx*v-a2*ny*u,       V-a3*ny*v,          a2*ny,          \
                     V*(phi-a1),     nx*a1-a2*u*V,       ny*a1-a2*v*V,       gam*V           ) ) . \
-                    reshape( ( M, N, 4, 4 ) )
+                    reshape( ( 4, 4 ) )
 
     return A
 
