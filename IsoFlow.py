@@ -27,7 +27,6 @@ frame.contourPanel.cax = frame.contourPanel.figure.gca()
 frame.iterPanel.figure = plt.figure( dpi=100, figsize=(5.1, 1.5), facecolor=(222/256,222/256,222/256) )
 frame.iterPanel.iax = frame.iterPanel.figure.gca()
 
-
 ###########################################################################
 ## Start the application
 ###########################################################################

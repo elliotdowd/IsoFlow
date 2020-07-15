@@ -62,6 +62,23 @@ def rR( Qm1, Qi, Qp1 ):
     r[np.isinf(r)] = 1
     return r
 
+# see appendix A.7 in Computational Fluid Dynamics: Principles and Applications (Blazek, 2004)
+def flux_jacobian( u, v, nx, ny, gam, E, M, N ):
+
+    phi = (1/2) * (gam-1) * (u**2 + v**2)
+    a1 = gam*E - phi
+    a2 = gam - 1
+    a3 = gam - 2
+    V =  nx*u + ny*v
+
+    A = np.array( ( 0,              nx,                 ny,                 0,              \
+                    nx*phi-u*V,     V-a3*nx*u,          ny*u-a2*nx*v,       a2*nx,          \
+                    ny*phi*v*V,     nx*v-a2*ny*u,       V-a3*ny*v,          a2*ny,          \
+                    V*(phi-a1),     nx*a1-a2*u*V,       ny*a1-a2*v*V,       gam*V           ) ) . \
+                    reshape( ( M, N, 4, 4 ) )
+
+    return A
+
 
 # flux limiter function class
 class limiters:

@@ -152,3 +152,32 @@ subroutine face_flux_muscl( mdot_half_zeta, mdot_half_eta, phiL, phiR, phiD, phi
     end do
 
 end
+
+
+!-*- f90 -*- -
+subroutine roe_fbar( fbar, Phi, U, normal, p, M, N )
+
+    implicit none
+
+    integer :: i, j, k
+
+    integer, intent(in) :: M, N
+    real(kind=8), intent(in) :: U(M,N), p(M,N)
+    real(kind=8), intent(in) :: Phi(M,N,4), normal(M,N,4)
+    real(kind=8), intent(inout) :: fbar(M,N,4)
+
+    do i = 1, M
+
+        do j = 1, N
+
+            do k = 1, 4
+
+                fbar(i,j,k) = U(i,j) * Phi(i,j,k) + normal(i,j,k) * p(i,j)
+
+            end do
+
+        end do
+
+    end do
+
+end
