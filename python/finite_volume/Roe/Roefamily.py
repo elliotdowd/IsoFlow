@@ -91,12 +91,12 @@ def RoeFDS( domain, mesh, boundary, parameters, state, gas ):
         rho_half_zeta = np.sqrt(state.Q[0:-1,:,0]*state.Q[1:,:,0])
         rho_half_eta = np.sqrt(state.Q[:,0:-1,0]*state.Q[:,1:,0])
 
-        QL, QR, QB, QT = muscl.MUSCL( state.Q, parameters.epsilon, parameters.kappa, parameters.limiter )
+        # QL, QR, QB, QT = muscl.MUSCL( state.Q, parameters.epsilon, parameters.kappa, parameters.limiter )
 
-        # QL = state.Q[0:-1,:,:]
-        # QR = state.Q[1:,:,:]
-        # QB = state.Q[:,0:-1,:]
-        # QT = state.Q[:,1:,:]
+        # QL = state.Q[0:-2,1:-1,:]
+        # QR = state.Q[1:-1,1:-1,:]
+        # QB = state.Q[1:-1,0:-2,:]
+        # QT = state.Q[1:-1,1:-1,:]
 
         # cell normal vectors
         nx = mesh.s_proj[1:,:,0]/mesh.s_proj[1:,:,4]
@@ -131,8 +131,8 @@ def RoeFDS( domain, mesh, boundary, parameters, state, gas ):
 
 
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
-        flux.residual( state.residual, state.dt[1:-1, 1:-1]*mesh.dV[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
-                          mesh.s_proj[1:-1,1:-1,:], domain.M, domain.N ) 
+        flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
+                          mesh.s_proj[1:-1,1:-1,:], domain.M, domain.N )
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
 
         # L_inf-norm residual

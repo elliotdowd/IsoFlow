@@ -184,7 +184,7 @@ class MainFrame ( wx.Frame ):
 		self.schemeButton = wx.Button( self, wx.ID_ANY, u"Run Simulation", wx.DefaultPosition, wx.DefaultSize, 0 )
 		MainSizer.Add( self.schemeButton, wx.GBPosition( 13, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
 		
-		schemeChoiceChoices = [ u"AUSM", u"AUSM+up", u"AUSMDV", u"SLAU", u"Roe FVS" ]
+		schemeChoiceChoices = [ u"AUSM", u"AUSM+up", u"AUSMDV", u"SLAU", u"Roe FDS", u"Roe FVS" ]
 		self.schemeChoice = wx.Choice( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, schemeChoiceChoices, 0 )
 		self.schemeChoice.SetSelection( 0 )
 		MainSizer.Add( self.schemeChoice, wx.GBPosition( 12, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
@@ -907,8 +907,10 @@ class MainFrame ( wx.Frame ):
 				self.state = AUSMDV( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 		elif scheme == 'SLAU':
 			self.state = SLAU( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
-		elif scheme == 'Roe FVS':
+		elif scheme == 'Roe FDS':
 			self.state = RoeFDS( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
+		elif scheme == 'Roe FVS':
+			self.state = RoeFVS( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 		elif scheme == 'Improved Roe FVS':
 			self.state = RoeFVSimproved( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 
