@@ -1264,10 +1264,10 @@ class MainFrame ( wx.Frame ):
 				
 				if obj.wall_n[1] == 1:
 					c = obj.wall_x[-1] - obj.wall_x[0]
-					panel.cax.plot( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y])/self.mesh.xxc[c,obj.wall_y], -obj.Cp, 'k^', linewidth=0.75, fillStyle='none' )
+					panel.cax.plot( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y])/self.mesh.xxc[c,obj.wall_y], obj.Cp, 'k^', linewidth=0.75, fillStyle='none' )
 				else:
 					c = obj.wall_x[-1] - obj.wall_x[0]
-					panel.cax.plot( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y])/self.mesh.xxc[c,obj.wall_y], -obj.Cp, 'kv', linewidth=0.75, fillStyle='none' )
+					panel.cax.plot( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y])/self.mesh.xxc[c,obj.wall_y], obj.Cp, 'kv', linewidth=0.75, fillStyle='none' )
 
 		# invert y-axis
 		panel.cax.invert_yaxis()
