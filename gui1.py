@@ -443,7 +443,7 @@ class MainFrame ( wx.Frame ):
 		
 		self.plotOptions.AppendSubMenu( self.cmOptions, u"Colormap" )
 
-		self.contOptions.AppendSeparator()
+		self.plotOptions.AppendSeparator()
 
 		self.force = wx.MenuItem( self.cmOptions, wx.ID_ANY, u"Plot Pressure Coefficient", wx.EmptyString, wx.ITEM_NORMAL )
 		self.plotOptions.Append( self.force )
@@ -1248,11 +1248,11 @@ class MainFrame ( wx.Frame ):
 
 		panel.cax = panel.figure.gca()
 		panel.cax.set_facecolor((1, 1, 1))
-		panel.cax.set_position([0.12, 0.12, 0.63, 0.72], which='both')
+		panel.cax.set_position([0.14, 0.12, 0.61, 0.72], which='both')
 
-		panel.cax.set
+		panel.cax.set_xlim([0, 1])
 		# panel.cax.set_aspect(self.axisOption, adjustable='box', anchor='C')
-		panel.cax.set_xlabel('x-coordinate' + ' (' + self.units.length + ')')
+		panel.cax.set_xlabel('x/c')
 		panel.cax.set_ylabel('Coefficient of Pressure')
 
 		force_calc( self, self.boundary, self.parameters, self.state, self.gas )
@@ -1263,9 +1263,15 @@ class MainFrame ( wx.Frame ):
 			if hasattr(obj, 'Cp'):
 				
 				if obj.wall_n[1] == 1:
-					panel.cax.plot( self.mesh.xxc[obj.wall_x, obj.wall_y], -obj.Cp, 'k^', linewidth=1, fillStyle='none' )
+					c = obj.wall_x[-1] - obj.wall_x[0]
+					panel.cax.plot( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y])/self.mesh.xxc[c,obj.wall_y], -obj.Cp, 'k^', linewidth=0.75, fillStyle='none' )
 				else:
-					panel.cax.plot( self.mesh.xxc[obj.wall_x, obj.wall_y], -obj.Cp, 'kv', linewidth=1, fillStyle='none' )
+					c = obj.wall_x[-1] - obj.wall_x[0]
+					panel.cax.plot( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y])/self.mesh.xxc[c,obj.wall_y], -obj.Cp, 'kv', linewidth=0.75, fillStyle='none' )
+
+		# invert y-axis
+		panel.cax.invert_yaxis()
+		plt.grid(True)
 
 		panel.canvas = FigureCanvas(panel, -1, panel.figure)
 
@@ -1696,7 +1702,7 @@ def force_calc( self, boundary, parameters, state, gas ):
 			p0 = (1+((gam-1)/2)*parameters.M_in**2)** \
 					 (gam/(gam-1)) * parameters.p_in
 
-			obj.Cp = obj.wall_n[1] * ( state.p[x,y] - parameters.p_in ) / ( p0 - parameters.p_in )
+			obj.Cp = ( state.p[x,y] - parameters.p_in ) / ( p0 - parameters.p_in )
 
 
 class RedirectText:
