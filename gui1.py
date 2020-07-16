@@ -1240,7 +1240,6 @@ class MainFrame ( wx.Frame ):
 	def call_forceplot( self, panel, scalex, scaley ):
 
 		# post processing
-		# plt.close(fig=panel.figure)
 		if scalex > 1 or scaley > 1:
 			panel.figure = plt.figure( dpi=100, figsize=(scalex*5.6, scaley*4.2), facecolor=(1, 1, 1) )
 		else:
@@ -1250,7 +1249,7 @@ class MainFrame ( wx.Frame ):
 		panel.cax.set_facecolor((1, 1, 1))
 		panel.cax.set_position([0.14, 0.12, 0.61, 0.72], which='both')
 
-		panel.cax.set_xlim([0, 1])
+		panel.cax.set_xlim([-0.05, 1.05])
 		# panel.cax.set_aspect(self.axisOption, adjustable='box', anchor='C')
 		panel.cax.set_xlabel('x/c')
 		panel.cax.set_ylabel('Coefficient of Pressure')
@@ -1264,10 +1263,27 @@ class MainFrame ( wx.Frame ):
 				
 				if obj.wall_n[1] == 1:
 					c = obj.wall_x[-1] - obj.wall_x[0]
-					panel.cax.plot( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y])/self.mesh.xxc[c,obj.wall_y], obj.Cp, 'k^', linewidth=0.75, fillStyle='none' )
+					n = np.maximum( 1, int(30/len(obj.wall_x)) )
+					data1 = np.array( ( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
+										(self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]), obj.Cp ) )
+					panel.cax.plot( data1[0,::n], data1[1,::n], 'k^', linewidth=0.75, fillStyle='none' )
+						
 				else:
 					c = obj.wall_x[-1] - obj.wall_x[0]
-					panel.cax.plot( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y])/self.mesh.xxc[c,obj.wall_y], obj.Cp, 'kv', linewidth=0.75, fillStyle='none' )
+					n = np.maximum( 1, int(30/len(obj.wall_x)) )
+					data2 = np.array( ( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
+										(self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]), obj.Cp ) )
+					panel.cax.plot( data2[0,::n], data2[1,::n], 'kv', linewidth=0.75, fillStyle='none' )
+
+
+		# paste data to clipboard if possible
+		if not wx.TheClipboard.IsOpened():
+
+			data = np.array( ( np.transpose(data1), np.transpose(data2) ) )
+
+			wx.TheClipboard.Open()
+			wx.TheClipboard.SetData( wx.TextDataObject( str(data) ) )
+			wx.TheClipboard.Close()
 
 		# invert y-axis
 		panel.cax.invert_yaxis()
