@@ -1248,12 +1248,12 @@ class MainFrame ( wx.Frame ):
 
 		panel.cax = panel.figure.gca()
 		panel.cax.set_facecolor((1, 1, 1))
-		panel.cax.set_position([0.14, 0.12, 0.68, 0.72], which='both')
+		panel.cax.set_position([0.12, 0.12, 0.63, 0.72], which='both')
 
 		panel.cax.set
 		# panel.cax.set_aspect(self.axisOption, adjustable='box', anchor='C')
 		panel.cax.set_xlabel('x-coordinate' + ' (' + self.units.length + ')')
-		panel.cax.set_ylabel('y-coordinate' + ' (' + self.units.length + ')')
+		panel.cax.set_ylabel('Coefficient of Pressure')
 
 		force_calc( self, self.boundary, self.parameters, self.state, self.gas )
 
@@ -1263,9 +1263,9 @@ class MainFrame ( wx.Frame ):
 			if hasattr(obj, 'Cp'):
 				
 				if obj.wall_n[1] == 1:
-					panel.cax.plot( self.mesh.xxc[obj.wall_x, obj.wall_y], obj.Cp, 'k^', linewidth=1 )
+					panel.cax.plot( self.mesh.xxc[obj.wall_x, obj.wall_y], -obj.Cp, 'k^', linewidth=1, fillStyle='none' )
 				else:
-					panel.cax.plot( self.mesh.xxc[obj.wall_x, obj.wall_y], obj.Cp, 'kv', linewidth=1 )
+					panel.cax.plot( self.mesh.xxc[obj.wall_x, obj.wall_y], -obj.Cp, 'kv', linewidth=1, fillStyle='none' )
 
 		panel.canvas = FigureCanvas(panel, -1, panel.figure)
 
