@@ -192,9 +192,10 @@ def enforce_bc(domain, mesh, boundary, parameters, state, gas):
                 state.p[sonic_mask,y0] = state.p[sonic_mask,y1]
                 state.T[sonic_mask,y0] = state.T[sonic_mask,y1]
             elif n[0] != 1:
-                state.Q[x0,sonic_mask,:] = state.Qn[x0,sonic_mask,:]
-                state.p[x0,sonic_mask] = state.p[x1,sonic_mask]
-                state.T[x0,sonic_mask] = state.T[x1,sonic_mask]
+                pass
+                # state.Q[x0,sonic_mask,:] = state.Qn[x0,sonic_mask,:]
+                # state.p[x0,sonic_mask] = state.p[x1,sonic_mask]
+                # state.T[x0,sonic_mask] = state.T[x1,sonic_mask]
 
         else:
             if y0 > y1:

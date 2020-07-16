@@ -8,7 +8,7 @@ import python.finite_volume.flux as flux
 import python.finite_volume.muscl as muscl
 from pytictoc import TicToc
 
-# Roe finite difference scheme
+# Roe finite difference scheme, work in progress
 def RoeFDS( domain, mesh, boundary, parameters, state, gas ):
 
     print('Roe Scheme: ' + 'CFL = ' + str(parameters.CFL))
@@ -111,7 +111,7 @@ def RoeFDS( domain, mesh, boundary, parameters, state, gas ):
                                             mesh.s_proj[i,j,0]/mesh.s_proj[i,j,4], mesh.s_proj[i,j,1]/mesh.s_proj[i,j,4], \
                                             gas.gamma_fn(gas.Cp[i,j], gas.Cv[i,j]), state.Q[i,j,3]/state.Q[i,j,0] )
 
-                # A[i,j,:,:] = A[i,j,:,:] / mesh.dV[i,j]
+                A[i,j,:,:] = A[i,j,:,:] / mesh.dV[i,j]
                 
 
         for i in range(1, domain.M+1):
@@ -131,7 +131,7 @@ def RoeFDS( domain, mesh, boundary, parameters, state, gas ):
 
 
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
-        flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
+        flux.residual( state.residual, state.dt[1:-1, 1:-1] * mesh.dV[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
                           mesh.s_proj[1:-1,1:-1,:], domain.M, domain.N )
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
 
@@ -250,22 +250,21 @@ def RoeFVS( domain, mesh, boundary, parameters, state, gas ):
         Phi[:,:,2] = state.Q[:,:,0]*state.v
         Phi[:,:,3] = state.Q[:,:,0]*state.ht
 
-        # [0, nx, ny, U]
-        Psi_zeta[:,:,3] = state.U[1:,:]
-        Psi_eta[:,:,3]  = state.V[:,1:]
+        # Roe averaged quantities
+        rho_zeta = np.sqrt( state.Q[0:-1,:,0] * state.Q[1:,:,0] )
+        rho_eta = np.sqrt( state.Q[:,0:-1,0] * state.Q[:,1:,0] )
+        U_roe = roe_average( state.Q[0:-1,:,0], state.Q[1:,:,0], state.U[0:-1,:], state.U[1:,:] )
+        V_roe = roe_average( state.Q[:,0:-1,0], state.Q[:,1:,0], state.U[:,0:-1], state.U[:,1:] )
 
+        # [0, nx, ny, U]
+        Psi_zeta[:,:,3] = U_roe
+        Psi_eta[:,:,3]  = V_roe
+        
         # calculate central term in eqch computational direction
         Ec_half =  (1/2) * ( F_bar( Phi[0:-1,:,:], state.U[0:-1,:], N_zeta, state.p[0:-1,:], domain.M+1, domain.N+2 ) + \
                              F_bar( Phi[1:,:,:], state.U[1:,:], N_zeta, state.p[1:,:], domain.M+1, domain.N+2 ) )
         Fc_half =  (1/2) * ( F_bar( Phi[:,0:-1,:], state.V[:,0:-1], N_eta, state.p[:,0:-1], domain.M+2, domain.N+1 ) + \
                              F_bar( Phi[:,1:,:], state.V[:,1:], N_eta, state.p[:,1:], domain.M+2, domain.N+1 ) )
-
-        # Roe averaged quantities
-        rho_zeta = np.sqrt( state.Q[0:-1,:,0] * state.Q[1:,:,0] )
-        rho_eta = np.sqrt( state.Q[:,0:-1,0] * state.Q[:,1:,0] )
-        #U_roe = roe_average( state.Q[0:-1,:,0], state.Q[1:,:,0], state.U[0:-1,:], state.U[1:,:] )
-        #V_roe = roe_average( state.Q[:,0:-1,0], state.Q[:,1:,0], state.U[:,0:-1], state.U[:,1:] )
-
 
         # upwind dissipation
         D_zeta = state.eig[0,0,:,:]
