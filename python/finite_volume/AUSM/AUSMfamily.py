@@ -18,6 +18,10 @@ def AUSM( domain, mesh, boundary, parameters, state, gas ):
 
     n = 0
 
+    # initialize speed of sound arrays
+    c_half_zeta = np.zeros( (domain.M+1, domain.N+2), dtype='float', order='F' )
+    c_half_eta = np.zeros( (domain.M+2, domain.N+1), dtype='float', order='F' )
+
     # initialize phi and p state vectors
     Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
     Phi[:,:,0] = np.ones( (domain.M+2, domain.N+2) )
@@ -63,15 +67,18 @@ def AUSM( domain, mesh, boundary, parameters, state, gas ):
         # speed of sound at cell interfaces
         # from Liou 2006 (JCP 214)
 
-        c_st = thermo.calc_c_star( state.ht, gas.gamma_fn(gas.Cp, gas.Cv) )
+        # c_st = thermo.calc_c_star( state.ht, gas.gamma_fn(gas.Cp, gas.Cv) )
 
-        c_L = c_st[0:-1,:] / np.maximum( np.sqrt(c_st[0:-1,:]), state.U[0:-1,:] )
-        c_R = c_st[1:,:] / np.maximum( np.sqrt(c_st[1:,:]), -state.U[1:,:] ) 
-        c_D = c_st[:,0:-1] / np.maximum( np.sqrt(c_st[:,0:-1]), state.V[:,0:-1] )
-        c_U = c_st[:,1:] / np.maximum( np.sqrt(c_st[:,1:]), -state.V[:,1:] )
+        # c_L = c_st[0:-1,:] / np.maximum( np.sqrt(c_st[0:-1,:]), state.U[0:-1,:] )
+        # c_R = c_st[1:,:] / np.maximum( np.sqrt(c_st[1:,:]), -state.U[1:,:] ) 
+        # c_D = c_st[:,0:-1] / np.maximum( np.sqrt(c_st[:,0:-1]), state.V[:,0:-1] )
+        # c_U = c_st[:,1:] / np.maximum( np.sqrt(c_st[:,1:]), -state.V[:,1:] )
 
-        c_half_zeta = np.minimum( c_L, c_R )
-        c_half_eta =  np.minimum( c_D, c_U )
+        # c_half_zeta = np.minimum( c_L, c_R )
+        # c_half_eta =  np.minimum( c_D, c_U )
+
+        flux.c_entropy_fixed( c_half_zeta, c_half_eta, state.ht, gas.gamma_fn(gas.Cp, gas.Cv), \
+                              state.U, state.V, domain.M, domain.N )
 
         # cell face Mach numbers
         M_L = state.U[0:-1,:] / c_half_zeta
@@ -176,6 +183,10 @@ def AUSMplusup( domain, mesh, boundary, parameters, state, gas ):
 
     n = 0
 
+    # initialize speed of sound arrays
+    c_half_zeta = np.zeros( (domain.M+1, domain.N+2), dtype='float', order='F' )
+    c_half_eta = np.zeros( (domain.M+2, domain.N+1), dtype='float', order='F' )
+
     # initialize phi and p state vectors
     Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
     Phi[:,:,0] = np.ones( (domain.M+2, domain.N+2) )
@@ -224,15 +235,18 @@ def AUSMplusup( domain, mesh, boundary, parameters, state, gas ):
         # speed of sound at cell interfaces
         # from Liou 2006 (JCP 214)
 
-        c_st = thermo.calc_c_star( state.ht, gas.gamma_fn(gas.Cp, gas.Cv) )
+        # c_st = thermo.calc_c_star( state.ht, gas.gamma_fn(gas.Cp, gas.Cv) )
 
-        c_L = c_st[0:-1,:] / np.maximum( np.sqrt(c_st[0:-1,:]), state.U[0:-1,:] )
-        c_R = c_st[1:,:] / np.maximum( np.sqrt(c_st[1:,:]), -state.U[1:,:] ) 
-        c_D = c_st[:,0:-1] / np.maximum( np.sqrt(c_st[:,0:-1]), state.V[:,0:-1] )
-        c_U = c_st[:,1:] / np.maximum( np.sqrt(c_st[:,1:]), -state.V[:,1:] )
+        # c_L = c_st[0:-1,:] / np.maximum( np.sqrt(c_st[0:-1,:]), state.U[0:-1,:] )
+        # c_R = c_st[1:,:] / np.maximum( np.sqrt(c_st[1:,:]), -state.U[1:,:] ) 
+        # c_D = c_st[:,0:-1] / np.maximum( np.sqrt(c_st[:,0:-1]), state.V[:,0:-1] )
+        # c_U = c_st[:,1:] / np.maximum( np.sqrt(c_st[:,1:]), -state.V[:,1:] )
 
-        c_half_zeta = np.minimum( c_L, c_R )
-        c_half_eta =  np.minimum( c_D, c_U )
+        # c_half_zeta = np.minimum( c_L, c_R )
+        # c_half_eta =  np.minimum( c_D, c_U )
+
+        flux.c_entropy_fixed( c_half_zeta, c_half_eta, state.ht, gas.gamma_fn(gas.Cp, gas.Cv), \
+                              state.U, state.V, domain.M, domain.N )
 
         # cell face Mach numbers
         M_L = state.U[0:-1,:] / c_half_zeta
@@ -329,6 +343,10 @@ def AUSMDV( domain, mesh, boundary, parameters, state, gas ):
 
     n = 0
 
+    # initialize speed of sound arrays
+    c_half_zeta = np.zeros( (domain.M+1, domain.N+2), dtype='float', order='F' )
+    c_half_eta = np.zeros( (domain.M+2, domain.N+1), dtype='float', order='F' )
+
     # initialize phi and p state vectors
     Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
     Phi[:,:,0] = np.ones( (domain.M+2, domain.N+2) )
@@ -371,22 +389,21 @@ def AUSMDV( domain, mesh, boundary, parameters, state, gas ):
         state.v = state.Q[:,:,2] / state.Q[:,:,0]
         state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / state.Q[:,:,0] + state.p/state.Q[:,:,0]
 
-        # density at cell interfaces, upwinded
-        #rho_half_zeta = ( state.Q[0:-1,:,0] + state.Q[1:,:,0] ) / 2
-        #rho_half_eta =  ( state.Q[:,0:-1,0] + state.Q[:,1:,0] ) / 2
-
         # speed of sound at cell interfaces
         # from Liou 2006 (JCP 214)
 
-        c_st = thermo.calc_c_star( state.ht, gas.gamma_fn(gas.Cp, gas.Cv) )
+        # c_st = thermo.calc_c_star( state.ht, gas.gamma_fn(gas.Cp, gas.Cv) )
 
-        c_L = c_st[0:-1,:] / np.maximum( np.sqrt(c_st[0:-1,:]), state.U[0:-1,:] )
-        c_R = c_st[1:,:] / np.maximum( np.sqrt(c_st[1:,:]), -state.U[1:,:] ) 
-        c_D = c_st[:,0:-1] / np.maximum( np.sqrt(c_st[:,0:-1]), state.V[:,0:-1] )
-        c_U = c_st[:,1:] / np.maximum( np.sqrt(c_st[:,1:]), -state.V[:,1:] )
+        # c_L = c_st[0:-1,:] / np.maximum( np.sqrt(c_st[0:-1,:]), state.U[0:-1,:] )
+        # c_R = c_st[1:,:] / np.maximum( np.sqrt(c_st[1:,:]), -state.U[1:,:] ) 
+        # c_D = c_st[:,0:-1] / np.maximum( np.sqrt(c_st[:,0:-1]), state.V[:,0:-1] )
+        # c_U = c_st[:,1:] / np.maximum( np.sqrt(c_st[:,1:]), -state.V[:,1:] )
 
-        c_half_zeta = np.minimum( c_L, c_R )
-        c_half_eta =  np.minimum( c_D, c_U )
+        # c_half_zeta = np.minimum( c_L, c_R )
+        # c_half_eta =  np.minimum( c_D, c_U )
+
+        flux.c_entropy_fixed( c_half_zeta, c_half_eta, state.ht, gas.gamma_fn(gas.Cp, gas.Cv), \
+                              state.U, state.V, domain.M, domain.N )
 
         # cell face Mach numbers
         M_L = state.U[0:-1,:] / c_half_zeta
@@ -468,12 +485,16 @@ def AUSMDV( domain, mesh, boundary, parameters, state, gas ):
 # Simple Low-dissipation AUSM (SLAU) scheme {Shima and Kitamura 2009}
 def SLAU( domain, mesh, boundary, parameters, state, gas ):
 
-    print('AUSM+up Scheme: ' + 'CFL = ' + str(parameters.CFL))
+    print('SLAU Scheme: ' + 'CFL = ' + str(parameters.CFL))
     print('________________________________________________________________________________________________________________________________________')
     print('                          mass          u            v        energy')
     print('________________________________________________________________________________________________________________________________________')
 
     n = 0
+
+    # initialize speed of sound arrays
+    c_half_zeta = np.zeros( (domain.M+1, domain.N+2), dtype='float', order='F' )
+    c_half_eta = np.zeros( (domain.M+2, domain.N+1), dtype='float', order='F' )
 
     # initialize phi and p state vectors
     Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
@@ -529,15 +550,18 @@ def SLAU( domain, mesh, boundary, parameters, state, gas ):
         # speed of sound at cell interfaces
         # from Liou 2006 (JCP 214)
 
-        c_st = thermo.calc_c_star( state.ht, gas.gamma_fn(gas.Cp, gas.Cv) )
+        # c_st = thermo.calc_c_star( state.ht, gas.gamma_fn(gas.Cp, gas.Cv) )
 
-        c_L = c_st[0:-1,:] / np.maximum( np.sqrt(c_st[0:-1,:]), state.U[0:-1,:] )
-        c_R = c_st[1:,:] / np.maximum( np.sqrt(c_st[1:,:]), -state.U[1:,:] ) 
-        c_D = c_st[:,0:-1] / np.maximum( np.sqrt(c_st[:,0:-1]), state.V[:,0:-1] )
-        c_U = c_st[:,1:] / np.maximum( np.sqrt(c_st[:,1:]), -state.V[:,1:] )
+        # c_L = c_st[0:-1,:] / np.maximum( np.sqrt(c_st[0:-1,:]), state.U[0:-1,:] )
+        # c_R = c_st[1:,:] / np.maximum( np.sqrt(c_st[1:,:]), -state.U[1:,:] ) 
+        # c_D = c_st[:,0:-1] / np.maximum( np.sqrt(c_st[:,0:-1]), state.V[:,0:-1] )
+        # c_U = c_st[:,1:] / np.maximum( np.sqrt(c_st[:,1:]), -state.V[:,1:] )
 
-        c_half_zeta =  np.minimum(c_L, c_R)
-        c_half_eta =   np.minimum(c_D, c_U)
+        # c_half_zeta =  np.minimum(c_L, c_R)
+        # c_half_eta =   np.minimum(c_D, c_U)
+
+        flux.c_entropy_fixed( c_half_zeta, c_half_eta, state.ht, gas.gamma_fn(gas.Cp, gas.Cv), \
+                              state.U, state.V, domain.M, domain.N )
 
         # cell face Mach numbers
         M_L = state.U[0:-1,:] / c_half_zeta
@@ -641,6 +665,10 @@ def AUSMmuscl( domain, mesh, boundary, parameters, state, gas ):
     print('________________________________________________________________________________________________________________________________________')
 
     n = 0
+
+    # initialize speed of sound arrays
+    c_half_zeta = np.zeros( (domain.M+1, domain.N+2), dtype='float', order='F' )
+    c_half_eta = np.zeros( (domain.M+2, domain.N+1), dtype='float', order='F' )
 
     QL = np.zeros( (domain.M+1, domain.N+2, 4) )
     QR = np.zeros( (domain.M+1, domain.N+2, 4) )
@@ -828,12 +856,16 @@ def AUSMmuscl( domain, mesh, boundary, parameters, state, gas ):
 
 def AUSMDVmuscl( domain, mesh, boundary, parameters, state, gas ):
 
-    print('AUSM Scheme: ' + 'CFL = ' + str(parameters.CFL))
+    print('AUSMDV Scheme: ' + 'CFL = ' + str(parameters.CFL))
     print('________________________________________________________________________________________________________________________________________')
     print('                          mass          u            v        energy')
     print('________________________________________________________________________________________________________________________________________')
 
     n = 0
+
+    # initialize speed of sound arrays
+    c_half_zeta = np.zeros( (domain.M+1, domain.N+2), dtype='float', order='F' )
+    c_half_eta = np.zeros( (domain.M+2, domain.N+1), dtype='float', order='F' )
 
     QL = np.zeros( (domain.M+1, domain.N+2, 4) )
     QR = np.zeros( (domain.M+1, domain.N+2, 4) )

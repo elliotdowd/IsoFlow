@@ -179,23 +179,23 @@ def RoeFVS( domain, mesh, boundary, parameters, state, gas ):
     n = 0
 
     # initialize phi and p state vectors
-    Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
-    Psi = np.zeros( (domain.M+2, domain.N+2, 4) )
+    Phi = np.zeros( (domain.M+2, domain.N+2, 4), dtype='float', order='F' )
+    Psi = np.zeros( (domain.M+2, domain.N+2, 4), dtype='float', order='F' )
 
     P_zeta = np.zeros( (domain.M+1, domain.N+2, 4) )
     P_zeta[:,:,0] = np.zeros( (domain.M+1, domain.N+2) )
     P_zeta[:,:,3] = np.zeros( (domain.M+1, domain.N+2) )
 
-    P_eta = np.zeros( (domain.M+2, domain.N+1, 4) )
+    P_eta = np.zeros( (domain.M+2, domain.N+1, 4), dtype='float', order='F' )
     P_eta[:,:,0] = np.zeros( (domain.M+2, domain.N+1) )
     P_eta[:,:,3] = np.zeros( (domain.M+2, domain.N+1) )
 
     # initialize Psi vector components
-    Psi_zeta = np.zeros( (domain.M+1, domain.N+2, 4) )
+    Psi_zeta = np.zeros( (domain.M+1, domain.N+2, 4), dtype='float', order='F' )
     Psi_zeta[:,:,1] = mesh.s_proj[1:,:,0]/mesh.s_proj[1:,:,4]
     Psi_zeta[:,:,2] = mesh.s_proj[1:,:,1]/mesh.s_proj[1:,:,4]
 
-    Psi_eta = np.zeros( (domain.M+2, domain.N+1, 4) )
+    Psi_eta = np.zeros( (domain.M+2, domain.N+1, 4), dtype='float', order='F' )
     Psi_eta[:,:,1] = mesh.s_proj[:,1:,2]/mesh.s_proj[:,1:,5]
     Psi_eta[:,:,2] = mesh.s_proj[:,1:,3]/mesh.s_proj[:,1:,5]
 
@@ -212,6 +212,13 @@ def RoeFVS( domain, mesh, boundary, parameters, state, gas ):
     E_hat_right = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
     F_hat_bot = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
     F_hat_top = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
+
+    # convective terms
+
+    Fbar_left = np.zeros( (domain.M+1, domain.N+2, 4), dtype='float', order='F' )
+    Fbar_right = np.zeros( (domain.M+1, domain.N+2, 4), dtype='float', order='F' )
+    Fbar_bot = np.zeros( (domain.M+2, domain.N+1, 4), dtype='float', order='F' )
+    Fbar_top = np.zeros( (domain.M+2, domain.N+1, 4), dtype='float', order='F' )
 
     Ec_half = np.zeros( (domain.M+1, domain.N+2, 4), dtype='float', order='F' )
     Fc_half = np.zeros( (domain.M+2, domain.N+1, 4), dtype='float', order='F' )
@@ -261,6 +268,12 @@ def RoeFVS( domain, mesh, boundary, parameters, state, gas ):
         Psi_eta[:,:,3]  = V_roe
         
         # calculate central term in eqch computational direction
+        # Fbar_left = flux.roe_fbar( Fbar_left, Phi[0:-1,:,:], state.U[0:-1,:], N_zeta, state.p[0:-1,:], domain.M+1, domain.N+2 )
+        # Fbar_right = flux.roe_fbar( Fbar_right, Phi[1:,:,:], state.U[1:,:], N_zeta, state.p[1:,:], domain.M+1, domain.N+2 )
+
+        # Ec_half =  (1/2) * ( Fbar_left + Fbar_right )
+        # Fc_half =  (1/2) * ( Fbar_bot + Fbar_top )
+
         Ec_half =  (1/2) * ( F_bar( Phi[0:-1,:,:], state.U[0:-1,:], N_zeta, state.p[0:-1,:], domain.M+1, domain.N+2 ) + \
                              F_bar( Phi[1:,:,:], state.U[1:,:], N_zeta, state.p[1:,:], domain.M+1, domain.N+2 ) )
         Fc_half =  (1/2) * ( F_bar( Phi[:,0:-1,:], state.V[:,0:-1], N_eta, state.p[:,0:-1], domain.M+2, domain.N+1 ) + \
@@ -282,27 +295,26 @@ def RoeFVS( domain, mesh, boundary, parameters, state, gas ):
         Up_eta  = np.maximum( 0, state.c[:,1:]-np.abs(state.V[:,1:]) ) * ( state.p[:,1:]-state.p[:,0:-1] ) / (rho_eta*state.c[:,1:]**2)
 
         # numerical dissipation terms
-        for i in range(0, 4):
-            if i < 3:
-                Ed_half[:,:,i] = -(1/2) * ( D_zeta[1:,:] * (Phi[1:,:,i]-Phi[0:-1,:,i]) + (Pu_zeta+Pp_zeta)*Psi_zeta[:,:,i] + \
-                                                                                        (Uu_zeta+Up_zeta)*Phi[1:,:,i] )
-                Fd_half[:,:,i] = -(1/2) * ( D_eta[:,1:] * (Phi[:,1:,i]-Phi[:,0:-1,i]) +  (Pu_eta+Pp_eta)*Psi_eta[:,:,i] + \
-                                                                                        (Uu_eta+Up_eta)*Phi[:,1:,i] )
-            else:
-                Ed_half[:,:,i] = -(1/2) * ( D_zeta[1:,:] * ((Phi[1:,:,i]-state.p[1:,:])-(Phi[0:-1,:,i]-state.p[0:-1,:])) + (Pu_zeta+Pp_zeta)*Psi_zeta[:,:,i] + \
-                                                                                                                           (Uu_zeta+Up_zeta)*Phi[1:,:,i] )
-                Fd_half[:,:,i] = -(1/2) * ( D_eta[:,1:] * ((Phi[:,1:,i]-state.p[:,1:])-(Phi[:,0:-1,i]-state.p[:,0:-1])) +  (Pu_eta+Pp_eta)*Psi_eta[:,:,i] + \
-                                                                                        (Uu_eta+Up_eta)*Phi[:,1:,i] )
+        flux.roe_dissipation( Ed_half, Fd_half, state.p, Phi, Psi_zeta, Psi_eta, D_zeta, D_eta, Pu_zeta, Pp_zeta, Uu_zeta, Up_zeta, \
+                                                              Pu_eta, Pp_eta, Uu_eta, Up_eta, domain.M, domain.N )
+
+        # for i in range(0, 4):
+        #     if i < 3:
+        #         Ed_half[:,:,i] = -(1/2) * ( D_zeta[1:,:] * (Phi[1:,:,i]-Phi[0:-1,:,i]) + (Pu_zeta+Pp_zeta)*Psi_zeta[:,:,i] + \
+        #                                                                                 (Uu_zeta+Up_zeta)*Phi[1:,:,i] )
+        #         Fd_half[:,:,i] = -(1/2) * ( D_eta[:,1:] * (Phi[:,1:,i]-Phi[:,0:-1,i]) +  (Pu_eta+Pp_eta)*Psi_eta[:,:,i] + \
+        #                                                                                 (Uu_eta+Up_eta)*Phi[:,1:,i] )
+        #     else:
+        #         Ed_half[:,:,i] = -(1/2) * ( D_zeta[1:,:] * ((Phi[1:,:,i]-state.p[1:,:])-(Phi[0:-1,:,i]-state.p[0:-1,:])) + (Pu_zeta+Pp_zeta)*Psi_zeta[:,:,i] + \
+        #                                                                                                                    (Uu_zeta+Up_zeta)*Phi[1:,:,i] )
+        #         Fd_half[:,:,i] = -(1/2) * ( D_eta[:,1:] * ((Phi[:,1:,i]-state.p[:,1:])-(Phi[:,0:-1,i]-state.p[:,0:-1])) +  (Pu_eta+Pp_eta)*Psi_eta[:,:,i] + \
+        #                                                                                 (Uu_eta+Up_eta)*Phi[:,1:,i] )
 
         # flux summation
         E_hat_left  = Ec_half[0:-1,1:-1,:] + Ed_half[0:-1,1:-1,:]
         E_hat_right = Ec_half[1:,1:-1,:] + Ed_half[1:,1:-1,:]
         F_hat_bot   = Fc_half[1:-1,0:-1,:] + Fd_half[1:-1,0:-1,:]
         F_hat_top   = Fc_half[1:-1,1:,:] + Fd_half[1:-1,1:,:]
-
-
-        # flux vector reconstruction
-        # flux.face_flux( mdot_half_zeta, mdot_half_eta, Phi, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
 
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
         flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\

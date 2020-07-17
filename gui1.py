@@ -936,7 +936,7 @@ class MainFrame ( wx.Frame ):
 		elif scheme == 'Improved Roe FVS':
 			self.state = RoeFVSimproved( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 
-		t.toc('simulation time:')
+		t.toc('Simulation time:')
 
 		self.call_contplot(self.contourPanel, 1, 1)
 		self.call_resplot()
@@ -1263,14 +1263,14 @@ class MainFrame ( wx.Frame ):
 				
 				if obj.wall_n[1] == 1:
 					c = obj.wall_x[-1] - obj.wall_x[0]
-					n = np.maximum( 1, int(30/len(obj.wall_x)) )
+					n = np.maximum( 1, int(len(obj.wall_x)/30) )
 					data1 = np.array( ( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
 										(self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]), obj.Cp ) )
 					panel.cax.plot( data1[0,::n], data1[1,::n], 'k^', linewidth=0.75, fillStyle='none' )
 						
 				else:
 					c = obj.wall_x[-1] - obj.wall_x[0]
-					n = np.maximum( 1, int(30/len(obj.wall_x)) )
+					n = np.maximum( 1, int(len(obj.wall_x)/30) )
 					data2 = np.array( ( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
 										(self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]), obj.Cp ) )
 					panel.cax.plot( data2[0,::n], data2[1,::n], 'kv', linewidth=0.75, fillStyle='none' )
