@@ -180,16 +180,16 @@ def mesh_naca4(domain):
     nx = 1.5
     half = int(N/2)
     for j in range( 0, half ):
-        y[half-j] = y[half-j] - 0.5*y[half-j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
-        y[half+2+j] = y[half+2+j] - 0.5*y[half+2+j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
+        y[half-j] = y[half-j] - 0.75*y[half-j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
+        y[half+2+j] = y[half+2+j] - 0.75*y[half+2+j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
 
     # concentrate x points near leading and trailing edges
-    nL = 1.5
+    nL = 1
     front = int(5)
     x_stored = x
     for i in range( 1, front ):
-        x[domain.obj_i+i] = x_stored[domain.obj_i+i] + 0.5*(x[domain.obj_i]-x[domain.obj_i+i])*(np.sinh((front-i)/front))**nL/np.sinh(1)**nL
-        x[domain.obj_i-i] = x_stored[domain.obj_i-i] + 0.5*(x[domain.obj_i]-x[domain.obj_i-i])*(np.sinh((front-i)/front))**nL/np.sinh(1)**nL
+        x[domain.obj_i+i] = x_stored[domain.obj_i+i] + 0.75*(x[domain.obj_i]-x[domain.obj_i+i])*(np.sinh((front-i)/front))**nL/np.sinh(1)**nL
+        x[domain.obj_i-i] = x_stored[domain.obj_i-i] + 0.75*(x[domain.obj_i]-x[domain.obj_i-i])*(np.sinh((front-i)/front))**nL/np.sinh(1)**nL
 
     nT = 1.5
     back = int(5)

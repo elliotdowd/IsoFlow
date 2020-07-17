@@ -91,8 +91,8 @@ def AUSM( domain, mesh, boundary, parameters, state, gas ):
         M_U = state.V[:,1:] / c_half_eta
 
         # split interface Mach numbers in the zeta and eta directions
-        M_half_zeta = split.M4p( M_L ) + split.M4m( M_R )
-        M_half_eta = split.M4p( M_D ) + split.M4m( M_U )
+        M_half_zeta = split.Mvp( M_L ) + split.Mvm( M_R )
+        M_half_eta = split.Mvp( M_D ) + split.Mvm( M_U )
 
         # calculate mass flux at cell interfaces
         mdot_half_zeta = c_half_zeta * M_half_zeta * ( np.double(M_half_zeta>0) * state.Q[0:-1,:,0] + np.double(M_half_zeta<=0) * state.Q[1:,:,0] )

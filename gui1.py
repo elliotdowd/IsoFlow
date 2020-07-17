@@ -1257,9 +1257,15 @@ class MainFrame ( wx.Frame ):
 		panel.cax.set_position([0.14, 0.12, 0.61, 0.72], which='both')
 
 		panel.cax.set_xlim([-0.05, 1.05])
-		# panel.cax.set_aspect(self.axisOption, adjustable='box', anchor='C')
 		panel.cax.set_xlabel('x/c')
-		panel.cax.set_ylabel('Coefficient of Pressure')
+		panel.cax.set_ylabel('$-C_{p}$')
+
+		ax2 = panel.cax.twinx()
+		ax2.set_ylabel('y/c')
+		ax2.set_aspect('equal')
+		ax2.set_ylim([-0.1, 0.7])
+		ax2.set_position([0.14, 0.12, 0.61, 0.72], which='both')
+
 
 		if self.force.IsChecked():
 			force_calc( self, self.boundary, self.parameters, self.state, self.gas )
@@ -1270,18 +1276,32 @@ class MainFrame ( wx.Frame ):
 				if hasattr(obj, 'Cp'):
 					
 					if obj.wall_n[1] == 1:
-						c = obj.wall_x[-1] - obj.wall_x[0]
+						c = self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]
 						n = np.maximum( 1, int(len(obj.wall_x)/30) )
 						data1 = np.array( ( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
-											(self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]), obj.Cp ) )
+											 c, -obj.Cp ) )
 						panel.cax.plot( data1[0,::n], data1[1,::n], 'k^', linewidth=0.75, fillStyle='none' )
-							
+
+						# plot wall
+						ax2.plot( (self.mesh.xx[obj.wall_x, obj.wall_y+1]-self.mesh.xx[obj.wall_x[0],obj.wall_y+1])/c, \
+										 self.mesh.yy[obj.wall_x, obj.wall_y+1], 'k-', linewidth=1)
+						# camber line	# plot wall
+						ax2.plot( (self.mesh.xx[obj.wall_x, obj.wall_y]-self.mesh.xx[obj.wall_x[0],obj.wall_y])/c, \
+										 self.mesh.yy[obj.wall_x, obj.wall_y], 'k--', linewidth=0.5)
+
 					else:
-						c = obj.wall_x[-1] - obj.wall_x[0]
+						c = self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]
 						n = np.maximum( 1, int(len(obj.wall_x)/30) )
 						data2 = np.array( ( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
-											(self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]), obj.Cp ) )
+											 c, -obj.Cp ) )
 						panel.cax.plot( data2[0,::n], data2[1,::n], 'kv', linewidth=0.75, fillStyle='none' )
+
+						# plot wall
+						ax2.plot( (self.mesh.xx[obj.wall_x, obj.wall_y]-self.mesh.xx[obj.wall_x[0],obj.wall_y])/c, \
+										 self.mesh.yy[obj.wall_x, obj.wall_y], 'k-', linewidth=1)
+
+			ax2.set_ylim
+
 
 			# paste data to clipboard if possible
 			if not wx.TheClipboard.IsOpened():
@@ -1293,7 +1313,7 @@ class MainFrame ( wx.Frame ):
 				wx.TheClipboard.Close()
 
 			# invert y-axis
-			panel.cax.invert_yaxis()
+			# panel.cax.invert_yaxis()
 			plt.grid(True)
 
 			panel.canvas = FigureCanvas(panel, -1, panel.figure)
