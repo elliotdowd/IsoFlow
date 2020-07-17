@@ -40,7 +40,10 @@ def AUSM( domain, mesh, boundary, parameters, state, gas ):
     F_hat_top = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
 
     state.residual = np.zeros( [domain.M, domain.N, 4], dtype='float', order='F' )
-    state.res = np.ones( [parameters.iterations + 1, 4] )
+    if state.n == 0:
+        state.res = np.ones( [parameters.iterations + 1, 4] )
+    else:
+        state.res = np.vstack( (state.res, np.ones( [parameters.iterations + 1, 4] )) )
 
     mesh.dV4 = np.dstack([mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1]])
 
@@ -51,6 +54,7 @@ def AUSM( domain, mesh, boundary, parameters, state, gas ):
         t.tic()
 
         n = n+1
+        state.n = state.n+1
 
         # state at previous timestep, use for outflow BCs
         state.Qn = state.Q
@@ -141,10 +145,10 @@ def AUSM( domain, mesh, boundary, parameters, state, gas ):
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
 
         # L_inf-norm residual
-        state.res[n-1,0] = np.log10( np.max(state.residual[:,:,0] * mesh.dV[1:-1,1:-1]) ) 
-        state.res[n-1,1] = np.log10( np.max(state.residual[:,:,1] * mesh.dV[1:-1,1:-1]) ) 
-        state.res[n-1,2] = np.log10( np.max(state.residual[:,:,2] * mesh.dV[1:-1,1:-1]) )
-        state.res[n-1,3] = np.log10( np.max(state.residual[:,:,3] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,0] = np.log10( np.max(state.residual[:,:,0] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,1] = np.log10( np.max(state.residual[:,:,1] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,2] = np.log10( np.max(state.residual[:,:,2] * mesh.dV[1:-1,1:-1]) )
+        state.res[state.n-1,3] = np.log10( np.max(state.residual[:,:,3] * mesh.dV[1:-1,1:-1]) ) 
 
         #state.res[n-1] = np.log10( np.max(state.residual * mesh.dV4) ) 
 
@@ -161,14 +165,14 @@ def AUSM( domain, mesh, boundary, parameters, state, gas ):
 
         # print iteration output
         if n % 10 == 0:
-            print('Iteration: ' + str(n) + '    ' + str(round(state.res[n-1,0],3)) + '    ' + str(round(state.res[n-1,1],3)) + \
-                                           '    ' + str(round(state.res[n-1,2],3)) + '    ' + str(round(state.res[n-1,3],3)) )
+            print('Iteration: ' + str(state.n) + '    ' + str(round(state.res[n-1,0],3)) + '    ' + str(round(state.res[n-1,1],3)) + \
+                                                 '    ' + str(round(state.res[n-1,2],3)) + '    ' + str(round(state.res[n-1,3],3)) )
             t.toc('Iteration time:')
 
     print('________________________________________________________________________________________________________________________________________')
 
     # post processing variables
-    state = calc_postvars(state, gas, n)
+    state = calc_postvars(state, gas)
 
     return state
 
@@ -205,7 +209,11 @@ def AUSMplusup( domain, mesh, boundary, parameters, state, gas ):
     F_hat_top = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
 
     state.residual = np.zeros( [domain.M, domain.N, 4], dtype='float', order='F' )
-    state.res = np.ones( [parameters.iterations + 1, 4] )
+
+    if state.n == 0:
+        state.res = np.ones( [parameters.iterations + 1, 4] )
+    else:
+        state.res = np.vstack( (state.res, np.ones( [parameters.iterations + 1, 4] )) )
 
     mesh.dV4 = np.dstack([mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1]])
 
@@ -216,6 +224,7 @@ def AUSMplusup( domain, mesh, boundary, parameters, state, gas ):
         t.tic()
 
         n = n+1
+        state.n = state.n+1
 
         # state at previous timestep, use for outflow BCs
         state.Qn = state.Q
@@ -301,10 +310,10 @@ def AUSMplusup( domain, mesh, boundary, parameters, state, gas ):
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
 
         # L_inf-norm residual
-        state.res[n-1,0] = np.log10( np.max(state.residual[:,:,0] * mesh.dV[1:-1,1:-1]) ) 
-        state.res[n-1,1] = np.log10( np.max(state.residual[:,:,1] * mesh.dV[1:-1,1:-1]) ) 
-        state.res[n-1,2] = np.log10( np.max(state.residual[:,:,2] * mesh.dV[1:-1,1:-1]) )
-        state.res[n-1,3] = np.log10( np.max(state.residual[:,:,3] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,0] = np.log10( np.max(state.residual[:,:,0] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,1] = np.log10( np.max(state.residual[:,:,1] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,2] = np.log10( np.max(state.residual[:,:,2] * mesh.dV[1:-1,1:-1]) )
+        state.res[state.n-1,3] = np.log10( np.max(state.residual[:,:,3] * mesh.dV[1:-1,1:-1]) ) 
 
         #state.res[n-1] = np.log10( np.max(state.residual * mesh.dV4) ) 
 
@@ -321,14 +330,14 @@ def AUSMplusup( domain, mesh, boundary, parameters, state, gas ):
 
         # print iteration output
         if n % 10 == 0:
-            print('Iteration: ' + str(n) + '    ' + str(round(state.res[n-1,0],3)) + '    ' + str(round(state.res[n-1,1],3)) + \
-                                           '    ' + str(round(state.res[n-1,2],3)) + '    ' + str(round(state.res[n-1,3],3)) )
+            print('Iteration: ' + str(state.n) + '    ' + str(round(state.res[n-1,0],3)) + '    ' + str(round(state.res[n-1,1],3)) + \
+                                                 '    ' + str(round(state.res[n-1,2],3)) + '    ' + str(round(state.res[n-1,3],3)) )
             t.toc('Iteration time:')
 
     print('________________________________________________________________________________________________________________________________________')
 
     # post processing variables
-    state = calc_postvars(state, gas, n)
+    state = calc_postvars(state, gas)
 
     return state
 
@@ -365,8 +374,11 @@ def AUSMDV( domain, mesh, boundary, parameters, state, gas ):
     F_hat_top = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
 
     state.residual = np.zeros( [domain.M, domain.N, 4], dtype='float', order='F' )
-    state.res = np.ones( [parameters.iterations + 1, 4] )
-
+    if state.n == 0:
+        state.res = np.ones( [parameters.iterations + 1, 4] )
+    else:
+        state.res = np.vstack( (state.res, np.ones( [parameters.iterations + 1, 4] )) )
+        
     mesh.dV4 = np.dstack([mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1]])
 
     t = TicToc()
@@ -377,6 +389,7 @@ def AUSMDV( domain, mesh, boundary, parameters, state, gas ):
         t.tic()
 
         n = n+1
+        state.n = state.n+1
 
         # state at previous timestep, use for outflow BCs
         state.Qn = state.Q
@@ -451,10 +464,10 @@ def AUSMDV( domain, mesh, boundary, parameters, state, gas ):
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
 
         # L_inf-norm residual
-        state.res[n-1,0] = np.log10( np.max(state.residual[:,:,0] * mesh.dV[1:-1,1:-1]) ) 
-        state.res[n-1,1] = np.log10( np.max(state.residual[:,:,1] * mesh.dV[1:-1,1:-1]) ) 
-        state.res[n-1,2] = np.log10( np.max(state.residual[:,:,2] * mesh.dV[1:-1,1:-1]) )
-        state.res[n-1,3] = np.log10( np.max(state.residual[:,:,3] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,0] = np.log10( np.max(state.residual[:,:,0] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,1] = np.log10( np.max(state.residual[:,:,1] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,2] = np.log10( np.max(state.residual[:,:,2] * mesh.dV[1:-1,1:-1]) )
+        state.res[state.n-1,3] = np.log10( np.max(state.residual[:,:,3] * mesh.dV[1:-1,1:-1]) ) 
 
         # update cell temperatures and pressures
         state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv) )
@@ -469,15 +482,15 @@ def AUSMDV( domain, mesh, boundary, parameters, state, gas ):
 
         # print iteration output
         if n % 10 == 0:
-            print('Iteration: ' + str(n) + '    ' + str(round(state.res[n-1,0],3)) + '    ' + str(round(state.res[n-1,1],3)) + \
-                                           '    ' + str(round(state.res[n-1,2],3)) + '    ' + str(round(state.res[n-1,3],3)) )
+            print('Iteration: ' + str(state.n) + '    ' + str(round(state.res[n-1,0],3)) + '    ' + str(round(state.res[n-1,1],3)) + \
+                                                 '    ' + str(round(state.res[n-1,2],3)) + '    ' + str(round(state.res[n-1,3],3)) )
             t.toc('Iteration time:')
 
     print('________________________________________________________________________________________________________________________________________')
 
 
     # post processing variables
-    state = calc_postvars(state, gas, n)
+    state = calc_postvars(state, gas)
     
     return state
 
@@ -514,7 +527,10 @@ def SLAU( domain, mesh, boundary, parameters, state, gas ):
     F_hat_top = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
 
     state.residual = np.zeros( [domain.M, domain.N, 4], dtype='float', order='F' )
-    state.res = np.ones( [parameters.iterations + 1, 4] )
+    if state.n == 0:
+        state.res = np.ones( [parameters.iterations + 1, 4] )
+    else:
+        state.res = np.vstack( (state.res, np.ones( [parameters.iterations + 1, 4] )) )
 
     mesh.dV4 = np.dstack([mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1]])
 
@@ -525,6 +541,7 @@ def SLAU( domain, mesh, boundary, parameters, state, gas ):
         t.tic()
 
         n = n+1
+        state.n = state.n+1
 
         # state at previous timestep, use for outflow BCs
         state.Qn = state.Q
@@ -624,10 +641,10 @@ def SLAU( domain, mesh, boundary, parameters, state, gas ):
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
 
         # L_inf-norm residual
-        state.res[n-1,0] = np.log10( np.max(state.residual[:,:,0] * mesh.dV[1:-1,1:-1]) ) 
-        state.res[n-1,1] = np.log10( np.max(state.residual[:,:,1] * mesh.dV[1:-1,1:-1]) ) 
-        state.res[n-1,2] = np.log10( np.max(state.residual[:,:,2] * mesh.dV[1:-1,1:-1]) )
-        state.res[n-1,3] = np.log10( np.max(state.residual[:,:,3] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,0] = np.log10( np.max(state.residual[:,:,0] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,1] = np.log10( np.max(state.residual[:,:,1] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,2] = np.log10( np.max(state.residual[:,:,2] * mesh.dV[1:-1,1:-1]) )
+        state.res[state.n-1,3] = np.log10( np.max(state.residual[:,:,3] * mesh.dV[1:-1,1:-1]) ) 
 
         #state.res[n-1] = np.log10( np.max(state.residual * mesh.dV4) ) 
 
@@ -644,14 +661,14 @@ def SLAU( domain, mesh, boundary, parameters, state, gas ):
 
         # print iteration output
         if n % 10 == 0:
-            print('Iteration: ' + str(n) + '    ' + str(round(state.res[n-1,0],3)) + '    ' + str(round(state.res[n-1,1],3)) + \
-                                           '    ' + str(round(state.res[n-1,2],3)) + '    ' + str(round(state.res[n-1,3],3)) )
+            print('Iteration: ' + str(state.n) + '    ' + str(round(state.res[n-1,0],3)) + '    ' + str(round(state.res[n-1,1],3)) + \
+                                                 '    ' + str(round(state.res[n-1,2],3)) + '    ' + str(round(state.res[n-1,3],3)) )
             t.toc('Iteration time:')
 
     print('________________________________________________________________________________________________________________________________________')
 
     # post processing variables
-    state = calc_postvars(state, gas, n)
+    state = calc_postvars(state, gas)
 
     return state
 
@@ -702,7 +719,10 @@ def AUSMmuscl( domain, mesh, boundary, parameters, state, gas ):
     F_hat_top = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
 
     state.residual = np.zeros( [domain.M, domain.N, 4], dtype='float', order='F' )
-    state.res = np.ones( [parameters.iterations + 1, 4] )
+    if state.n == 0:
+        state.res = np.ones( [parameters.iterations + 1, 4] )
+    else:
+        state.res = np.vstack( (state.res, np.ones( [parameters.iterations + 1, 4] )) )
 
     mesh.dV4 = np.dstack([mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1]])
 
@@ -713,6 +733,7 @@ def AUSMmuscl( domain, mesh, boundary, parameters, state, gas ):
         t.tic()
 
         n = n+1
+        state.n = state.n+1
 
         # state at previous timestep, use for outflow BCs
         state.Qn = state.Q
@@ -822,10 +843,10 @@ def AUSMmuscl( domain, mesh, boundary, parameters, state, gas ):
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
 
         # L_inf-norm residual
-        state.res[n-1,0] = np.log10( np.max(state.residual[:,:,0] * mesh.dV[1:-1,1:-1]) ) 
-        state.res[n-1,1] = np.log10( np.max(state.residual[:,:,1] * mesh.dV[1:-1,1:-1]) ) 
-        state.res[n-1,2] = np.log10( np.max(state.residual[:,:,2] * mesh.dV[1:-1,1:-1]) )
-        state.res[n-1,3] = np.log10( np.max(state.residual[:,:,3] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,0] = np.log10( np.max(state.residual[:,:,0] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,1] = np.log10( np.max(state.residual[:,:,1] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,2] = np.log10( np.max(state.residual[:,:,2] * mesh.dV[1:-1,1:-1]) )
+        state.res[state.n-1,3] = np.log10( np.max(state.residual[:,:,3] * mesh.dV[1:-1,1:-1]) ) 
 
         #state.res[n-1] = np.log10( np.max(state.residual * mesh.dV4) ) 
 
@@ -842,14 +863,14 @@ def AUSMmuscl( domain, mesh, boundary, parameters, state, gas ):
 
         # print iteration output
         if n % 10 == 0:
-            print('Iteration: ' + str(n) + '    ' + str(round(state.res[n-1,0],3)) + '    ' + str(round(state.res[n-1,1],3)) + \
-                                           '    ' + str(round(state.res[n-1,2],3)) + '    ' + str(round(state.res[n-1,3],3)) )
+            print('Iteration: ' + str(state.n) + '    ' + str(round(state.res[n-1,0],3)) + '    ' + str(round(state.res[n-1,1],3)) + \
+                                                 '    ' + str(round(state.res[n-1,2],3)) + '    ' + str(round(state.res[n-1,3],3)) )
             t.toc('Iteration time:')
 
     print('________________________________________________________________________________________________________________________________________')
 
     # post processing variables
-    state = calc_postvars(state, gas, n)
+    state = calc_postvars(state, gas)
 
     return state
 
@@ -899,7 +920,10 @@ def AUSMDVmuscl( domain, mesh, boundary, parameters, state, gas ):
     F_hat_top = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
 
     state.residual = np.zeros( [domain.M, domain.N, 4], dtype='float', order='F' )
-    state.res = np.ones( [parameters.iterations + 1, 4] )
+    if state.n == 0:
+        state.res = np.ones( [parameters.iterations + 1, 4] )
+    else:
+        state.res = np.vstack( (state.res, np.ones( [parameters.iterations + 1, 4] )) )
 
     mesh.dV4 = np.dstack([mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1]])
 
@@ -910,6 +934,7 @@ def AUSMDVmuscl( domain, mesh, boundary, parameters, state, gas ):
         t.tic()
 
         n = n+1
+        state.n = state.n+1
 
         # state at previous timestep, use for outflow BCs
         state.Qn = state.Q
@@ -1049,10 +1074,10 @@ def AUSMDVmuscl( domain, mesh, boundary, parameters, state, gas ):
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
 
         # L_inf-norm residual
-        state.res[n-1,0] = np.log10( np.max(state.residual[:,:,0] * mesh.dV[1:-1,1:-1]) ) 
-        state.res[n-1,1] = np.log10( np.max(state.residual[:,:,1] * mesh.dV[1:-1,1:-1]) ) 
-        state.res[n-1,2] = np.log10( np.max(state.residual[:,:,2] * mesh.dV[1:-1,1:-1]) )
-        state.res[n-1,3] = np.log10( np.max(state.residual[:,:,3] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,0] = np.log10( np.max(state.residual[:,:,0] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,1] = np.log10( np.max(state.residual[:,:,1] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,2] = np.log10( np.max(state.residual[:,:,2] * mesh.dV[1:-1,1:-1]) )
+        state.res[state.n-1,3] = np.log10( np.max(state.residual[:,:,3] * mesh.dV[1:-1,1:-1]) ) 
 
         #state.res[n-1] = np.log10( np.max(state.residual * mesh.dV4) ) 
 
@@ -1069,19 +1094,19 @@ def AUSMDVmuscl( domain, mesh, boundary, parameters, state, gas ):
 
         # print iteration output
         if n % 10 == 0:
-            print('Iteration: ' + str(n) + '    ' + str(round(state.res[n-1,0],3)) + '    ' + str(round(state.res[n-1,1],3)) + \
+            print('Iteration: ' + str(state.n) + '    ' + str(round(state.res[n-1,0],3)) + '    ' + str(round(state.res[n-1,1],3)) + \
                                            '    ' + str(round(state.res[n-1,2],3)) + '    ' + str(round(state.res[n-1,3],3)) )
             t.toc('Iteration time:')
 
     print('________________________________________________________________________________________________________________________________________')
 
     # post processing variables
-    state = calc_postvars(state, gas, n)
+    state = calc_postvars(state, gas)
 
     return state
 
 
-def calc_postvars(state, gas, n):
+def calc_postvars(state, gas):
 
     state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / \
                            thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv) )
@@ -1089,6 +1114,5 @@ def calc_postvars(state, gas, n):
     state.p0 = (1+((gas.gamma_fn(gas.Cp, gas.Cv)-1)/2)*state.Mach**2)** \
                    (gas.gamma_fn(gas.Cp, gas.Cv)/(gas.gamma_fn(gas.Cp, gas.Cv)-1)) * state.p
     state.T0 = (1+((gas.gamma_fn(gas.Cp, gas.Cv)-1)/2)*state.Mach**2) * state.T
-    state.n = n
 
     return state

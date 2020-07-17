@@ -29,7 +29,7 @@ def init_state(domain, mesh, boundary, parameters, gas):
     state.p0 = (1+((gas.gamma_p-1)/2)*state.Mach**2)**(gas.gamma_p/(gas.gamma_p-1)) * state.p
     state.res = np.array([1, 1, 1, 1])
     state.T0 = (1+((gas.gamma_p-1)/2)*state.Mach**2) * state.T
-    state.n = 1
+    state.n = 0
 
     # specific heat ratio calculation
     gas.Cp = gas.Cp_fn( gas.gamma_p, gas.Cp_p, gas.theta, state.T )

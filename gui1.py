@@ -445,7 +445,7 @@ class MainFrame ( wx.Frame ):
 
 		self.plotOptions.AppendSeparator()
 
-		self.force = wx.MenuItem( self.cmOptions, wx.ID_ANY, u"Plot Pressure Coefficient", wx.EmptyString, wx.ITEM_NORMAL )
+		self.force = wx.MenuItem( self.plotOptions, 9707, u"Plot Pressure Coefficient", wx.EmptyString, wx.ITEM_CHECK )
 		self.plotOptions.Append( self.force )
 
 		self.menuBar.Append( self.plotOptions, u"Plotting" )
@@ -938,7 +938,11 @@ class MainFrame ( wx.Frame ):
 
 		t.toc('Simulation time:')
 
-		self.call_contplot(self.contourPanel, 1, 1)
+		if self.force.IsChecked():
+			self.call_forceplot( self.contourPanel, 1, 1 )
+		else:
+			self.call_contplot(self.contourPanel, 1, 1)		
+		
 		self.call_resplot()
 
 		event.Skip()
@@ -946,6 +950,9 @@ class MainFrame ( wx.Frame ):
 	def call_contplot( self, panel, scalex, scaley ):
 
 		# panel input as self.contourPanel
+
+		# uncheck plot pressure coefficient option
+		self.plotOptions.Check(9707, False)
 
 		# length to height ratio
 		r = min(1, (1.35/1.3) / ( ( np.max(self.mesh.xxc) - np.min(self.mesh.xxc) ) / \
@@ -1254,42 +1261,46 @@ class MainFrame ( wx.Frame ):
 		panel.cax.set_xlabel('x/c')
 		panel.cax.set_ylabel('Coefficient of Pressure')
 
-		force_calc( self, self.boundary, self.parameters, self.state, self.gas )
+		if self.force.IsChecked():
+			force_calc( self, self.boundary, self.parameters, self.state, self.gas )
 
-		# loop through walls to plot Cp
-		for obj in self.boundary:
+			# loop through walls to plot Cp
+			for obj in self.boundary:
 
-			if hasattr(obj, 'Cp'):
-				
-				if obj.wall_n[1] == 1:
-					c = obj.wall_x[-1] - obj.wall_x[0]
-					n = np.maximum( 1, int(len(obj.wall_x)/30) )
-					data1 = np.array( ( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
-										(self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]), obj.Cp ) )
-					panel.cax.plot( data1[0,::n], data1[1,::n], 'k^', linewidth=0.75, fillStyle='none' )
-						
-				else:
-					c = obj.wall_x[-1] - obj.wall_x[0]
-					n = np.maximum( 1, int(len(obj.wall_x)/30) )
-					data2 = np.array( ( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
-										(self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]), obj.Cp ) )
-					panel.cax.plot( data2[0,::n], data2[1,::n], 'kv', linewidth=0.75, fillStyle='none' )
+				if hasattr(obj, 'Cp'):
+					
+					if obj.wall_n[1] == 1:
+						c = obj.wall_x[-1] - obj.wall_x[0]
+						n = np.maximum( 1, int(len(obj.wall_x)/30) )
+						data1 = np.array( ( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
+											(self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]), obj.Cp ) )
+						panel.cax.plot( data1[0,::n], data1[1,::n], 'k^', linewidth=0.75, fillStyle='none' )
+							
+					else:
+						c = obj.wall_x[-1] - obj.wall_x[0]
+						n = np.maximum( 1, int(len(obj.wall_x)/30) )
+						data2 = np.array( ( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
+											(self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]), obj.Cp ) )
+						panel.cax.plot( data2[0,::n], data2[1,::n], 'kv', linewidth=0.75, fillStyle='none' )
 
+			# paste data to clipboard if possible
+			if not wx.TheClipboard.IsOpened():
 
-		# paste data to clipboard if possible
-		if not wx.TheClipboard.IsOpened():
+				data = np.array( ( np.transpose(data1), np.transpose(data2) ) )
 
-			data = np.array( ( np.transpose(data1), np.transpose(data2) ) )
+				wx.TheClipboard.Open()
+				wx.TheClipboard.SetData( wx.TextDataObject( str(data) ) )
+				wx.TheClipboard.Close()
 
-			wx.TheClipboard.Open()
-			wx.TheClipboard.SetData( wx.TextDataObject( str(data) ) )
-			wx.TheClipboard.Close()
+			# invert y-axis
+			panel.cax.invert_yaxis()
+			plt.grid(True)
 
-		# invert y-axis
-		panel.cax.invert_yaxis()
-		plt.grid(True)
+			panel.canvas = FigureCanvas(panel, -1, panel.figure)
 
-		panel.canvas = FigureCanvas(panel, -1, panel.figure)
+		else:
+
+			self.call_contplot( self.contourPanel, 1, 1 )
 
 
 	# menubar events
@@ -1687,7 +1698,11 @@ class MainFrame ( wx.Frame ):
 		scy = y/4.0 * 0.9
 		#scale = min(scx, scy)
 
-		self.call_contplot(self.new.contourPanel, scx, scy)
+		if self.force.IsChecked():
+			self.call_forceplot( self.new.contourPanel, scx*0.9, scy*0.9 )
+		else:
+			self.call_contplot( self.new.contourPanel, scx, scy )
+
 		self.new.Show()
 		event.Skip()
 
