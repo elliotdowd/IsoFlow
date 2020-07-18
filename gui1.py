@@ -788,6 +788,9 @@ class MainFrame ( wx.Frame ):
 		from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 		from pytictoc import TicToc
 
+		# uncheck plot pressure coefficient option
+		self.plotOptions.Check(9707, False)
+
 		t = TicToc()
 		t.tic()
 
@@ -1266,7 +1269,6 @@ class MainFrame ( wx.Frame ):
 		ax2.set_ylim([-0.1, 0.7])
 		ax2.set_position([0.14, 0.12, 0.61, 0.72], which='both')
 
-
 		if self.force.IsChecked():
 			force_calc( self, self.boundary, self.parameters, self.state, self.gas )
 
@@ -1276,9 +1278,11 @@ class MainFrame ( wx.Frame ):
 				if hasattr(obj, 'Cp'):
 					
 					if obj.wall_n[1] == 1:
+						wall_x = np.hstack([obj.wall_x[0], obj.wall_x]) #, obj.wall_x[-1]])
+						xxc = self.mesh.xxc[wall_x, obj.wall_y]
 						c = self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]
 						n = np.maximum( 1, int(len(obj.wall_x)/30) )
-						data1 = np.array( ( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
+						data1 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
 											 c, -obj.Cp ) )
 						panel.cax.plot( data1[0,::n], data1[1,::n], 'k^', linewidth=0.75, fillStyle='none' )
 
@@ -1290,18 +1294,17 @@ class MainFrame ( wx.Frame ):
 										 self.mesh.yy[obj.wall_x, obj.wall_y], 'k--', linewidth=0.5)
 
 					else:
+						wall_x = np.hstack([obj.wall_x[0], obj.wall_x]) #, obj.wall_x[-1]])
+						xxc = self.mesh.xxc[wall_x, obj.wall_y]
 						c = self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]
 						n = np.maximum( 1, int(len(obj.wall_x)/30) )
-						data2 = np.array( ( (self.mesh.xxc[obj.wall_x, obj.wall_y]-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
+						data2 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
 											 c, -obj.Cp ) )
 						panel.cax.plot( data2[0,::n], data2[1,::n], 'kv', linewidth=0.75, fillStyle='none' )
 
 						# plot wall
 						ax2.plot( (self.mesh.xx[obj.wall_x, obj.wall_y]-self.mesh.xx[obj.wall_x[0],obj.wall_y])/c, \
 										 self.mesh.yy[obj.wall_x, obj.wall_y], 'k-', linewidth=1)
-
-			ax2.set_ylim
-
 
 			# paste data to clipboard if possible
 			if not wx.TheClipboard.IsOpened():
@@ -1744,7 +1747,7 @@ def force_calc( self, boundary, parameters, state, gas ):
 
 	for obj in boundary:
 		if obj.region == 'object':
-			x = obj.wall_x
+			x = np.hstack([ int(obj.wall_x[0]-1), obj.wall_x ]) #, int(obj.wall_x[-1]+1)])
 			y = obj.wall_y
 
 			gam = gas.gamma_fn( gas.Cp_fn( gas.gamma_p, gas.Cp_p, gas.theta, parameters.T_in), \
@@ -1754,6 +1757,7 @@ def force_calc( self, boundary, parameters, state, gas ):
 					 (gam/(gam-1)) * parameters.p_in
 
 			obj.Cp = ( state.p[x,y] - parameters.p_in ) / ( p0 - parameters.p_in )
+
 
 
 class RedirectText:
