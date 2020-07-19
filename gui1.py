@@ -246,6 +246,17 @@ class MainFrame ( wx.Frame ):
 
 		self.boundOptions = wx.Menu()
 
+		self.out_supersonic = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Supersonic Outflow", wx.EmptyString, wx.ITEM_RADIO )
+		self.boundOptions.Append( self.out_supersonic )
+
+		self.out_hybrid = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Hybrid Outflow", wx.EmptyString, wx.ITEM_RADIO )
+		self.boundOptions.Append( self.out_hybrid )
+
+		self.out_subsonic = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Subsonic Outflow", wx.EmptyString, wx.ITEM_RADIO )
+		self.boundOptions.Append( self.out_subsonic )
+
+		self.boundOptions.AppendSeparator()
+
 		self.objwall_invisc = wx.MenuItem( self.boundOptions, 330, u"Object Wall: Inviscid Wall", wx.EmptyString, wx.ITEM_RADIO )
 		self.boundOptions.Append( self.objwall_invisc )
 		
@@ -448,6 +459,18 @@ class MainFrame ( wx.Frame ):
 		self.force = wx.MenuItem( self.plotOptions, 9707, u"Plot Pressure Coefficient", wx.EmptyString, wx.ITEM_CHECK )
 		self.plotOptions.Append( self.force )
 
+		self.showObj = wx.MenuItem( self.plotOptions, wx.ID_ANY, u"Show Wall Geometry", wx.EmptyString, wx.ITEM_CHECK )
+		self.plotOptions.Append( self.showObj )
+
+		self.copyOptions = wx.Menu()
+		self.cp = wx.MenuItem( self.copyOptions, wx.ID_ANY, u"Copy Pressure Coefficient", wx.EmptyString, wx.ITEM_NORMAL )
+		self.copyOptions.Append( self.cp )
+
+		self.coordinates = wx.MenuItem( self.copyOptions, wx.ID_ANY, u"Copy Object Coordinates", wx.EmptyString, wx.ITEM_NORMAL )
+		self.copyOptions.Append( self.coordinates )
+
+		self.plotOptions.AppendSubMenu( self.copyOptions, u"Copy Data to Clipboard" )
+
 		self.menuBar.Append( self.plotOptions, u"Plotting" )
 
 
@@ -503,6 +526,10 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.thermalgas_change, id = self.thermalgas.GetId() )
 		self.Bind( wx.EVT_MENU, self.infoWindow, id = self.gasinfo.GetId() )
 
+		self.Bind( wx.EVT_MENU, self.init_parameters, id = self.out_supersonic.GetId() )
+		self.Bind( wx.EVT_MENU, self.init_parameters, id = self.out_hybrid.GetId() )
+		self.Bind( wx.EVT_MENU, self.init_parameters, id = self.out_subsonic.GetId() )
+
 		self.Bind( wx.EVT_MENU, self.topwall_change, id = self.topwall_out.GetId() )
 		self.Bind( wx.EVT_MENU, self.topwall_change, id = self.topwall_invisc.GetId() )
 		self.Bind( wx.EVT_MENU, self.topwall_change, id = self.topwall_visc.GetId() )
@@ -552,6 +579,11 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.init_parameters, id = self.vanalbada2.GetId() )
 
 		self.Bind( wx.EVT_MENU, self.force_change, id = self.force.GetId() )
+		self.Bind( wx.EVT_MENU, self.force_change, id = self.showObj.GetId() )
+
+		self.Bind( wx.EVT_MENU, self.copyCp, id = self.cp.GetId() )
+		self.Bind( wx.EVT_MENU, self.copyxy, id = self.coordinates.GetId() )
+
 
 		# initialize grid values and class attributes
 		self.init_grids()
@@ -660,7 +692,7 @@ class MainFrame ( wx.Frame ):
 				
 		self.domain = domain
 
-	def init_parameters( self ):
+	def init_parameters( self, event ):
 
 		# initialize state vector, simulation parameters and fluid properties
 		class parameters:
@@ -676,6 +708,14 @@ class MainFrame ( wx.Frame ):
 			iterations = int(wx.grid.Grid.GetCellValue(self.simGrid, 1, 0))
 			tolerance = float(wx.grid.Grid.GetCellValue(self.simGrid, 2, 0))
 			CFL = float(wx.grid.Grid.GetCellValue(self.simGrid, 0, 0))
+
+			# outlet conditions
+			if self.out_supersonic.IsChecked():
+				outlet = 'supersonic'
+			if self.out_hybrid.IsChecked():
+				outlet = 'hybrid'
+			else:
+				outlet = 'subsonic'
 
 			# MUSCL interpolation parameters
 			from python.finite_volume.muscl import limiters
@@ -860,7 +900,7 @@ class MainFrame ( wx.Frame ):
 
 		t = TicToc()
 
-		self.init_parameters()
+		self.init_parameters(wx.EVT_MENU)
 		self.init_boundary(self.boundary)
 
 		self.gas = gasdata.air_tpg
@@ -900,7 +940,7 @@ class MainFrame ( wx.Frame ):
 			self.domain.theta = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.domainGrid, 4, 0)))
 			self.domain.alpha = np.deg2rad(float(wx.grid.Grid.GetCellValue(self.parameterGrid, 3, 0)))
 	
-		self.init_parameters()
+		self.init_parameters(wx.EVT_MENU)
 		self.init_boundary(self.boundary)
 
 		if self.thermoModel == 'cpg':
@@ -1263,11 +1303,13 @@ class MainFrame ( wx.Frame ):
 		panel.cax.set_xlabel('x/c')
 		panel.cax.set_ylabel('$-C_{p}$')
 
-		ax2 = panel.cax.twinx()
-		ax2.set_ylabel('y/c')
-		ax2.set_aspect('equal')
-		ax2.set_ylim([-0.1, 0.7])
-		ax2.set_position([0.14, 0.12, 0.61, 0.72], which='both')
+
+		if self.showObj.IsChecked():
+			ax2 = panel.cax.twinx()
+			ax2.set_ylabel('y/c')
+			ax2.set_aspect('equal')
+			ax2.set_ylim([-0.1, 0.7])
+			ax2.set_position([0.14, 0.12, 0.61, 0.72], which='both')
 
 		if self.force.IsChecked():
 			force_calc( self, self.boundary, self.parameters, self.state, self.gas )
@@ -1286,12 +1328,13 @@ class MainFrame ( wx.Frame ):
 											 c, -obj.Cp ) )
 						panel.cax.plot( data1[0,::n], data1[1,::n], 'k^', linewidth=0.75, fillStyle='none' )
 
-						# plot wall
-						ax2.plot( (self.mesh.xx[obj.wall_x, obj.wall_y+1]-self.mesh.xx[obj.wall_x[0],obj.wall_y+1])/c, \
-										 self.mesh.yy[obj.wall_x, obj.wall_y+1], 'k-', linewidth=1)
-						# camber line	# plot wall
-						ax2.plot( (self.mesh.xx[obj.wall_x, obj.wall_y]-self.mesh.xx[obj.wall_x[0],obj.wall_y])/c, \
-										 self.mesh.yy[obj.wall_x, obj.wall_y], 'k--', linewidth=0.5)
+						if self.showObj.IsChecked():
+							# plot wall
+							ax2.plot( (self.mesh.xx[obj.wall_x, obj.wall_y+1]-self.mesh.xx[obj.wall_x[0],obj.wall_y+1])/c, \
+											self.mesh.yy[obj.wall_x, obj.wall_y+1], 'k-', linewidth=1)
+							# camber line	# plot wall
+							ax2.plot( (self.mesh.xx[obj.wall_x, obj.wall_y]-self.mesh.xx[obj.wall_x[0],obj.wall_y])/c, \
+											self.mesh.yy[obj.wall_x, obj.wall_y], 'k--', linewidth=0.5)
 
 					else:
 						wall_x = np.hstack([obj.wall_x[0], obj.wall_x]) #, obj.wall_x[-1]])
@@ -1302,23 +1345,12 @@ class MainFrame ( wx.Frame ):
 											 c, -obj.Cp ) )
 						panel.cax.plot( data2[0,::n], data2[1,::n], 'kv', linewidth=0.75, fillStyle='none' )
 
-						# plot wall
-						ax2.plot( (self.mesh.xx[obj.wall_x, obj.wall_y]-self.mesh.xx[obj.wall_x[0],obj.wall_y])/c, \
-										 self.mesh.yy[obj.wall_x, obj.wall_y], 'k-', linewidth=1)
+						if self.showObj.IsChecked():
+							# plot wall
+							ax2.plot( (self.mesh.xx[obj.wall_x, obj.wall_y]-self.mesh.xx[obj.wall_x[0],obj.wall_y])/c, \
+											self.mesh.yy[obj.wall_x, obj.wall_y], 'k-', linewidth=1)
 
-			# paste data to clipboard if possible
-			if not wx.TheClipboard.IsOpened():
-
-				data = np.array( ( np.transpose(data1), np.transpose(data2) ) )
-
-				wx.TheClipboard.Open()
-				wx.TheClipboard.SetData( wx.TextDataObject( str(data) ) )
-				wx.TheClipboard.Close()
-
-			# invert y-axis
-			# panel.cax.invert_yaxis()
 			plt.grid(True)
-
 			panel.canvas = FigureCanvas(panel, -1, panel.figure)
 
 		else:
@@ -1710,6 +1742,78 @@ class MainFrame ( wx.Frame ):
 
 		event.Skip()
 
+	# copy pressure coefficient data to clipboard
+	def copyCp( self, event ):
+
+		# paste data to clipboard if possible
+		if not wx.TheClipboard.IsOpened():
+
+			force_calc( self, self.boundary, self.parameters, self.state, self.gas )
+
+			# loop through walls to write Cp
+			for obj in self.boundary:
+
+				if hasattr(obj, 'Cp'):
+					
+					if obj.wall_n[1] == 1:
+						wall_x = np.hstack([obj.wall_x[0], obj.wall_x]) #, obj.wall_x[-1]])
+						xxc = self.mesh.xxc[wall_x, obj.wall_y]
+						c = self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]
+						n = np.maximum( 1, int(len(obj.wall_x)/30) )
+						data1 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
+											 c, -obj.Cp ) )
+					else:
+						wall_x = np.hstack([obj.wall_x[0], obj.wall_x]) #, obj.wall_x[-1]])
+						xxc = self.mesh.xxc[wall_x, obj.wall_y]
+						c = self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]
+						n = np.maximum( 1, int(len(obj.wall_x)/30) )
+						data2 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
+											 c, -obj.Cp ) )
+
+			if 'data2' in locals():
+				data = np.array( ( np.transpose(data1), np.transpose(data2) ) )
+			else:
+				data = np.transpose(data1)
+
+			wx.TheClipboard.Open()
+			wx.TheClipboard.SetData( wx.TextDataObject( str(data) ) )
+			wx.TheClipboard.Close()
+
+	def copyxy( self, event ):
+
+		# paste data to clipboard if possible
+		if not wx.TheClipboard.IsOpened():
+
+			for obj in self.boundary:
+
+				if obj.region == 'object':
+
+					if obj.wall_n[1] == 1:
+										
+						wall_x = np.hstack([obj.wall_x[0], obj.wall_x])
+						addY = int(obj.wall_n[1]==1)
+						wall_y = obj.wall_y + addY
+						xx = self.mesh.xx[wall_x, wall_y] - self.mesh.xx[wall_x[0], wall_y]
+						yy = self.mesh.yy[wall_x, wall_y]
+						c = self.mesh.xx[obj.wall_x[-1],wall_y] - self.mesh.xx[obj.wall_x[0],wall_y]
+						data1 = np.array( ( xx/c, yy/c ) )
+
+					else:
+
+						wall_x = np.hstack([obj.wall_x[0], obj.wall_x])
+						addY = int(obj.wall_n[1]==1)
+						wall_y = obj.wall_y + addY
+						xx = self.mesh.xx[wall_x, wall_y] - self.mesh.xx[wall_x[0], wall_y]
+						yy = self.mesh.yy[wall_x, wall_y]
+						c = self.mesh.xx[obj.wall_x[-1],wall_y] - self.mesh.xx[obj.wall_x[0],wall_y]
+						data2 = np.array( ( xx/c, yy/c ) )
+
+			data = np.array( ( np.transpose(data1), np.transpose(data2) ) )
+
+			wx.TheClipboard.Open()
+			wx.TheClipboard.SetData( wx.TextDataObject( str(data) ) )
+			wx.TheClipboard.Close()
+
 
 	# open contour plot in new window
 	def expandWindow( self, event ):
@@ -1736,7 +1840,7 @@ class MainFrame ( wx.Frame ):
 
 	# open info window for MUSCL interpolation
 	def musclWindow( self, event ):
-		self.init_parameters()
+		self.init_parameters(wx.EVT_MENU)
 		self.new = tvdWindow( parent=self )
 		self.new.Show()
 		event.Skip()
@@ -1766,9 +1870,6 @@ class RedirectText:
 
 	def write(self,string):
 		self.out.WriteText(string)
-
-		# redir=RedirectText(self.consolePanel.text)
-		# sys.stdout=redir
 
 
 class NewWindow( wx.Frame ):

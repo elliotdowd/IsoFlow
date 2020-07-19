@@ -175,27 +175,43 @@ def enforce_bc(domain, mesh, boundary, parameters, state, gas):
 
         if obj.type == 'Outflow':
 
-            # dynamic outflow boundary condition, leave alone if subsonic, propagate if supersonic
-            state.Q[x0,y0,0] = parameters.p_in / (gas.R_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]) * parameters.T_in)
-            state.Q[x0,y0,1] = state.Q[x0,y0,0] * parameters.M_in * np.cos(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_in/state.Q[x0,y0,0])
-            state.Q[x0,y0,2] = state.Q[x0,y0,0] * parameters.M_in * np.sin(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_in/state.Q[x0,y0,0])
-            state.Q[x0,y0,3] = thermo.calc_rho_et(parameters.p_in, state.Q[x0,y0,0], state.u[x0,y0], state.v[x0,y0], gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]))
+            if parameters.outlet == 'supersonic':
+                if n[0] == 0:
+                    state.Q[x0,y0,:] = state.Qn[x1,y1,:]
+                    state.p[x0,y0] = state.p[x1,y1]
+                    state.T[x0,y0] = state.T[x1,y1]
+                elif n[0] != 1:
+                    state.Q[x0,y0,:] = state.Qn[x1,y1,:]
+                    state.p[x0,y0] = state.p[x1,y1]
+                    state.T[x0,y0] = state.T[x1,y1]
+            elif parameters.outlet == 'hybrid':
 
-            M = np.sqrt( (state.Q[x1,y1,1]/state.Q[x1,y1,0])**2 + (state.Q[x1,y1,2]/state.Q[x1,y1,0])**2 ) / \
-                          thermo.calc_c( state.p[x1,y1], state.Q[x1,y1,0], gas.gamma_fn(gas.Cp[x1,y1], gas.Cv[x1,y1]) )
-            # mask for state vector positions where M > 1
-            sonic_mask = np.where( M > 1 )
+                # dynamic outflow boundary condition, leave alone if subsonic, propagate if supersonic
+                state.Q[x0,y0,0] = parameters.p_in / (gas.R_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]) * parameters.T_in)
+                state.Q[x0,y0,1] = state.Q[x0,y0,0] * parameters.M_in * np.cos(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_in/state.Q[x0,y0,0])
+                state.Q[x0,y0,2] = state.Q[x0,y0,0] * parameters.M_in * np.sin(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_in/state.Q[x0,y0,0])
+                state.Q[x0,y0,3] = thermo.calc_rho_et(parameters.p_in, state.Q[x0,y0,0], state.u[x0,y0], state.v[x0,y0], gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]))
 
-            # mask for left/right vs. top or bottom outlets
-            if n[0] == 0:
-                state.Q[sonic_mask,y0,:] = state.Qn[sonic_mask,y1,:]
-                state.p[sonic_mask,y0] = state.p[sonic_mask,y1]
-                state.T[sonic_mask,y0] = state.T[sonic_mask,y1]
-            elif n[0] != 1:
-                pass
-                # state.Q[x0,sonic_mask,:] = state.Qn[x0,sonic_mask,:]
-                # state.p[x0,sonic_mask] = state.p[x1,sonic_mask]
-                # state.T[x0,sonic_mask] = state.T[x1,sonic_mask]
+                M = np.sqrt( (state.Q[x1,y1,1]/state.Q[x1,y1,0])**2 + (state.Q[x1,y1,2]/state.Q[x1,y1,0])**2 ) / \
+                            thermo.calc_c( state.p[x1,y1], state.Q[x1,y1,0], gas.gamma_fn(gas.Cp[x1,y1], gas.Cv[x1,y1]) )
+                # mask for state vector positions where M > 1
+                sonic_mask = np.where( M > 1 )
+
+                # mask for left/right vs. top or bottom outlets
+                if n[0] == 0:
+                    state.Q[sonic_mask,y0,:] = state.Qn[sonic_mask,y1,:]
+                    state.p[sonic_mask,y0] = state.p[sonic_mask,y1]
+                    state.T[sonic_mask,y0] = state.T[sonic_mask,y1]
+                elif n[0] != 1:
+                    state.Q[x0,sonic_mask,:] = state.Qn[x0,sonic_mask,:]
+                    state.p[x0,sonic_mask] = state.p[x1,sonic_mask]
+                    state.T[x0,sonic_mask] = state.T[x1,sonic_mask]
+
+            else:
+                state.Q[x0,y0,0] = parameters.p_in / (gas.R_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]) * parameters.T_in)
+                state.Q[x0,y0,1] = state.Q[x0,y0,0] * parameters.M_in * np.cos(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_in/state.Q[x0,y0,0])
+                state.Q[x0,y0,2] = state.Q[x0,y0,0] * parameters.M_in * np.sin(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_in/state.Q[x0,y0,0])
+                state.Q[x0,y0,3] = thermo.calc_rho_et(parameters.p_in, state.Q[x0,y0,0], state.u[x0,y0], state.v[x0,y0], gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]))
 
         else:
             if y0 > y1:

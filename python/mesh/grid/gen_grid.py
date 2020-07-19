@@ -25,11 +25,15 @@ def mesh_wedge(domain):
     yy = np.fliplr(yy)
     #yy[:,-1] = height*(1+(1/(N)))
 
+    obj_i = np.where(x>wedge_start)[0][0]
+
     # initialize list
     walls = []
 
     # set boundary class values
-    walls.append( wall( 'domain', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'domain', 0, obj_i-1, 0, 0, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'object', obj_i, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
+
     walls.append( wall( 'domain', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
     walls.append( wall( 'domain', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
     walls.append( wall( 'domain', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
@@ -180,8 +184,8 @@ def mesh_naca4(domain):
     nx = 1.5
     half = int(N/2)
     for j in range( 0, half ):
-        y[half-j] = y[half-j] - 0.75*y[half-j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
-        y[half+2+j] = y[half+2+j] - 0.75*y[half+2+j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
+        y[half-j] = y[half-j] - 0.875*y[half-j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
+        y[half+2+j] = y[half+2+j] - 0.875*y[half+2+j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
 
     # concentrate x points near leading and trailing edges
     nL = 1
@@ -289,8 +293,8 @@ def mesh_biconvex(domain):
     nx = 1
     half = int(N/2)
     for j in range( 0, half ):
-        y[half-j] = y[half-j] - 0.5*y[half-j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
-        y[half+2+j] = y[half+2+j] - 0.5*y[half+2+j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
+        y[half-j] = y[half-j] - 0.875*y[half-j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
+        y[half+2+j] = y[half+2+j] - 0.875*y[half+2+j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
 
     # concentrate x points near leading and trailing edges
     nL = 1.5
