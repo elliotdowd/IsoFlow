@@ -26,7 +26,7 @@ def init_state(domain, mesh, boundary, parameters, gas):
     state.v = Q[:,:,2]/Q[:,:,0]
     state.Q = Q
     state.Qn = Q
-    state.p = thermo.calc_p( Q[:,:,0], Q[:,:,3], Q[:,:,1]/Q[:,:,0], Q[:,:,2]/Q[:,:,0], gas.gamma_p )
+    state.p = thermo.calc_p( Q[:,:,0], Q[:,:,3], Q[:,:,1]/Q[:,:,0], Q[:,:,2]/Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv) )
     state.T = state.p / (gas.R_p * Q[:,:,0])
     state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / \
                            thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv) )

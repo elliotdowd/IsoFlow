@@ -20,7 +20,7 @@ class air_cpg:
     gamma_p = 1
     Cp_p = 1006
     Cv_p = 718
-    R_p = Cp_p - Cv_p
+    R_p = 287
     theta = 3055.556
 
     def Cp_fn( k_p, Cp_p, th, T ):
@@ -102,7 +102,7 @@ class air_tpg:
     gamma_p = 1.4
     Cp_p = 1006
     Cv_p = 718
-    R_p = Cp_p - Cv_p
+    R_p = 287
     theta = 3055.556
 
     def Cp_fn( k_p, Cp_p, th, T ):

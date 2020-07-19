@@ -903,7 +903,20 @@ class MainFrame ( wx.Frame ):
 		self.init_parameters(wx.EVT_MENU)
 		self.init_boundary(self.boundary)
 
-		self.gas = gasdata.air_tpg
+		if self.thermoModel == 'cpg':
+			if self.air.IsChecked() == True:
+				self.gas = gasdata.air_cpg
+			elif self.C02.IsChecked() == True:
+				self.gas = gasdata.C02_cpg
+			elif self.H2.IsChecked() == True:
+				self.gas = gasdata.H2_cpg
+		elif self.thermoModel == 'tpg':
+			if self.air.IsChecked() == True:
+				self.gas = gasdata.air_tpg
+			elif self.C02.IsChecked() == True:
+				self.gas = gasdata.C02_tpg
+			elif self.H2.IsChecked() == True:
+				self.gas = gasdata.H2_tpg
 
 		# initialize state vector, thermodynamic variables
 		t.tic()

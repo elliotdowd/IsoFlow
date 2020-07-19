@@ -130,6 +130,7 @@ def RoeFDS( domain, mesh, boundary, parameters, state, gas ):
         t.toc('Flux Jacobian time:')
 
 
+
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
         flux.residual( state.residual, state.dt[1:-1, 1:-1] * mesh.dV[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
                           mesh.s_proj[1:-1,1:-1,:], domain.M, domain.N )
@@ -320,9 +321,15 @@ def RoeFVS( domain, mesh, boundary, parameters, state, gas ):
         F_hat_bot   = Fc_half[1:-1,0:-1,:] + Fd_half[1:-1,0:-1,:]
         F_hat_top   = Fc_half[1:-1,1:,:] + Fd_half[1:-1,1:,:]
 
+        state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
+                                  ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
+                                    - E_hat_left * np.dstack([mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4]]) ) + \
+                                    ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
+                                    - F_hat_bot * np.dstack([mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5]]) ) )
+
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
-        flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
-                          mesh.s_proj[1:-1,1:-1,:], domain.M, domain.N ) 
+        # flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
+        #                   mesh.s_proj[1:-1,1:-1,:], domain.M, domain.N ) 
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
 
         # L_inf-norm residual
