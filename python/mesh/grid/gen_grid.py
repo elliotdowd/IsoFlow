@@ -35,7 +35,7 @@ def mesh_wedge(domain):
     walls.append( wall( 'object', obj_i, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
 
     walls.append( wall( 'domain', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
-    walls.append( wall( 'domain', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
+    walls.append( wall( 'inlet', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
     walls.append( wall( 'domain', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
 
     return xx, yy, walls
@@ -104,7 +104,7 @@ def mesh_corner(domain):
     # set boundary class values
     walls.append( wall( 'domain', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
     walls.append( wall( 'domain', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
-    walls.append( wall( 'domain', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
+    walls.append( wall( 'inlet', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
     walls.append( wall( 'domain', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
 
     return xx, yy, walls
@@ -144,12 +144,12 @@ def mesh_cylinder(domain):
     walls = []
 
     # set boundary class values
-    walls.append( wall( 'domain', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
-    walls.append( wall( 'domain', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
-    walls.append( wall( 'domain', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
-    walls.append( wall( 'domain', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
+    walls.append( wall( 'object', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'inlet', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
+    walls.append( wall( 'symmetry', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
+    walls.append( wall( 'symmetry', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
 
-    return xx, yy
+    return xx, yy, walls
 
 
 def mesh_naca4(domain):
@@ -195,11 +195,11 @@ def mesh_naca4(domain):
         x[domain.obj_i+i] = x_stored[domain.obj_i+i] + 0.75*(x[domain.obj_i]-x[domain.obj_i+i])*(np.sinh((front-i)/front))**nL/np.sinh(1)**nL
         x[domain.obj_i-i] = x_stored[domain.obj_i-i] + 0.75*(x[domain.obj_i]-x[domain.obj_i-i])*(np.sinh((front-i)/front))**nL/np.sinh(1)**nL
 
-    nT = 1.5
+    nT = 1
     back = int(5)
     for i in range( 1, back ):
-        x[domain.obj_f+i] = x_stored[domain.obj_f+i] + 0.5*(x[domain.obj_f]-x[domain.obj_f+i])*(np.sinh((back-i)/back))**nT/np.sinh(1)**nT
-        x[domain.obj_f-i] = x_stored[domain.obj_f-i] + 0.5*(x[domain.obj_f]-x[domain.obj_f-i])*(np.sinh((back-i)/back))**nT/np.sinh(1)**nT
+        x[domain.obj_f+i] = x_stored[domain.obj_f+i] + 0.75*(x[domain.obj_f]-x[domain.obj_f+i])*(np.sinh((back-i)/back))**nT/np.sinh(1)**nT
+        x[domain.obj_f-i] = x_stored[domain.obj_f-i] + 0.75*(x[domain.obj_f]-x[domain.obj_f-i])*(np.sinh((back-i)/back))**nT/np.sinh(1)**nT
 
 
     xaf = x[domain.obj_i:domain.obj_f]
@@ -259,7 +259,7 @@ def mesh_naca4(domain):
     walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallU-1, domain.wallU-1, np.array( ( 0, 1 ) ) ) )
     walls.append( wall( 'domain', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
     walls.append( wall( 'domain', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
-    walls.append( wall( 'domain', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
+    walls.append( wall( 'inlet', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
     walls.append( wall( 'domain', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
 
     return xx, yy, walls
@@ -339,7 +339,7 @@ def mesh_biconvex(domain):
     walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallU-1, domain.wallU-1, np.array( ( 0, 1 ) ) ) )
     walls.append( wall( 'domain', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
     walls.append( wall( 'domain', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
-    walls.append( wall( 'domain', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
+    walls.append( wall( 'inlet', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
     walls.append( wall( 'domain', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
 
     return xx, yy, walls
@@ -377,18 +377,18 @@ def mesh_capsule(domain):
         y[half+2+j] = y[half+2+j] - 0.5*y[half+2+j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
 
     # concentrate x points near leading and trailing edges
-    nL = 2
-    front = int(5)
-    x_stored = x
-    for i in range( 1, front ):
-        x[domain.obj_i+i] = x_stored[domain.obj_i+i] + 0.5*(x[domain.obj_i]-x[domain.obj_i+i])*(np.sinh((front-i)/front))**nL/np.sinh(1)**nL
-        x[domain.obj_i-i] = x_stored[domain.obj_i-i] + 0.5*(x[domain.obj_i]-x[domain.obj_i-i])*(np.sinh((front-i)/front))**nL/np.sinh(1)**nL
+    # nL = 2
+    # front = int(5)
+    # x_stored = x
+    # for i in range( 1, front ):
+    #     x[domain.obj_i+i] = x_stored[domain.obj_i+i] + 0.5*(x[domain.obj_i]-x[domain.obj_i+i])*(np.sinh((front-i)/front))**nL/np.sinh(1)**nL
+    #     x[domain.obj_i-i] = x_stored[domain.obj_i-i] + 0.5*(x[domain.obj_i]-x[domain.obj_i-i])*(np.sinh((front-i)/front))**nL/np.sinh(1)**nL
 
-    nT = 1.5
-    back = int(5)
-    for i in range( 1, back ):
-        x[domain.obj_f+i] = x_stored[domain.obj_f+i] + 0.5*(x[domain.obj_f]-x[domain.obj_f+i])*(np.sinh((back-i)/back))**nT/np.sinh(1)**nT
-        x[domain.obj_f-i] = x_stored[domain.obj_f-i] + 0.5*(x[domain.obj_f]-x[domain.obj_f-i])*(np.sinh((back-i)/back))**nT/np.sinh(1)**nT
+    # nT = 2
+    # back = int(5)
+    # for i in range( 1, back ):
+    #     x[domain.obj_f+i] = x_stored[domain.obj_f+i] + 0.5*(x[domain.obj_f]-x[domain.obj_f+i])*(np.sinh((back-i)/back))**nT/np.sinh(1)**nT
+    #     x[domain.obj_f-i] = x_stored[domain.obj_f-i] + 0.5*(x[domain.obj_f]-x[domain.obj_f-i])*(np.sinh((back-i)/back))**nT/np.sinh(1)**nT
 
     xaf = x[domain.obj_i:domain.obj_f] - x[domain.obj_i]
     c = x[domain.obj_f] - x[domain.obj_i]
@@ -409,12 +409,15 @@ def mesh_capsule(domain):
     yy = np.transpose(yy)
 
     # focus points closer to capsule
-    nC = 1
-    for j in range( 0, half ):
+    nC = 2
+    nT = 1
+    for j in range( 0, half-1 ):
         yy[domain.obj_i:domain.obj_f, half-j] = -yL*(np.sinh((half-j)/half)**nC)/np.sinh(1)**nC + yy[domain.obj_i:domain.obj_f, half-j]
-        yy[domain.obj_i:domain.obj_f, half+2+j] = yU*(half-j)/half + yy[domain.obj_i:domain.obj_f, half+2+j]#*(np.sinh((half-j)/half)**nC)/np.sinh(1)**nC 
+        # yy[domain.obj_i:domain.obj_f, half+2+j] = yU*(np.tanh((half-j)/half)**nT)/np.tanh(1)**nT + yy[domain.obj_i:domain.obj_f, half+2+j]
+        yy[domain.obj_i:domain.obj_f, half+2+j] = yU*(half-j-1)/half + yy[domain.obj_i:domain.obj_f, half+2+j]
 
     xx = np.array(xx, order='F')
+    # yy[:,-1] = height/2*(1+(1/(N)))
     yy = np.array(yy, order='F')
 
     # initialize list
@@ -423,10 +426,10 @@ def mesh_capsule(domain):
     # set boundary class values
     walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallL, domain.wallL, np.array( ( 0, -1 ) ) ) )
     walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallU-1, domain.wallU-1, np.array( ( 0, 1 ) ) ) )
-    walls.append( wall( 'domain', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'inlet', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
     walls.append( wall( 'domain', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
-    walls.append( wall( 'domain', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
-    walls.append( wall( 'domain', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
+    walls.append( wall( 'inlet', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
+    walls.append( wall( 'inlet', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
 
     return xx, yy, walls
 

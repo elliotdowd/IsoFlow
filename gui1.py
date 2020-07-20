@@ -1,10 +1,5 @@
-# -*- coding: utf-8 -*- 
-
 ###########################################################################
-## Python code generated with wxFormBuilder (version Jun 17 2015)
-## http://www.wxformbuilder.org/
-##
-## PLEASE DO "NOT" EDIT THIS FILE!
+## Import modules
 ###########################################################################
 
 import wx
@@ -66,13 +61,6 @@ class MainFrame ( wx.Frame ):
 		# Rows
 		self.domainGrid.EnableDragRowSize( True )
 		self.domainGrid.SetRowLabelSize( 112 )
-		self.domainGrid.SetRowLabelValue( 0, u"Length (m)" )
-		self.domainGrid.SetRowLabelValue( 1, u"Height (m)" )
-		self.domainGrid.SetRowLabelValue( 2, u"Airfoil Start (m)" )
-		self.domainGrid.SetRowLabelValue( 3, u"Airfoil End (m)" )
-		self.domainGrid.SetRowLabelValue( 4, u"NACA XXXX" )
-		self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
-		self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
 		self.domainGrid.SetRowLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
 		# Label Appearance
@@ -120,10 +108,6 @@ class MainFrame ( wx.Frame ):
 		# Rows
 		self.parameterGrid.EnableDragRowSize( True )
 		self.parameterGrid.SetRowLabelSize( 100 )
-		self.parameterGrid.SetRowLabelValue( 0, u"Inlet Mach #" )
-		self.parameterGrid.SetRowLabelValue( 1, u"Inlet Pres. (kPa)" )
-		self.parameterGrid.SetRowLabelValue( 2, u"Inlet Temp. (K)" )
-		self.parameterGrid.SetRowLabelValue( 3, u"< of Attack (°)" )
 		self.parameterGrid.SetRowLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
 		# Label Appearance
@@ -151,9 +135,6 @@ class MainFrame ( wx.Frame ):
 		# Rows
 		self.simGrid.EnableDragRowSize( True )
 		self.simGrid.SetRowLabelSize( 100 )
-		self.simGrid.SetRowLabelValue( 0, u"Max. CFL" )
-		self.simGrid.SetRowLabelValue( 1, u"Iterations" )
-		self.simGrid.SetRowLabelValue( 2, u"Residual Tol." )
 		self.simGrid.SetRowLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
 		# Label Appearance
@@ -319,6 +300,9 @@ class MainFrame ( wx.Frame ):
 		self.topwall_fixed = wx.MenuItem( self.topwall_thermal, wx.ID_ANY, u"Fixed Temperature", wx.EmptyString, wx.ITEM_RADIO )
 		self.topwall_thermal.Append( self.topwall_fixed )
 
+		self.botwall_adiabatic.Enable(False)
+		self.botwall_isothermal.Enable(False)
+		self.botwall_fixed.Enable(False)
 		self.topwall_adiabatic.Enable(False)
 		self.topwall_isothermal.Enable(False)
 		self.topwall_fixed.Enable(False)
@@ -456,18 +440,34 @@ class MainFrame ( wx.Frame ):
 
 		self.plotOptions.AppendSeparator()
 
-		self.force = wx.MenuItem( self.plotOptions, 9707, u"Plot Pressure Coefficient", wx.EmptyString, wx.ITEM_CHECK )
+		self.force = wx.MenuItem( self.plotOptions, 9707, u"Plot Wall Quantity", wx.EmptyString, wx.ITEM_CHECK )
 		self.plotOptions.Append( self.force )
+
+		self.wallQuantityOptions = wx.Menu()
+
+		self.wallCp = wx.MenuItem( self.wallQuantityOptions, wx.ID_ANY, u"Pressure Coefficient", wx.EmptyString, wx.ITEM_RADIO )
+		self.wallQuantityOptions.Append( self.wallCp )
+
+		self.wallp = wx.MenuItem( self.wallQuantityOptions, wx.ID_ANY, u"Pressure", wx.EmptyString, wx.ITEM_RADIO )
+		self.wallQuantityOptions.Append( self.wallp )
+
+		self.wallt = wx.MenuItem( self.wallQuantityOptions, wx.ID_ANY, u"Temperature", wx.EmptyString, wx.ITEM_RADIO )
+		self.wallQuantityOptions.Append( self.wallt )
+
+		self.plotOptions.AppendSubMenu( self.wallQuantityOptions, u"Select Wall Quantity" )
 
 		self.showObj = wx.MenuItem( self.plotOptions, wx.ID_ANY, u"Show Wall Geometry", wx.EmptyString, wx.ITEM_CHECK )
 		self.plotOptions.Append( self.showObj )
 
 		self.copyOptions = wx.Menu()
-		self.cp = wx.MenuItem( self.copyOptions, wx.ID_ANY, u"Copy Pressure Coefficient", wx.EmptyString, wx.ITEM_NORMAL )
+		self.cp = wx.MenuItem( self.copyOptions, wx.ID_ANY, u"Pressure Coefficient", wx.EmptyString, wx.ITEM_NORMAL )
 		self.copyOptions.Append( self.cp )
 
-		self.coordinates = wx.MenuItem( self.copyOptions, wx.ID_ANY, u"Copy Object Coordinates", wx.EmptyString, wx.ITEM_NORMAL )
+		self.coordinates = wx.MenuItem( self.copyOptions, wx.ID_ANY, u"Object Coordinates", wx.EmptyString, wx.ITEM_NORMAL )
 		self.copyOptions.Append( self.coordinates )
+
+		self.residual = wx.MenuItem( self.copyOptions, wx.ID_ANY, u"Residual Data", wx.EmptyString, wx.ITEM_NORMAL )
+		self.copyOptions.Append( self.residual )
 
 		self.plotOptions.AppendSubMenu( self.copyOptions, u"Copy Data to Clipboard" )
 
@@ -530,6 +530,9 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.init_parameters, id = self.out_hybrid.GetId() )
 		self.Bind( wx.EVT_MENU, self.init_parameters, id = self.out_subsonic.GetId() )
 
+		self.Bind( wx.EVT_MENU, self.botwall_change, id = self.botwall_out.GetId() )
+		self.Bind( wx.EVT_MENU, self.botwall_change, id = self.botwall_invisc.GetId() )
+		self.Bind( wx.EVT_MENU, self.botwall_change, id = self.botwall_visc.GetId() )
 		self.Bind( wx.EVT_MENU, self.topwall_change, id = self.topwall_out.GetId() )
 		self.Bind( wx.EVT_MENU, self.topwall_change, id = self.topwall_invisc.GetId() )
 		self.Bind( wx.EVT_MENU, self.topwall_change, id = self.topwall_visc.GetId() )
@@ -580,10 +583,14 @@ class MainFrame ( wx.Frame ):
 
 		self.Bind( wx.EVT_MENU, self.force_change, id = self.force.GetId() )
 		self.Bind( wx.EVT_MENU, self.force_change, id = self.showObj.GetId() )
+		self.Bind( wx.EVT_MENU, self.force_change, id = self.wallCp.GetId() )
+		self.Bind( wx.EVT_MENU, self.force_change, id = self.wallp.GetId() )
+		self.Bind( wx.EVT_MENU, self.force_change, id = self.wallt.GetId() )
 
 		self.Bind( wx.EVT_MENU, self.copyCp, id = self.cp.GetId() )
 		self.Bind( wx.EVT_MENU, self.copyxy, id = self.coordinates.GetId() )
-
+		self.Bind( wx.EVT_MENU, self.copyres, id = self.residual.GetId() )
+		
 
 		# initialize grid values and class attributes
 		self.init_grids()
@@ -631,6 +638,24 @@ class MainFrame ( wx.Frame ):
 
 	# initialize option grid values
 	def init_grids( self ):
+		# set domain row label values
+		self.domainGrid.SetRowLabelValue( 0, u"Length (m)" )
+		self.domainGrid.SetRowLabelValue( 1, u"Height (m)" )
+		self.domainGrid.SetRowLabelValue( 2, u"Airfoil Start (m)" )
+		self.domainGrid.SetRowLabelValue( 3, u"Airfoil End (m)" )
+		self.domainGrid.SetRowLabelValue( 4, u"NACA XXXX" )
+		self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
+		self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
+
+		self.parameterGrid.SetRowLabelValue( 0, u"Inlet Mach #" )
+		self.parameterGrid.SetRowLabelValue( 1, u"Inlet Pres. (kPa)" )
+		self.parameterGrid.SetRowLabelValue( 2, u"Inlet Temp. (K)" )
+		self.parameterGrid.SetRowLabelValue( 3, u"< of Attack (°)" )
+
+		self.simGrid.SetRowLabelValue( 0, u"Max. CFL" )
+		self.simGrid.SetRowLabelValue( 1, u"Iterations" )
+		self.simGrid.SetRowLabelValue( 2, u"Residual Tol." )
+
 		# set domain row values
 		self.domainGrid.SetCellValue( 0, 0, "1.5")
 		self.domainGrid.SetCellValue( 1, 0, "1.3")
@@ -799,6 +824,12 @@ class MainFrame ( wx.Frame ):
 
 				else:
 					obj.type = 'Outflow'
+
+			elif obj.region == 'inlet':
+				obj.type = 'Inlet'
+
+			elif obj.region == 'symmetry':
+				obj.type = 'Symmetry'
 
 			# object wall(s)
 			else:
@@ -1265,7 +1296,7 @@ class MainFrame ( wx.Frame ):
 				else:
 					self.contourPanel.cax.clabel(cont, fmt='%2.3f', colors='w', fontsize=8)
 
-		# add airfoil if needed
+		# add object if needed
 		if self.gridChoice.StringSelection == 'NACA XXXX Airfoil' or \
 		   self.gridChoice.StringSelection == 'Biconvex Airfoil' or \
 		   self.gridChoice.StringSelection == 'Capsule':
@@ -1317,8 +1348,13 @@ class MainFrame ( wx.Frame ):
 
 		panel.cax.set_xlim([-0.05, 1.05])
 		panel.cax.set_xlabel('x/c')
-		panel.cax.set_ylabel('$-C_{p}$')
 
+		if self.wallCp.IsChecked():
+			panel.cax.set_ylabel('$-C_{p}$')
+		elif self.wallp.IsChecked():
+			panel.cax.set_ylabel('Pressure' + ' (' + self.units.press + ')')
+		else:
+			panel.cax.set_ylabel('Temperature' + ' (' + self.units.temp + ')')
 
 		if self.showObj.IsChecked():
 			ax2 = panel.cax.twinx()
@@ -1334,14 +1370,21 @@ class MainFrame ( wx.Frame ):
 			for obj in self.boundary:
 
 				if hasattr(obj, 'Cp'):
+
+					wall_x = np.hstack([obj.wall_x[0], obj.wall_x, obj.wall_x[-1]]) #, obj.wall_x[-1]])
+					xxc = self.mesh.xxc[wall_x, obj.wall_y]
 					
 					if obj.wall_n[1] == 1:
-						wall_x = np.hstack([obj.wall_x[0], obj.wall_x]) #, obj.wall_x[-1]])
-						xxc = self.mesh.xxc[wall_x, obj.wall_y]
 						c = self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]
 						n = np.maximum( 1, int(len(obj.wall_x)/30) )
-						data1 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
-											 c, -obj.Cp ) )
+						# choose wall quantity
+						if self.wallCp.IsChecked():
+							data1 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / c, -obj.Cp ) )
+						elif self.wallp.IsChecked():
+							data1 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / c, obj.p ) )
+						else:
+							data1 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / c, obj.T ) )
+
 						panel.cax.plot( data1[0,::n], data1[1,::n], 'k^', linewidth=0.75, fillStyle='none' )
 
 						if self.showObj.IsChecked():
@@ -1353,12 +1396,16 @@ class MainFrame ( wx.Frame ):
 											self.mesh.yy[obj.wall_x, obj.wall_y], 'k--', linewidth=0.5)
 
 					else:
-						wall_x = np.hstack([obj.wall_x[0], obj.wall_x]) #, obj.wall_x[-1]])
-						xxc = self.mesh.xxc[wall_x, obj.wall_y]
 						c = self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]
 						n = np.maximum( 1, int(len(obj.wall_x)/30) )
-						data2 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
-											 c, -obj.Cp ) )
+						# choose wall quantity
+						if self.wallCp.IsChecked():
+							data2 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / c, -obj.Cp ) )
+						elif self.wallp.IsChecked():
+							data2 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / c, obj.p ) )
+						else:
+							data2 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / c, obj.T ) )
+
 						panel.cax.plot( data2[0,::n], data2[1,::n], 'kv', linewidth=0.75, fillStyle='none' )
 
 						if self.showObj.IsChecked():
@@ -1534,7 +1581,8 @@ class MainFrame ( wx.Frame ):
 		self.parameterGrid.SetRowLabelValue( 2, u"Inlet Temp. (" + self.units.temp + ')' )
 
 		if hasattr(self, 'state'):
-			self.call_contplot(self.contourPanel, 1, 1)
+			self.call_forceplot( self.contourPanel, 1, 1 )
+			# self.call_contplot(self.contourPanel, 1, 1)
 
 	def axis_change( self, event ):
 		if self.equal.IsChecked():
@@ -1627,6 +1675,17 @@ class MainFrame ( wx.Frame ):
 		self.bot_thermal_window.Show()
 		event.Skip()
 
+	def botwall_change( self, event ):
+		if self.botwall_invisc.IsChecked() or self.botwall_visc.IsChecked():
+			self.botwall_adiabatic.Enable(True)
+			self.botwall_isothermal.Enable(True)
+			self.botwall_fixed.Enable(True)
+		else:
+			self.botwall_adiabatic.Enable(False)
+			self.botwall_isothermal.Enable(False)
+			self.botwall_fixed.Enable(False)
+		event.Skip()
+
 	def topwall_thermal_change( self, event ):
 		self.faceselect = 'top'
 		self.top_thermal_window = thermalWindow(parent=self)
@@ -1650,13 +1709,6 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.ShowRow( 1 )
 			self.domainGrid.ShowRow( 3 )
 			self.domainGrid.ShowRow( 4 )
-
-			# disable object wall options
-			wx.MenuBar.Enable(self.menuBar, 330, False)
-			wx.MenuBar.Enable(self.menuBar, 331, False)
-			wx.MenuBar.Enable(self.menuBar, 340, False)
-			wx.MenuBar.Enable(self.menuBar, 341, False)
-			wx.MenuBar.Enable(self.menuBar, 342, False)
 
 			# check inviscid wall
 			if self.botwall_visc.IsChecked():
@@ -1852,6 +1904,18 @@ class MainFrame ( wx.Frame ):
 			wx.TheClipboard.SetData( wx.TextDataObject( str(data) ) )
 			wx.TheClipboard.Close()
 
+	def copyres( self, event ):
+
+		# paste data to clipboard if possible
+		if not wx.TheClipboard.IsOpened():
+
+			if hasattr(self, 'state'):
+				r = int(self.state.n/100)
+				data = np.round(self.state.res[::r,:], 2)
+
+			wx.TheClipboard.Open()
+			wx.TheClipboard.SetData( wx.TextDataObject( str(data) ) )
+			wx.TheClipboard.Close()
 
 	# open contour plot in new window
 	def expandWindow( self, event ):
@@ -1889,7 +1953,7 @@ def force_calc( self, boundary, parameters, state, gas ):
 
 	for obj in boundary:
 		if obj.region == 'object':
-			x = np.hstack([ int(obj.wall_x[0]-1), obj.wall_x ]) #, int(obj.wall_x[-1]+1)])
+			x = np.hstack([ int(obj.wall_x[0]-1), obj.wall_x, obj.wall_x[-1]+1 ])
 			y = obj.wall_y
 
 			gam = gas.gamma_fn( gas.Cp_fn( gas.gamma_p, gas.Cp_p, gas.theta, parameters.T_in), \
@@ -1902,7 +1966,15 @@ def force_calc( self, boundary, parameters, state, gas ):
 			else:
 				q = p0 - parameters.p_in
 
-			obj.Cp = ( state.p[x,y] - parameters.p_in ) / q
+			obj.Cp = np.hstack( [ ( state.p[x[0]-1,y-obj.wall_n[1]] - parameters.p_in ) / q, \
+								 ( state.p[x[1:-1],y] - parameters.p_in ) / q, \
+								 ( state.p[x[0]-1,y-obj.wall_n[1]] - parameters.p_in ) / q ] )
+			obj.p = self.units.conv_press( np.hstack( [ state.p[x[0]-1,y-obj.wall_n[1]], \
+								 						state.p[x[1:-1],y], \
+								 						state.p[x[0]-1,y-obj.wall_n[1]] ] ) )
+			obj.T = self.units.conv_temp( np.hstack( [  state.T[x[0]-1,y-obj.wall_n[1]], \
+								 		                state.T[x[1:-1],y], \
+								 						state.T[x[0]-1,y-obj.wall_n[1]] ] ) )
 
 
 class RedirectText:

@@ -1,5 +1,13 @@
-## IsoFlow 0.5.1
 
+## IsoFlow 0.5.3
+- Fixed issue with inverse metric indexing in residual calculation
+- Added plotting of wall temperature and pressures
+- Tweaked capsule meshing to provide less skewed meshes
+
+## IsoFlow 0.5.2
+- Separated copy function of object pressure coefficient
+
+## IsoFlow 0.5.1
 - Residual plotting no longer resets on every simulation run, only resets on initialize
 
 ###########################################################################
