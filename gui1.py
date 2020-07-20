@@ -1010,6 +1010,9 @@ class MainFrame ( wx.Frame ):
 		# uncheck plot pressure coefficient option
 		self.plotOptions.Check(9707, False)
 
+		# close all figures
+		plt.close('all')
+
 		# length to height ratio
 		r = min(1, (1.35/1.3) / ( ( np.max(self.mesh.xxc) - np.min(self.mesh.xxc) ) / \
 							   ( np.max(self.mesh.yyc - np.min(self.mesh.yyc) ) ) ) )
@@ -1749,6 +1752,28 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
 			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
 
+		elif self.gridChoice.StringSelection == 'Capsule':
+			self.domainGrid.ShowRow( 1 )
+			self.domainGrid.ShowRow( 3 )
+			self.domainGrid.ShowRow( 4 )
+
+			wx.MenuBar.Enable(self.menuBar, 330, True)
+			wx.MenuBar.Enable(self.menuBar, 331, True)
+			wx.MenuBar.Enable(self.menuBar, 340, True)
+			wx.MenuBar.Enable(self.menuBar, 341, True)
+			wx.MenuBar.Enable(self.menuBar, 342, True)
+
+			# check inviscid wall
+			self.boundOptions.Check(430, True)
+
+			self.domainGrid.SetRowLabelValue( 0, u"Length (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
+			self.domainGrid.SetRowLabelValue( 2, u"Capsule Left (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 3, u"Capsule Right (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 4, u"Capsule Height (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
+			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
+
 	def force_change( self, event ):
 
 		self.call_forceplot( self.contourPanel, 1, 1 )
@@ -1872,9 +1897,12 @@ def force_calc( self, boundary, parameters, state, gas ):
 
 			p0 = (1+((gam-1)/2)*parameters.M_in**2)** \
 					 (gam/(gam-1)) * parameters.p_in
+			if parameters.M_in > 1:
+				q = (gam/2) * parameters.p_in * parameters.M_in**2
+			else:
+				q = p0 - parameters.p_in
 
-			obj.Cp = ( state.p[x,y] - parameters.p_in ) / ( p0 - parameters.p_in )
-
+			obj.Cp = ( state.p[x,y] - parameters.p_in ) / q
 
 
 class RedirectText:
