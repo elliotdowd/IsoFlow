@@ -3,6 +3,7 @@
 - Fixed issue with inverse metric indexing in residual calculation
 - Added plotting of wall temperature and pressures
 - Tweaked capsule meshing to provide less skewed meshes
+- Expand window option can now plot meshes
 
 ## IsoFlow 0.5.2
 - Separated copy function of object pressure coefficient

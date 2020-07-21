@@ -460,8 +460,8 @@ class MainFrame ( wx.Frame ):
 		self.plotOptions.Append( self.showObj )
 
 		self.copyOptions = wx.Menu()
-		self.cp = wx.MenuItem( self.copyOptions, wx.ID_ANY, u"Pressure Coefficient", wx.EmptyString, wx.ITEM_NORMAL )
-		self.copyOptions.Append( self.cp )
+		self.wallq = wx.MenuItem( self.copyOptions, wx.ID_ANY, u"Wall Quantity", wx.EmptyString, wx.ITEM_NORMAL )
+		self.copyOptions.Append( self.wallq )
 
 		self.coordinates = wx.MenuItem( self.copyOptions, wx.ID_ANY, u"Object Coordinates", wx.EmptyString, wx.ITEM_NORMAL )
 		self.copyOptions.Append( self.coordinates )
@@ -587,7 +587,7 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.force_change, id = self.wallp.GetId() )
 		self.Bind( wx.EVT_MENU, self.force_change, id = self.wallt.GetId() )
 
-		self.Bind( wx.EVT_MENU, self.copyCp, id = self.cp.GetId() )
+		self.Bind( wx.EVT_MENU, self.copyWallq, id = self.wallq.GetId() )
 		self.Bind( wx.EVT_MENU, self.copyxy, id = self.coordinates.GetId() )
 		self.Bind( wx.EVT_MENU, self.copyres, id = self.residual.GetId() )
 		
@@ -862,11 +862,10 @@ class MainFrame ( wx.Frame ):
 		# uncheck plot pressure coefficient option
 		self.plotOptions.Check(9707, False)
 
+		self.plotType = 'grid'
+
 		t = TicToc()
 		t.tic()
-
-		# length unit conversion
-		cl = self.units.conv_length(1)
 
 		self.init_domain()
 
@@ -891,33 +890,7 @@ class MainFrame ( wx.Frame ):
 		print('Mesh elements: ' + str((self.domain.M+2) * (self.domain.N*2)))
 		t.toc('Meshing time:')
 
-		# mesh plotting
-		plt.close(fig=self.contourPanel.figure)
-		self.contourPanel.figure = plt.figure( dpi=100, figsize=(5.6, 4), facecolor=(222/256,222/256,222/256) )
-		self.contourPanel.cax = self.contourPanel.figure.gca()
-		self.contourPanel.cax.set_position([0.08, 0.11, 0.84, 0.78])
-
-		#mpl.axes.Axes.clear(self.contourPanel.cax)
-		self.contourPanel.cax.plot(self.mesh.xx * cl, self.mesh.yy * cl, color='blue', linewidth=0.5)
-		self.contourPanel.cax.plot(np.transpose(self.mesh.xx) * cl, np.transpose(self.mesh.yy) * cl, color='blue', linewidth=0.5)
-		self.contourPanel.cax.plot(self.mesh.xxc * cl, self.mesh.yyc * cl, 'gx', markersize=0.25)
-
-		# plot settings
-		if self.topwall_out.IsChecked():
-			self.contourPanel.cax.set(xlim=[np.min(self.mesh.xx) * cl, np.max(self.mesh.xx) * cl], \
-					  	  			  ylim=[np.min(self.mesh.yy) * cl, np.max(self.mesh.yy) * cl])
-		else:
-			self.contourPanel.cax.set(xlim=[np.min(self.mesh.xx) * cl, np.max(self.mesh.xx) * cl], \
-					  	  			  ylim=[np.min(self.mesh.yy[:,0:-1]) * cl, np.max(self.mesh.yy[:,0:-1]) * cl])
-
-		self.contourPanel.cax.set_xlabel('x-coordinate ' + '(' + self.units.length + ')')
-		self.contourPanel.cax.set_ylabel('y-coordinate ' + '(' + self.units.length + ')')
-		self.contourPanel.cax.set_aspect(self.axisOption, adjustable='box', anchor='C')
-		self.contourPanel.canvas = FigureCanvas(self.contourPanel, -1, self.contourPanel.figure)
-
-		sizer = wx.BoxSizer(wx.HORIZONTAL)
-		sizer.Add(self.contourPanel.canvas, proportion=1, flag=wx.LEFT | wx.TOP | wx.GROW)
-		self.SetSizer(sizer)
+		self.call_gridplot( self.contourPanel, 1, 1 )
 
 		event.Skip()
 
@@ -1034,12 +1007,42 @@ class MainFrame ( wx.Frame ):
 
 		event.Skip()
 
+	def call_gridplot( self, panel, scx, scy ):
+
+		# length unit conversion
+		cl = self.units.conv_length(1)
+
+		# mesh plotting
+		# plt.close(fig=panel.figure)
+		if scx > 1 or scy > 1:
+			panel.figure = plt.figure( dpi=100, figsize=(scx*5.6, scy*4.2), facecolor=(1, 1, 1) )
+		else:
+			panel.figure = plt.figure( dpi=100, figsize=(scx*5.6, scy*4.2), facecolor=(222/256,222/256,222/256) )		
+		panel.cax = panel.figure.gca()
+		panel.cax.set_position([0.08, 0.11, 0.84, 0.78])
+
+		#mpl.axes.Axes.clear(self.contourPanel.cax)
+		panel.cax.plot(self.mesh.xx * cl, self.mesh.yy * cl, color='blue', linewidth=0.5)
+		panel.cax.plot(np.transpose(self.mesh.xx) * cl, np.transpose(self.mesh.yy) * cl, color='blue', linewidth=0.5)
+		panel.cax.plot(self.mesh.xxc * cl, self.mesh.yyc * cl, 'gx', markersize=0.25)
+
+		# plot settings
+		panel.cax.set(xlim=[np.min(self.mesh.xx) * cl, np.max(self.mesh.xx) * cl], \
+									ylim=[np.min(self.mesh.yy) * cl, np.max(self.mesh.yy) * cl])
+
+		panel.cax.set_xlabel('x-coordinate ' + '(' + self.units.length + ')')
+		panel.cax.set_ylabel('y-coordinate ' + '(' + self.units.length + ')')
+		panel.cax.set_aspect(self.axisOption, adjustable='box', anchor='C')
+		panel.canvas = FigureCanvas(panel, -1, panel.figure)
+
 	def call_contplot( self, panel, scalex, scaley ):
 
 		# panel input as self.contourPanel
 
 		# uncheck plot pressure coefficient option
 		self.plotOptions.Check(9707, False)
+
+		self.plotType = 'contour'
 
 		# close all figures
 		plt.close('all')
@@ -1364,6 +1367,7 @@ class MainFrame ( wx.Frame ):
 			ax2.set_position([0.14, 0.12, 0.61, 0.72], which='both')
 
 		if self.force.IsChecked():
+			self.plotType = 'force'
 			force_calc( self, self.boundary, self.parameters, self.state, self.gas )
 
 			# loop through walls to plot Cp
@@ -1833,7 +1837,7 @@ class MainFrame ( wx.Frame ):
 		event.Skip()
 
 	# copy pressure coefficient data to clipboard
-	def copyCp( self, event ):
+	def copyWallq( self, event ):
 
 		# paste data to clipboard if possible
 		if not wx.TheClipboard.IsOpened():
@@ -1850,15 +1854,23 @@ class MainFrame ( wx.Frame ):
 						xxc = self.mesh.xxc[wall_x, obj.wall_y]
 						c = self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]
 						n = np.maximum( 1, int(len(obj.wall_x)/30) )
-						data1 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
-											 c, -obj.Cp ) )
+						if self.wallCp.IsChecked():
+							data1 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / c, -obj.Cp ) )
+						elif self.wallp.IsChecked():
+							data1 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / c, obj.p ) )
+						else:
+							data1 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / c, obj.T ) )
 					else:
 						wall_x = np.hstack([obj.wall_x[0], obj.wall_x]) #, obj.wall_x[-1]])
 						xxc = self.mesh.xxc[wall_x, obj.wall_y]
 						c = self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]
 						n = np.maximum( 1, int(len(obj.wall_x)/30) )
-						data2 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / \
-											 c, -obj.Cp ) )
+						if self.wallCp.IsChecked():
+							data2 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / c, -obj.Cp ) )
+						elif self.wallp.IsChecked():
+							data2 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / c, obj.p ) )
+						else:
+							data2 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / c, obj.T ) )
 
 			if 'data2' in locals():
 				data = np.array( ( np.transpose(data1), np.transpose(data2) ) )
@@ -1929,7 +1941,9 @@ class MainFrame ( wx.Frame ):
 
 		if self.force.IsChecked():
 			self.call_forceplot( self.new.contourPanel, scx*0.9, scy*0.9 )
-		else:
+		elif self.plotType == 'grid':
+			self.call_gridplot( self.new.contourPanel, 0.92*scx, 0.92*scy )
+		elif self.plotType == 'contour':
 			self.call_contplot( self.new.contourPanel, scx, scy )
 
 		self.new.Show()
