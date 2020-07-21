@@ -52,14 +52,14 @@ def QR( Qm1, Qi, Qp1, kap, eps, limiter ):
 
 def rL( Qm2, Qm1, Qi ):
     r = (Qi-Qm1) / (Qm1-Qm2)
-    r[np.isnan(r)] = 1
-    r[np.isinf(r)] = 1
+    r[np.isnan(r)] = 0
+    r[np.isinf(r)] = 0
     return r
 
 def rR( Qm1, Qi, Qp1 ):
     r = (Qi-Qm1) / (Qp1-Qi)
-    r[np.isnan(r)] = 1
-    r[np.isinf(r)] = 1
+    r[np.isnan(r)] = 0
+    r[np.isinf(r)] = 0
     return r
 
 

@@ -1850,7 +1850,7 @@ class MainFrame ( wx.Frame ):
 				if hasattr(obj, 'Cp'):
 					
 					if obj.wall_n[1] == 1:
-						wall_x = np.hstack([obj.wall_x[0], obj.wall_x]) #, obj.wall_x[-1]])
+						wall_x = np.hstack([obj.wall_x[0], obj.wall_x, obj.wall_x[-1]])
 						xxc = self.mesh.xxc[wall_x, obj.wall_y]
 						c = self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]
 						n = np.maximum( 1, int(len(obj.wall_x)/30) )
@@ -1861,7 +1861,7 @@ class MainFrame ( wx.Frame ):
 						else:
 							data1 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / c, obj.T ) )
 					else:
-						wall_x = np.hstack([obj.wall_x[0], obj.wall_x]) #, obj.wall_x[-1]])
+						wall_x = np.hstack([obj.wall_x[0], obj.wall_x, obj.wall_x[-1]])
 						xxc = self.mesh.xxc[wall_x, obj.wall_y]
 						c = self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]
 						n = np.maximum( 1, int(len(obj.wall_x)/30) )
@@ -1872,10 +1872,12 @@ class MainFrame ( wx.Frame ):
 						else:
 							data2 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / c, obj.T ) )
 
-			if 'data2' in locals():
+			if 'data2' in locals() and 'data1' in locals():
 				data = np.array( ( np.transpose(data1), np.transpose(data2) ) )
-			else:
+			elif 'data1' in locals():
 				data = np.transpose(data1)
+			else:
+				data = np.transpose(data2)
 
 			wx.TheClipboard.Open()
 			wx.TheClipboard.SetData( wx.TextDataObject( str(data) ) )
