@@ -115,23 +115,32 @@ def AUSM( domain, mesh, boundary, parameters, state, gas ):
         P_eta[:,:,1] = p_half_eta * mesh.s_proj[:,0:-1,2] / mesh.s_proj[:,0:-1,5]
         P_eta[:,:,2] = p_half_eta * mesh.s_proj[:,0:-1,3] / mesh.s_proj[:,0:-1,5]
 
-        # dissipative term (Liou_JCP_160_2000)
-        #Dm_zeta = np.abs( mdot_half_zeta )
-        #Dm_eta  = np.abs( mdot_half_eta )
+        if parameters.viscModel == 'viscous laminar':
+            # calculate viscous stress terms
+            Txx_m, Tyy_m, Txy_m = calc_stress( mesh, state, gas, '-' )
+            Txx_p, Tyy_p, Txy_p = calc_stress( mesh, state, gas, '+' )
 
-        # flux vector reconstruction
-        # E_hat_left = (1/2) * mdot_half_zeta[0:-1,1:-1] * ( Phi[0:-2,1:-1,:] + Phi[1:-1,1:-1,:] ) \
-        #             -(1/2) * Dm_zeta[0:-1,1:-1] * ( Phi[1:-1,1:-1,:] - Phi[0:-2,1:-1,:] ) \
-        #                    + P_zeta[0:-1,1:-1,:]
-        # E_hat_right= (1/2) * mdot_half_zeta[1:,1:-1] * ( Phi[1:-1,1:-1,:] + Phi[2:,1:-1,:] ) \
-        #             -(1/2) * Dm_zeta[1:,1:-1] * ( Phi[2:,1:-1,:] - Phi[1:-1,1:-1,:] ) \
-        #                    + P_zeta[1:,1:-1,:]
-        # F_hat_bot =  (1/2) * mdot_half_eta[1:-1,0:-1] * ( Phi[1:-1,0:-2,:] + Phi[1:-1,1:-1,:] ) \
-        #             -(1/2) * Dm_eta[1:-1,0:-1] * ( Phi[1:-1,1:-1,:] - Phi[1:-1,0:-2,:] ) \
-        #                    + P_eta[1:-1,0:-1,:]
-        # F_hat_top =  (1/2) * mdot_half_eta[1:-1,1:] * ( Phi[1:-1,1:-1,:] + Phi[1:-1,2:,:] ) \
-        #             -(1/2) * Dm_eta[1:-1,1:] * ( Phi[1:-1,2:,:] - Phi[1:-1,1:-1,:] ) \
-        #                    + P_eta[1:-1,1:,:]
+            Ev_left[:,:,1] = Txx_m
+            Ev_left[:,:,2] = Txy_m
+            Ev_left[:,:,3] = state.u[0:-2,1:-1]*Txx_m + state.v[0:-2,1:-1]*Txy_m
+            Ev_right[:,:,1] = Txx_p
+            Ev_right[:,:,2] = Txy_p
+            Ev_right[:,:,3] = state.u[1:-1,1:-1]*Txx_p + state.v[1:-1,1:-1]*Txy_p
+
+            Fv_bot[:,:,1] = Txx_m
+            Fv_bot[:,:,2] = Txy_m
+            Fv_bot[:,:,3] = state.u[1:-1,0:-2]*Txy_m + state.v[1:-1,0:-2]*Tyy_m
+            Fv_top[:,:,1] = Txx_p
+            Fv_top[:,:,2] = Txy_p
+            Fv_top[:,:,3] = state.u[1:-1,1:-1]*Txy_p + state.v[1:-1,1:-1]*Tyy_p
+
+            E_hat_left = E_hat_left - Ev_left
+            E_hat_right = E_hat_right - Ev_right
+            F_hat_bot = F_hat_bot - Fv_bot
+            F_hat_top = F_hat_top - Fv_top
+        elif parameters.viscModel == 'inviscid':
+            pass
+
         flux.face_flux( mdot_half_zeta, mdot_half_eta, Phi, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
 
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
@@ -1710,29 +1719,6 @@ def AUSMvisc( domain, mesh, boundary, parameters, state, gas ):
         # face flux terms
         flux.face_flux( mdot_half_zeta, mdot_half_eta, Phi, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
 
-        # calculate viscous stress terms
-        Txx_m, Tyy_m, Txy_m = calc_stress( mesh, state, '-' )
-        Txx_p, Tyy_p, Txy_p = calc_stress( mesh, state, '+' )
-
-        Ev_left[:,:,1] = Txx_m
-        Ev_left[:,:,2] = Txy_m
-        Ev_left[:,:,3] = state.u[0:-2,1:-1]*Txx_m + state.v[0:-2,1:-1]*Txy_m
-        Ev_right[:,:,1] = Txx_p
-        Ev_right[:,:,2] = Txy_p
-        Ev_right[:,:,3] = state.u[1:-1,1:-1]*Txx_p + state.v[1:-1,1:-1]*Txy_p
-
-        Fv_bot[:,:,1] = Txx_m
-        Fv_bot[:,:,2] = Txy_m
-        Fv_bot[:,:,3] = state.u[1:-1,0:-2]*Txy_m + state.v[1:-1,0:-2]*Tyy_m
-        Fv_top[:,:,1] = Txx_p
-        Fv_top[:,:,2] = Txy_p
-        Fv_top[:,:,3] = state.u[1:-1,1:-1]*Txy_p + state.v[1:-1,1:-1]*Tyy_p
-
-        E_hat_left = E_hat_left - Ev_left
-        E_hat_right = E_hat_right - Ev_right
-        F_hat_bot = F_hat_bot - Fv_bot
-        F_hat_top = F_hat_top - Fv_top
-
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
         state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
                                   ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
@@ -1777,7 +1763,8 @@ def AUSMvisc( domain, mesh, boundary, parameters, state, gas ):
     return state
 
 
-def calc_stress( mesh, state, face ):
+# calculate viscous stress components 
+def calc_stress( mesh, state, gas, face ):
 
     if face == '-':
         u_zeta = state.u[1:-1,1:-1] - state.u[0:-2,1:-1]
@@ -1798,9 +1785,9 @@ def calc_stress( mesh, state, face ):
         S_zetay = mesh.s_proj[1:-1,1:-1,1]
         S_etay = mesh.s_proj[1:-1,1:-1,3]
 
-    Txx = (2/3)*gas.mu_fn(state.T) * ( 2*(S_zetax*u_zeta + S_etax*u_eta) - S_zetay*v_zeta + S_etay*v_eta)
-    Tyy = (2/3)*gas.mu_fn(state.T) * ( 2*(S_zetay*v_zeta + S_etay*v_eta) - S_zetax*u_zeta + S_etax*u_eta)
-    Txy = gas.mu_fn(state.T) * (S_zetay*u_zeta + S_etay*u_eta + S_zetax*v_zeta + S_etax*v_eta)
+    Txx = (2/3)*gas.mu_fn(state.T[1:-1,1:-1]) * ( 2*(S_zetax*u_zeta + S_etax*u_eta) - S_zetay*v_zeta + S_etay*v_eta)
+    Tyy = (2/3)*gas.mu_fn(state.T[1:-1,1:-1]) * ( 2*(S_zetay*v_zeta + S_etay*v_eta) - S_zetax*u_zeta + S_etax*u_eta)
+    Txy = gas.mu_fn(state.T[1:-1,1:-1]) * (S_zetay*u_zeta + S_etay*u_eta + S_zetax*v_zeta + S_etax*v_eta)
 
     return Txx, Tyy, Txy
 

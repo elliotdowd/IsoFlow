@@ -215,6 +215,17 @@ class MainFrame ( wx.Frame ):
 		self.gasOptions.Append( self.H2 )
 		
 		self.gasOptions.AppendSeparator()
+
+		self.viscosityOptions = wx.Menu()
+
+		self.inviscid = wx.MenuItem( self.viscosityOptions, wx.ID_ANY, u"Inviscid", wx.EmptyString, wx.ITEM_RADIO )
+		self.viscosityOptions.Append( self.inviscid )
+
+		self.viscouslaminar = wx.MenuItem( self.viscosityOptions, wx.ID_ANY, u"Viscous Laminar", wx.EmptyString, wx.ITEM_RADIO )
+		self.viscosityOptions.Append( self.viscouslaminar )
+
+		self.gasOptions.AppendSubMenu( self.viscosityOptions, u"Viscosity Model" )
+
 		
 		self.thermalgas = wx.MenuItem( self.gasOptions, wx.ID_ANY, u"Thermally Perfect", wx.EmptyString, wx.ITEM_CHECK )
 		self.gasOptions.Append( self.thermalgas )
@@ -781,6 +792,11 @@ class MainFrame ( wx.Frame ):
 				limiter = limiters.vanalbada1
 			elif self.vanalbada2.IsChecked():
 				limiter = limiters.vanalbada2
+
+			if self.inviscid.IsChecked():
+				viscModel = 'inviscid'
+			elif self.viscouslaminar.IsChecked():
+				viscModel = 'viscous laminar'
 
 		self.parameters = parameters
 
