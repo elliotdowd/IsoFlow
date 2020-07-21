@@ -937,7 +937,8 @@ class MainFrame ( wx.Frame ):
 	def call_scheme( self, event ):
 
 		from pytictoc import TicToc
-		from python.finite_volume.AUSM.AUSMfamily import AUSM, AUSMmuscl, AUSMplusup, AUSMDV, AUSMDVmuscl, SLAU
+		from python.finite_volume.AUSM.AUSMfamily import AUSM, AUSMmuscl, AUSMplusup, AUSMplusupmuscl, \
+														 AUSMDV, AUSMDVmuscl, SLAU, SLAUmuscl
 		from python.finite_volume.Roe.Roefamily import RoeFDS, RoeFVS, RoeFVSimproved
 		import python.finite_volume.gasdata as gasdata
 
@@ -981,14 +982,20 @@ class MainFrame ( wx.Frame ):
 			else:
 				self.state = AUSM( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 		elif scheme == 'AUSM+up':
-			self.state = AUSMplusup( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
+			if self.higherorder.IsChecked():
+				self.state = AUSMplusupmuscl( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
+			else:
+				self.state = AUSMplusup( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 		elif scheme == 'AUSMDV':
 			if self.higherorder.IsChecked():
 				self.state = AUSMDVmuscl( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 			else:
 				self.state = AUSMDV( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 		elif scheme == 'SLAU':
-			self.state = SLAU( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
+			if self.higherorder.IsChecked():
+				self.state = SLAUmuscl( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
+			else:
+				self.state = SLAU( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 		elif scheme == 'Roe FDS':
 			self.state = RoeFDS( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 		elif scheme == 'Roe FVS':
