@@ -7,17 +7,17 @@ def init_state(domain, mesh, boundary, parameters, gas):
     from python.finite_volume.helper import thermo
 
     # specific heat ratio calculation
-    gas.Cp = np.zeros( (domain.M+2, domain.N+2 ) ) + gas.Cp_fn( gas.gamma_p, gas.Cp_p, gas.theta, parameters.T_in )
-    gas.Cv = np.zeros( (domain.M+2, domain.N+2 ) ) + gas.Cv_fn( gas.gamma_p, gas.Cv_p, gas.theta, parameters.T_in )
+    gas.Cp = np.zeros( (domain.M+2, domain.N+2 ) ) + gas.Cp_fn( gas.gamma_p, gas.Cp_p, gas.theta, parameters.T_out )
+    gas.Cv = np.zeros( (domain.M+2, domain.N+2 ) ) + gas.Cv_fn( gas.gamma_p, gas.Cv_p, gas.theta, parameters.T_out )
 
     # initialize Q state vector at each point
     Q = np.zeros((domain.M+2, domain.N+2, 4), dtype='float', order='F')
     #soln_vars.init_q(Q, parameters.p_in, parameters.T_in, parameters.M_in, gas.R, gas.gamma, domain.M+2, domain.M+2)
 
-    Q[:,:,0] = parameters.p_in / (gas.R_p * parameters.T_in)
-    Q[:,:,1] = Q[:,:,0] * parameters.M_in * np.cos(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp, gas.Cv)*parameters.p_in/Q[:,:,0])
-    Q[:,:,2] = Q[:,:,0] * parameters.M_in * np.sin(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp, gas.Cv)*parameters.p_in/Q[:,:,0])
-    Q[:,:,3] = thermo.calc_rho_et(parameters.p_in, Q[:,:,0], Q[:,:,1]/Q[:,:,0], Q[:,:,2]/Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv))
+    Q[:,:,0] = parameters.p_out / (gas.R_p * parameters.T_out)
+    Q[:,:,1] = Q[:,:,0] * parameters.M_in * np.cos(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp, gas.Cv)*parameters.p_out/Q[:,:,0])
+    Q[:,:,2] = Q[:,:,0] * parameters.M_in * np.sin(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp, gas.Cv)*parameters.p_out/Q[:,:,0])
+    Q[:,:,3] = thermo.calc_rho_et(parameters.p_out, Q[:,:,0], Q[:,:,1]/Q[:,:,0], Q[:,:,2]/Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv))
 
     class state:
         pass

@@ -157,7 +157,7 @@ class MainFrame ( wx.Frame ):
 		
 		MainSizer.Add( self.m_staticText111, wx.GBPosition( 10, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
-		gridChoiceChoices = [ u"Wedge", u"Corner", u'NACA XXXX Airfoil', u'Biconvex Airfoil', u'Capsule', u'C-D Nozzle' ]
+		gridChoiceChoices = [ u"Wedge", u"Corner", u'NACA XXXX Airfoil', u'Biconvex Airfoil', u'Capsule', u'Planar C-D Nozzle', u'C-D Nozzle w/ Exit' ]
 		self.gridChoice = wx.Choice( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, gridChoiceChoices, 0 )
 		self.gridChoice.SetSelection( 2 )
 		MainSizer.Add( self.gridChoice, wx.GBPosition( 3, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
@@ -886,7 +886,8 @@ class MainFrame ( wx.Frame ):
 
 	# Virtual event handlers, overide them in your derived class
 	def call_grid( self, event ):
-		from python.mesh.grid.gen_grid import mesh_wedge, mesh_corner, mesh_cylinder, mesh_naca4, mesh_biconvex, mesh_capsule, mesh_planar_nozzle
+		from python.mesh.grid.gen_grid import mesh_wedge, mesh_corner, mesh_cylinder, mesh_naca4, \
+											  mesh_biconvex, mesh_capsule, mesh_planar_nozzle, mesh_planar_nozzle_exit
 		from python.mesh.metrics.calc_cell_metrics import cellmetrics
 		import matplotlib.pyplot as plt
 		import matplotlib as mpl
@@ -915,8 +916,10 @@ class MainFrame ( wx.Frame ):
 			xx, yy, walls = mesh_biconvex(self.domain)
 		elif self.domain.name == "Capsule":
 			xx, yy, walls = mesh_capsule(self.domain)
-		elif self.domain.name == "C-D Nozzle":
+		elif self.domain.name == "Planar C-D Nozzle":
 			xx, yy, walls = mesh_planar_nozzle(self.domain)
+		elif self.domain.name == "C-D Nozzle w/ Exit":
+			xx, yy, walls = mesh_planar_nozzle_exit(self.domain)
 
 		self.mesh = cellmetrics(xx, yy, self.domain)
 
@@ -1884,7 +1887,7 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
 			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
 
-		elif self.gridChoice.StringSelection == "C-D Nozzle":
+		elif self.gridChoice.StringSelection == "Planar C-D Nozzle":
 			self.domainGrid.ShowRow( 1 )
 			self.domainGrid.HideRow( 3 )
 			self.domainGrid.ShowRow( 4 )
@@ -1903,6 +1906,29 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
 			self.domainGrid.SetRowLabelValue( 2, u"Throat Size (" + self.units.length + ')' )
 			# self.domainGrid.SetRowLabelValue( 3, u"Capsule Right (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 4, u"$Theta_{1}$ (°)" )
+			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
+			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
+
+		elif self.gridChoice.StringSelection == "C-D Nozzle w/ Exit":
+			self.domainGrid.ShowRow( 1 )
+			self.domainGrid.ShowRow( 3 )
+			self.domainGrid.ShowRow( 4 )
+
+			wx.MenuBar.Enable(self.menuBar, 330, False)
+			wx.MenuBar.Enable(self.menuBar, 331, False)
+			wx.MenuBar.Enable(self.menuBar, 340, False)
+			wx.MenuBar.Enable(self.menuBar, 341, False)
+			wx.MenuBar.Enable(self.menuBar, 342, False)
+
+			# check inviscid walls
+			self.boundOptions.Check(431, True)
+			self.boundOptions.Check(531, True)
+
+			self.domainGrid.SetRowLabelValue( 0, u"Length (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
+			self.domainGrid.SetRowLabelValue( 2, u"Throat Size (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 3, u"Exit Length (" + self.units.length + ')' )
 			self.domainGrid.SetRowLabelValue( 4, u"$Theta_{1}$ (°)" )
 			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
 			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )

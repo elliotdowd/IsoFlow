@@ -129,7 +129,6 @@ def mesh_planar_nozzle(domain):
     # theta1 = theta1*(3.1415927/180)
     y0 = 0.4
     Aratio = 2.9
-    throat = 0.25
 
     # Foesch nozzle parameters (see NAVAL ORDNANCE LABORATORY MEMORANDUM 10594 )
 
@@ -142,7 +141,7 @@ def mesh_planar_nozzle(domain):
     # mesh left side of domain
 
     x_i = np.linspace(0, (1+(1/M)), int(M/2)+1)
-    x_i = x_i * np.sin(x_i)**(2*throat/height)
+    x_i = x_i * np.sin(x_i)**(throat/height)
     y_i = np.linspace(-(1/2)*(1+(1/N)), (1/2)*(1+(1/N)), N+3)
 
     xL = x_i / np.max(x_i)
@@ -178,6 +177,82 @@ def mesh_planar_nozzle(domain):
     walls.append( wall( 'domain', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
 
     return xx, yy, walls
+
+
+def mesh_planar_nozzle_exit(domain):
+
+    # import numpy
+    import numpy as np
+    import python.mesh.grid.meshing as meshing
+
+    # import domain values
+    M = domain.M
+    N = domain.N
+    length = domain.length
+    height = domain.height
+    theta1 = domain.theta
+    throat = domain.obj_start
+    exit = domain.obj_end
+
+    # import domain values
+    # theta1 = theta1*(3.1415927/180)
+    y0 = 0.4
+    Aratio = 2.9
+
+    # Foesch nozzle parameters (see NAVAL ORDNANCE LABORATORY MEMORANDUM 10594 )
+
+    r0 = y0 / theta1
+    y1 = y0 * (np.sin(theta1)/theta1) * Aratio
+    x1 = (3/2) * (y1-y0) * (1/np.tan(theta1))
+
+    Nhalf = int(N/2)+1
+
+    # mesh left side of domain
+
+    x_i = np.linspace(0, (1+(1/M)), int(M/2)+1)
+    x_i = x_i * np.sin(x_i)**(throat/height)
+    y_i = np.linspace(-(1/2)*(1+(1/N)), (1/2)*(1+(1/N)), N+3)
+
+    xL = x_i / np.max(x_i)
+
+    y = y1 + (np.tan(theta1)/x1)* (xL**2) * (1-xL/(3*x1))
+    yL = ( y-np.min(y) )
+    yL = ( yL / np.max(yL) )
+
+    xx1, yy1 = np.meshgrid(xL*length, y_i*height)
+    xx1 = np.transpose(xx1)
+    yy1 = np.transpose(yy1)
+
+    yy1 = np.fliplr(yy1)
+
+    for j in range(0, Nhalf+1):
+        yy1[:,Nhalf-j] = yy1[:,Nhalf-j] + (1/2)*((height/throat)-1)*yL*((j)/Nhalf)
+        yy1[:,Nhalf+j] = yy1[:,Nhalf+j] - (1/2)*((height/throat)-1)*yL*((j)/Nhalf)
+
+    yy1 = (height / np.max(yy1[:,1:-1])) * yy1
+
+    xx = np.vstack( [np.flipud(-xx1[-1,:]-(1/M)*length), np.flipud(-xx1), xx1[1:,:], xx1[-1,:]+(1/M)*length] )
+    yy = np.vstack( [(yy1[-1,:]), np.flipud(yy1), yy1[1:,:], yy1[-1,:]] )
+
+    yy = np.fliplr(yy)
+
+    for i in range(1, int((M/2)*(exit/length)+1)):
+        xx = np.vstack( [xx, xx[-1,:]+(2/M)*length] )
+        yy = np.vstack( [yy, yy[-1,:]] )
+
+    domain.M = domain.M + int((M/2)*(exit/length))
+
+    # initialize list
+    walls = []
+
+    # set boundary class values
+    walls.append( wall( 'domain', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'domain', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
+    walls.append( wall( 'inlet', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
+    walls.append( wall( 'domain', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
+
+    return xx, yy, walls
+
 
 
 def mesh_cylinder(domain):
