@@ -117,62 +117,56 @@ def mesh_planar_nozzle(domain):
     import python.mesh.grid.meshing as meshing
 
     # import domain values
-    M = int(domain.M/2)
+    M = domain.M
     N = domain.N
     length = domain.length
     height = domain.height
     theta1 = domain.theta
-    y0 = domain.obj_start
-    Aratio = domain.obj_end
+    throat = domain.obj_start
+    # Aratio = domain.obj_end
+
+    # import domain values
+    # theta1 = theta1*(3.1415927/180)
+    y0 = 0.4
+    Aratio = 2.9
+    throat = 0.25
 
     # Foesch nozzle parameters (see NAVAL ORDNANCE LABORATORY MEMORANDUM 10594 )
 
     r0 = y0 / theta1
     y1 = y0 * (np.sin(theta1)/theta1) * Aratio
-    x1 = (3/2) * (y1-y0) * np.cot(theta1)
+    x1 = (3/2) * (y1-y0) * (1/np.tan(theta1))
 
-    Nhalf = int(N/2) - 1
+    Nhalf = int(N/2)+1
 
     # mesh left side of domain
 
-    x_i = np.linspace(-(1/M)*length, length*(1+(1/M))/2, M+3)
-    y_i = np.linspace(-(1/N)*height, height*(1+(1/N)), N+3)
+    x_i = np.linspace(0, (1+(1/M)), int(M/2)+1)
+    x_i = x_i * np.sin(x_i)**(2*throat/height)
+    y_i = np.linspace(-(1/2)*(1+(1/N)), (1/2)*(1+(1/N)), N+3)
 
-    y = y1 + (np.tan(theta1)/x1)*x_i**2 * (1-x_i/(3*x1))
+    xL = x_i / np.max(x_i)
 
-    xx1, yy1 = np.meshgrid(x1,y1)
+    y = y1 + (np.tan(theta1)/x1)* (xL**2) * (1-xL/(3*x1))
+    yL = ( y-np.min(y) )
+    yL = ( yL / np.max(yL) )
+
+    xx1, yy1 = np.meshgrid(xL*length, y_i*height)
     xx1 = np.transpose(xx1)
     yy1 = np.transpose(yy1)
 
     yy1 = np.fliplr(yy1)
 
-    # determine airfoil height
-    if np.sign(theta1) == 1:
-        h = np.max(yy1[:,1])
-    else:
-        h = np.min(yy1[:,1])
+    for j in range(0, Nhalf+1):
+        yy1[:,Nhalf-j] = yy1[:,Nhalf-j] + (1/2)*((height/throat)-1)*yL*((j)/Nhalf)
+        yy1[:,Nhalf+j] = yy1[:,Nhalf+j] - (1/2)*((height/throat)-1)*yL*((j)/Nhalf)
 
-    # mesh right side of domain
+    yy1 = (height / np.max(yy1[:,1:-1])) * yy1
 
-    x2 = np.linspace(0, length/2, M+3) + np.max(xx1)
-    y2 = np.linspace(-(1/N)*height, height*(1+(1/N)), N+3)
+    xx = np.vstack( [np.flipud(-xx1[-1,:]-(1/M)*length), np.flipud(-xx1), xx1[1:,:], xx1[-1,:]+(1/M)*length] )
+    yy = np.vstack( [(yy1[-1,:]), np.flipud(yy1), yy1[1:,:], yy1[-1,:]] )
 
-    xx2, yy2 = np.meshgrid(x2,y2)
-    xx2 = np.transpose(xx2)
-    yy2 = np.transpose(yy2)
-
-    # determine second half angle
-    theta2 = np.arctan(h/((np.max(xx2)-np.min(xx2))-(length-af_end)))
-
-    meshing.mod2wedge(xx2, yy2, height, theta2, (length-af_end)+np.max(xx1), M, N)
-    yy2 = np.flipud(yy2)
-    yy2 = np.fliplr(yy2)
-    yy2[:,-1] = height*(1+(1/(N)))
-
-    xx = np.vstack((xx1[1:-1,:], xx2[0:-1,:]))
-    yy = np.vstack((yy1[1:-1,:], yy2[0:-1,:]))
-
-    domain.M = M*2
+    yy = np.fliplr(yy)
 
     # initialize list
     walls = []

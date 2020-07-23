@@ -157,7 +157,7 @@ class MainFrame ( wx.Frame ):
 		
 		MainSizer.Add( self.m_staticText111, wx.GBPosition( 10, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 		
-		gridChoiceChoices = [ u"Wedge", u"Corner", u'NACA XXXX Airfoil', u'Biconvex Airfoil', u'Capsule' ]
+		gridChoiceChoices = [ u"Wedge", u"Corner", u'NACA XXXX Airfoil', u'Biconvex Airfoil', u'Capsule', u'C-D Nozzle' ]
 		self.gridChoice = wx.Choice( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, gridChoiceChoices, 0 )
 		self.gridChoice.SetSelection( 2 )
 		MainSizer.Add( self.gridChoice, wx.GBPosition( 3, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
@@ -295,13 +295,13 @@ class MainFrame ( wx.Frame ):
 
 		self.boundOptions.AppendSeparator()
 
-		self.topwall_out = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Top Wall: Outflow", wx.EmptyString, wx.ITEM_RADIO )
+		self.topwall_out = wx.MenuItem( self.boundOptions, 530, u"Top Wall: Outflow", wx.EmptyString, wx.ITEM_RADIO )
 		self.boundOptions.Append( self.topwall_out )
 		
-		self.topwall_invisc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Top Wall: Inviscid Wall", wx.EmptyString, wx.ITEM_RADIO )
+		self.topwall_invisc = wx.MenuItem( self.boundOptions, 531, u"Top Wall: Inviscid Wall", wx.EmptyString, wx.ITEM_RADIO )
 		self.boundOptions.Append( self.topwall_invisc )
 		
-		self.topwall_visc = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Top Wall: Viscous Wall", wx.EmptyString, wx.ITEM_RADIO )
+		self.topwall_visc = wx.MenuItem( self.boundOptions, 532, u"Top Wall: Viscous Wall", wx.EmptyString, wx.ITEM_RADIO )
 		self.boundOptions.Append( self.topwall_visc )
 
 		self.topwall_thermal = wx.Menu()
@@ -886,7 +886,7 @@ class MainFrame ( wx.Frame ):
 
 	# Virtual event handlers, overide them in your derived class
 	def call_grid( self, event ):
-		from python.mesh.grid.gen_grid import mesh_wedge, mesh_corner, mesh_cylinder, mesh_naca4, mesh_biconvex, mesh_capsule
+		from python.mesh.grid.gen_grid import mesh_wedge, mesh_corner, mesh_cylinder, mesh_naca4, mesh_biconvex, mesh_capsule, mesh_planar_nozzle
 		from python.mesh.metrics.calc_cell_metrics import cellmetrics
 		import matplotlib.pyplot as plt
 		import matplotlib as mpl
@@ -915,6 +915,9 @@ class MainFrame ( wx.Frame ):
 			xx, yy, walls = mesh_biconvex(self.domain)
 		elif self.domain.name == "Capsule":
 			xx, yy, walls = mesh_capsule(self.domain)
+		elif self.domain.name == "C-D Nozzle":
+			xx, yy, walls = mesh_planar_nozzle(self.domain)
+
 		self.mesh = cellmetrics(xx, yy, self.domain)
 
 		self.init_boundary(walls)
@@ -1749,10 +1752,10 @@ class MainFrame ( wx.Frame ):
 		event.Skip()
 
 	def out_change( self, event ):
-		if self.out_supersonic.IsChecked():
-			self.boundOptions.Check(734, False)
-		else:
-			self.boundOptions.Check(734, True)
+		# if self.out_supersonic.IsChecked():
+		# 	self.boundOptions.Check(734, False)
+		# else:
+		# 	self.boundOptions.Check(734, True)
 
 		self.out_window = outletWindow(parent=self)
 		self.out_window.Show()
@@ -1762,7 +1765,7 @@ class MainFrame ( wx.Frame ):
 
 		if self.gridChoice.StringSelection == 'Wedge':
 			self.domainGrid.ShowRow( 1 )
-			self.domainGrid.ShowRow( 3 )
+			self.domainGrid.HideRow( 3 )
 			self.domainGrid.ShowRow( 4 )
 
 			# check inviscid wall
@@ -1880,6 +1883,30 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.SetRowLabelValue( 4, u"Capsule Height (" + self.units.length + ')' )
 			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
 			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
+
+		elif self.gridChoice.StringSelection == "C-D Nozzle":
+			self.domainGrid.ShowRow( 1 )
+			self.domainGrid.HideRow( 3 )
+			self.domainGrid.ShowRow( 4 )
+
+			wx.MenuBar.Enable(self.menuBar, 330, False)
+			wx.MenuBar.Enable(self.menuBar, 331, False)
+			wx.MenuBar.Enable(self.menuBar, 340, False)
+			wx.MenuBar.Enable(self.menuBar, 341, False)
+			wx.MenuBar.Enable(self.menuBar, 342, False)
+
+			# check inviscid walls
+			self.boundOptions.Check(431, True)
+			self.boundOptions.Check(531, True)
+
+			self.domainGrid.SetRowLabelValue( 0, u"Length (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
+			self.domainGrid.SetRowLabelValue( 2, u"Throat Size (" + self.units.length + ')' )
+			# self.domainGrid.SetRowLabelValue( 3, u"Capsule Right (" + self.units.length + ')' )
+			self.domainGrid.SetRowLabelValue( 4, u"$Theta_{1}$ (°)" )
+			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
+			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
+
 
 	def force_change( self, event ):
 
