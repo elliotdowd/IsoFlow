@@ -244,8 +244,11 @@ class MainFrame ( wx.Frame ):
 		self.out_hybrid = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Hybrid Outflow", wx.EmptyString, wx.ITEM_RADIO )
 		self.boundOptions.Append( self.out_hybrid )
 
-		self.out_subsonic = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Subsonic Outflow", wx.EmptyString, wx.ITEM_RADIO )
+		self.out_subsonic = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Subsonic Outlet", wx.EmptyString, wx.ITEM_RADIO )
 		self.boundOptions.Append( self.out_subsonic )
+
+		self.out_parameters = wx.MenuItem( self.boundOptions, 734, u"Change Outflow Parameters", wx.EmptyString, wx.ITEM_NORMAL )
+		self.boundOptions.Append( self.out_parameters )
 
 		self.boundOptions.AppendSeparator()
 
@@ -540,6 +543,7 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.init_parameters, id = self.out_supersonic.GetId() )
 		self.Bind( wx.EVT_MENU, self.init_parameters, id = self.out_hybrid.GetId() )
 		self.Bind( wx.EVT_MENU, self.init_parameters, id = self.out_subsonic.GetId() )
+		self.Bind( wx.EVT_MENU, self.out_change, id = self.out_parameters.GetId() )
 
 		self.Bind( wx.EVT_MENU, self.botwall_change, id = self.botwall_out.GetId() )
 		self.Bind( wx.EVT_MENU, self.botwall_change, id = self.botwall_invisc.GetId() )
@@ -739,7 +743,7 @@ class MainFrame ( wx.Frame ):
 			elif self.units.temp == '°F':
 				T_in = (float(wx.grid.Grid.GetCellValue(self.parameterGrid, 2, 0))-32)*(5/9) + 273.15
 			else:
-				T_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 2, 0)) * self.units.conv_temp(1)
+				T_in = float(wx.grid.Grid.GetCellValue(self.parameterGrid, 2, 0)) / self.units.conv_temp(1)
 
 			iterations = int(wx.grid.Grid.GetCellValue(self.simGrid, 1, 0))
 			tolerance = float(wx.grid.Grid.GetCellValue(self.simGrid, 2, 0))
@@ -748,10 +752,24 @@ class MainFrame ( wx.Frame ):
 			# outlet conditions
 			if self.out_supersonic.IsChecked():
 				outlet = 'supersonic'
-			if self.out_hybrid.IsChecked():
+			elif self.out_hybrid.IsChecked():
 				outlet = 'hybrid'
 			else:
 				outlet = 'subsonic'
+
+			if hasattr(self, 'out_window'):
+				p_out = self.out_window.p_out / self.units.conv_press(1)
+				M_out = self.out_window.M_out
+				if self.units.temp == '°C':
+					T_out = float(self.out_window.T_out) + self.units.conv_temp(0)
+				elif self.units.temp == '°F':
+					T_out = (float(self.out_window.T_out)-32)*(5/9) + 273.15
+				else:
+					T_out = self.out_window.T_out / self.units.conv_temp(1)
+			else:
+				p_out = p_in
+				T_out = T_in
+				M_out = M_in
 
 			# MUSCL interpolation parameters
 			from python.finite_volume.muscl import limiters
@@ -1730,6 +1748,16 @@ class MainFrame ( wx.Frame ):
 			self.topwall_fixed.Enable(False)
 		event.Skip()
 
+	def out_change( self, event ):
+		if self.out_supersonic.IsChecked():
+			self.boundOptions.Check(734, False)
+		else:
+			self.boundOptions.Check(734, True)
+
+		self.out_window = outletWindow(parent=self)
+		self.out_window.Show()
+		event.Skip()
+
 	def grid_change( self, event ):
 
 		if self.gridChoice.StringSelection == 'Wedge':
@@ -1986,7 +2014,6 @@ class MainFrame ( wx.Frame ):
 		self.new.Show()
 		event.Skip()
 
-
 # calculate Cp on object wall
 def force_calc( self, boundary, parameters, state, gas ):
 
@@ -2195,6 +2222,51 @@ class thermalWindow(wx.Frame):
 
 	def wall_change( self, event ):
 		self.walltemp = self.wallGrid.GetCellValue( 0, 0 )
+
+
+class outletWindow(wx.Frame):
+	def __init__(self, parent):
+		wx.Frame.__init__( self, parent, title = 'Outlet' + ' Properties',\
+						size = wx.Size( 256, 96 ), style=wx.DEFAULT_FRAME_STYLE )
+
+		self.outGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.outGrid.CreateGrid( 3, 1 )
+		self.outGrid.SetRowLabelSize( 160 )
+		self.outGrid.SetColLabelSize( 0 )
+
+		self.outGrid.SetRowLabelValue( 0, u"Outlet Backpressure " + '(' + parent.units.press + ')' )
+		self.outGrid.SetRowLabelValue( 1, u"Outlet Temperature " + '(' + parent.units.temp + ')' )
+		self.outGrid.SetRowLabelValue( 2, u"Outlet Mach" )
+
+		if hasattr(parent, 'parameters'):
+			if hasattr(parent.parameters, 'p_out'):
+				self.outGrid.SetCellValue( 0, 0, str(parent.parameters.p_out*parent.units.conv_press(1)))
+		else:
+			self.outGrid.SetCellValue( 0, 0, str(parent.parameterGrid.GetCellValue(1,0)))
+		if hasattr(parent, 'parameters'):
+			if hasattr(parent.parameters, 'T_out'):
+				self.outGrid.SetCellValue( 1, 0, str(parent.parameters.T_out/parent.units.conv_temp(1)-parent.units.conv_temp(0)))
+		else:
+			self.outGrid.SetCellValue( 1, 0, str(parent.parameterGrid.GetCellValue(2,0)))
+		if hasattr(parent, 'parameters'):
+			if hasattr(parent.parameters, 'M_out'):
+				self.outGrid.SetCellValue( 2, 0, str(parent.parameters.M_out))
+		else:
+			self.outGrid.SetCellValue( 2, 0, str(parent.parameterGrid.GetCellValue(0,0)))
+
+
+		self.p_out = float(self.outGrid.GetCellValue( 0, 0 ))
+		self.T_out = float(self.outGrid.GetCellValue( 1, 0 ))
+		self.M_out = float(self.outGrid.GetCellValue( 2, 0 ))
+
+		self.outGrid.Bind( wx.grid.EVT_GRID_CELL_CHANGED, self.wall_change )
+
+	def wall_change( self, event ):
+		self.p_out = float(self.outGrid.GetCellValue( 0, 0 ))
+		self.T_out = float(self.outGrid.GetCellValue( 1, 0 ))
+		self.M_out = float(self.outGrid.GetCellValue( 2, 0 ))
+
+		self.Parent.init_parameters(wx.EVT_MENU)
 
 
 class tvdWindow(wx.Frame):

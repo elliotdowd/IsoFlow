@@ -23,7 +23,7 @@ class air_cpg:
     R_p = 287
     theta = 3055.556
 
-    mu_p = 1.803e-5
+    mu_p = 1.803e5
 
     def Cp_fn( k_p, Cp_p, th, T ):
         import numpy as np
@@ -115,6 +115,8 @@ class air_tpg:
     R_p = 287
     theta = 3055.556
 
+    mu_p = 1.803e-5
+
     def Cp_fn( k_p, Cp_p, th, T ):
         import numpy as np
         Cp = Cp_p * (1+(k_p-1)/k_p * ((th/T)**2*np.exp(th/T)/(np.exp(th/T)-1)**2))
@@ -132,6 +134,14 @@ class air_tpg:
     def gamma_fn( Cp, Cv ):
         gamma = Cp / Cv
         return gamma
+
+    def mu_fn( T ):
+
+        T0 = 273.11
+        S = 110.56
+        mu = air_cpg.mu_p * ( (T/T0)**(3/2) ) * ( (T0+S)/(T+S) )
+
+        return mu
 
 # thermally perfect CO2
 class C02_tpg:

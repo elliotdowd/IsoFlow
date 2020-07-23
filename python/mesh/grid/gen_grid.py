@@ -110,6 +110,82 @@ def mesh_corner(domain):
     return xx, yy, walls
 
 
+def mesh_planar_nozzle(domain):
+
+    # import numpy
+    import numpy as np
+    import python.mesh.grid.meshing as meshing
+
+    # import domain values
+    M = int(domain.M/2)
+    N = domain.N
+    length = domain.length
+    height = domain.height
+    theta1 = domain.theta
+    y0 = domain.obj_start
+    Aratio = domain.obj_end
+
+    # Foesch nozzle parameters (see NAVAL ORDNANCE LABORATORY MEMORANDUM 10594 )
+
+    r0 = y0 / theta1
+    y1 = y0 * (np.sin(theta1)/theta1) * Aratio
+    x1 = (3/2) * (y1-y0) * np.cot(theta1)
+
+    Nhalf = int(N/2) - 1
+
+    # mesh left side of domain
+
+    x_i = np.linspace(-(1/M)*length, length*(1+(1/M))/2, M+3)
+    y_i = np.linspace(-(1/N)*height, height*(1+(1/N)), N+3)
+
+    y = y1 + (np.tan(theta1)/x1)*x_i**2 * (1-x_i/(3*x1))
+
+    xx1, yy1 = np.meshgrid(x1,y1)
+    xx1 = np.transpose(xx1)
+    yy1 = np.transpose(yy1)
+
+    yy1 = np.fliplr(yy1)
+
+    # determine airfoil height
+    if np.sign(theta1) == 1:
+        h = np.max(yy1[:,1])
+    else:
+        h = np.min(yy1[:,1])
+
+    # mesh right side of domain
+
+    x2 = np.linspace(0, length/2, M+3) + np.max(xx1)
+    y2 = np.linspace(-(1/N)*height, height*(1+(1/N)), N+3)
+
+    xx2, yy2 = np.meshgrid(x2,y2)
+    xx2 = np.transpose(xx2)
+    yy2 = np.transpose(yy2)
+
+    # determine second half angle
+    theta2 = np.arctan(h/((np.max(xx2)-np.min(xx2))-(length-af_end)))
+
+    meshing.mod2wedge(xx2, yy2, height, theta2, (length-af_end)+np.max(xx1), M, N)
+    yy2 = np.flipud(yy2)
+    yy2 = np.fliplr(yy2)
+    yy2[:,-1] = height*(1+(1/(N)))
+
+    xx = np.vstack((xx1[1:-1,:], xx2[0:-1,:]))
+    yy = np.vstack((yy1[1:-1,:], yy2[0:-1,:]))
+
+    domain.M = M*2
+
+    # initialize list
+    walls = []
+
+    # set boundary class values
+    walls.append( wall( 'domain', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'domain', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
+    walls.append( wall( 'inlet', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
+    walls.append( wall( 'domain', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
+
+    return xx, yy, walls
+
+
 def mesh_cylinder(domain):
 
     # import numpy

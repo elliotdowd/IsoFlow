@@ -35,9 +35,13 @@ def AUSM( domain, mesh, boundary, parameters, state, gas ):
     P_eta[:,:,3] = np.zeros( (domain.M+2, domain.N+1) )
 
     E_hat_left = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
+    Ev_left = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
     E_hat_right = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
+    Ev_right = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
     F_hat_bot = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
+    Fv_bot = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
     F_hat_top = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
+    Fv_top = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
 
     state.residual = np.zeros( [domain.M, domain.N, 4], dtype='float', order='F' )
     if state.n == 0:
@@ -70,17 +74,6 @@ def AUSM( domain, mesh, boundary, parameters, state, gas ):
 
         # speed of sound at cell interfaces
         # from Liou 2006 (JCP 214)
-
-        # c_st = thermo.calc_c_star( state.ht, gas.gamma_fn(gas.Cp, gas.Cv) )
-
-        # c_L = c_st[0:-1,:] / np.maximum( np.sqrt(c_st[0:-1,:]), state.U[0:-1,:] )
-        # c_R = c_st[1:,:] / np.maximum( np.sqrt(c_st[1:,:]), -state.U[1:,:] ) 
-        # c_D = c_st[:,0:-1] / np.maximum( np.sqrt(c_st[:,0:-1]), state.V[:,0:-1] )
-        # c_U = c_st[:,1:] / np.maximum( np.sqrt(c_st[:,1:]), -state.V[:,1:] )
-
-        # c_half_zeta = np.minimum( c_L, c_R )
-        # c_half_eta =  np.minimum( c_D, c_U )
-
         flux.c_entropy_fixed( c_half_zeta, c_half_eta, state.ht, gas.gamma_fn(gas.Cp, gas.Cv), \
                               state.U, state.V, domain.M, domain.N )
 
@@ -115,6 +108,8 @@ def AUSM( domain, mesh, boundary, parameters, state, gas ):
         P_eta[:,:,1] = p_half_eta * mesh.s_proj[:,0:-1,2] / mesh.s_proj[:,0:-1,5]
         P_eta[:,:,2] = p_half_eta * mesh.s_proj[:,0:-1,3] / mesh.s_proj[:,0:-1,5]
 
+        flux.face_flux( mdot_half_zeta, mdot_half_eta, Phi, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
+
         if parameters.viscModel == 'viscous laminar':
             # calculate viscous stress terms
             Txx_m, Tyy_m, Txy_m = calc_stress( mesh, state, gas, '-' )
@@ -127,21 +122,20 @@ def AUSM( domain, mesh, boundary, parameters, state, gas ):
             Ev_right[:,:,2] = Txy_p
             Ev_right[:,:,3] = state.u[1:-1,1:-1]*Txx_p + state.v[1:-1,1:-1]*Txy_p
 
-            Fv_bot[:,:,1] = Txx_m
-            Fv_bot[:,:,2] = Txy_m
+            Fv_bot[:,:,1] = Txy_m
+            Fv_bot[:,:,2] = Tyy_m
             Fv_bot[:,:,3] = state.u[1:-1,0:-2]*Txy_m + state.v[1:-1,0:-2]*Tyy_m
-            Fv_top[:,:,1] = Txx_p
-            Fv_top[:,:,2] = Txy_p
+            Fv_top[:,:,1] = Txy_p
+            Fv_top[:,:,2] = Tyy_p
             Fv_top[:,:,3] = state.u[1:-1,1:-1]*Txy_p + state.v[1:-1,1:-1]*Tyy_p
 
             E_hat_left = E_hat_left - Ev_left
             E_hat_right = E_hat_right - Ev_right
             F_hat_bot = F_hat_bot - Fv_bot
             F_hat_top = F_hat_top - Fv_top
+
         elif parameters.viscModel == 'inviscid':
             pass
-
-        flux.face_flux( mdot_half_zeta, mdot_half_eta, Phi, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
 
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
         state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
@@ -1785,8 +1779,8 @@ def calc_stress( mesh, state, gas, face ):
         S_zetay = mesh.s_proj[1:-1,1:-1,1]
         S_etay = mesh.s_proj[1:-1,1:-1,3]
 
-    Txx = (2/3)*gas.mu_fn(state.T[1:-1,1:-1]) * ( 2*(S_zetax*u_zeta + S_etax*u_eta) - S_zetay*v_zeta + S_etay*v_eta)
-    Tyy = (2/3)*gas.mu_fn(state.T[1:-1,1:-1]) * ( 2*(S_zetay*v_zeta + S_etay*v_eta) - S_zetax*u_zeta + S_etax*u_eta)
+    Txx = (2/3)*gas.mu_fn(state.T[1:-1,1:-1]) * ( 2*(S_zetax*u_zeta + S_etax*u_eta) - S_zetay*v_zeta + S_etay*v_eta )
+    Tyy = (2/3)*gas.mu_fn(state.T[1:-1,1:-1]) * ( 2*(S_zetay*v_zeta + S_etay*v_eta) - S_zetax*u_zeta + S_etax*u_eta )
     Txy = gas.mu_fn(state.T[1:-1,1:-1]) * (S_zetay*u_zeta + S_etay*u_eta + S_zetax*v_zeta + S_etax*v_eta)
 
     return Txx, Tyy, Txy
