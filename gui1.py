@@ -452,6 +452,9 @@ class MainFrame ( wx.Frame ):
 		
 		self.plotOptions.AppendSubMenu( self.cmOptions, u"Colormap" )
 
+		self.show_mesh = wx.MenuItem( self.plotOptions, wx.ID_ANY, u"Show Mesh?", wx.EmptyString, wx.ITEM_CHECK )
+		self.plotOptions.Append( self.show_mesh )
+
 		self.plotOptions.AppendSeparator()
 
 		self.force = wx.MenuItem( self.plotOptions, 9707, u"Plot Wall Quantity", wx.EmptyString, wx.ITEM_CHECK )
@@ -559,6 +562,7 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.topwall_thermal_change, id = self.topwall_isothermal.GetId() )
 		self.Bind( wx.EVT_MENU, self.topwall_thermal_change, id = self.topwall_fixed.GetId() )
 
+		self.Bind( wx.EVT_MENU, self.cont_change, id = self.show_mesh.GetId() )
 		self.Bind( wx.EVT_MENU, self.cont_change, id = self.mach.GetId() )
 		self.Bind( wx.EVT_MENU, self.cont_change, id = self.velocity.GetId() )
 		self.Bind( wx.EVT_MENU, self.cont_change, id = self.quiver.GetId() )
@@ -1140,7 +1144,7 @@ class MainFrame ( wx.Frame ):
 													self.state.u[1:-1:downM,1:-1:downN], self.state.v[1:-1:downM,1:-1:downN], \
 													self.state.vel[1:-1:downM,1:-1:downN], cmap=self.cmOption, pivot='tip', \
 													angles='uv', scale_units='width', \
-													scale=0.8*self.domain.M*np.max(self.state.vel[1:-1,1:-1])/max((downM,downM)))
+													scale=1.0*self.domain.M*np.max(self.state.vel[1:-1,1:-1])/max((downM,downM)))
 				# colorbar settings
 				ticks = np.linspace(round(np.min(self.state.vel),0), round(np.max(self.state.vel),0), 6)
 				CB = panel.figure.colorbar(cont, ticks=ticks, \
@@ -1346,6 +1350,11 @@ class MainFrame ( wx.Frame ):
 				else:
 					self.contourPanel.cax.clabel(cont, fmt='%2.3f', colors='w', fontsize=8)
 
+		# show mesh if option checked
+		if self.show_mesh.IsChecked():
+			panel.cax.plot(self.mesh.xx * cl, self.mesh.yy * cl, 'k', linewidth=0.3)
+			panel.cax.plot(np.transpose(self.mesh.xx) * cl, np.transpose(self.mesh.yy) * cl, 'k', linewidth=0.3)
+
 		# add object if needed
 		if self.gridChoice.StringSelection == 'NACA XXXX Airfoil' or \
 		   self.gridChoice.StringSelection == 'Biconvex Airfoil' or \
@@ -1422,7 +1431,11 @@ class MainFrame ( wx.Frame ):
 
 				if hasattr(obj, 'Cp'):
 
-					wall_x = np.hstack([obj.wall_x[0], obj.wall_x, obj.wall_x[-1]]) #, obj.wall_x[-1]])
+					# account for object wall being entire domain length
+					if len(obj.wall_x) > self.domain.M+1:
+						wall_x = obj.wall_x
+					else:
+						wall_x = np.hstack([obj.wall_x[0], obj.wall_x, obj.wall_x[-1]])					
 					xxc = self.mesh.xxc[wall_x, obj.wall_y]
 					
 					if obj.wall_n[1] == 1:
@@ -1915,15 +1928,15 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.ShowRow( 3 )
 			self.domainGrid.ShowRow( 4 )
 
-			wx.MenuBar.Enable(self.menuBar, 330, False)
-			wx.MenuBar.Enable(self.menuBar, 331, False)
-			wx.MenuBar.Enable(self.menuBar, 340, False)
-			wx.MenuBar.Enable(self.menuBar, 341, False)
-			wx.MenuBar.Enable(self.menuBar, 342, False)
+			wx.MenuBar.Enable(self.menuBar, 330, True)
+			wx.MenuBar.Enable(self.menuBar, 331, True)
+			wx.MenuBar.Enable(self.menuBar, 340, True)
+			wx.MenuBar.Enable(self.menuBar, 341, True)
+			wx.MenuBar.Enable(self.menuBar, 342, True)
 
 			# check inviscid walls
-			self.boundOptions.Check(431, True)
-			self.boundOptions.Check(531, True)
+			self.boundOptions.Check(430, True)
+			self.boundOptions.Check(530, True)
 
 			self.domainGrid.SetRowLabelValue( 0, u"Length (" + self.units.length + ')' )
 			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
@@ -1952,10 +1965,13 @@ class MainFrame ( wx.Frame ):
 			for obj in self.boundary:
 
 				if hasattr(obj, 'Cp'):
-					
-					if obj.wall_n[1] == 1:
+					# account for object wall being entire domain length
+					if len(obj.wall_x) > self.domain.M+1:
+						wall_x = obj.wall_x
+					else:
 						wall_x = np.hstack([obj.wall_x[0], obj.wall_x, obj.wall_x[-1]])
-						xxc = self.mesh.xxc[wall_x, obj.wall_y]
+					xxc = self.mesh.xxc[wall_x, obj.wall_y]
+					if obj.wall_n[1] == 1:
 						c = self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]
 						n = np.maximum( 1, int(len(obj.wall_x)/30) )
 						if self.wallCp.IsChecked():
@@ -1965,8 +1981,6 @@ class MainFrame ( wx.Frame ):
 						else:
 							data1 = np.array( ( (xxc-self.mesh.xxc[obj.wall_x[0],obj.wall_y]) / c, obj.T ) )
 					else:
-						wall_x = np.hstack([obj.wall_x[0], obj.wall_x, obj.wall_x[-1]])
-						xxc = self.mesh.xxc[wall_x, obj.wall_y]
 						c = self.mesh.xxc[obj.wall_x[-1],obj.wall_y] - self.mesh.xxc[obj.wall_x[0],obj.wall_y]
 						n = np.maximum( 1, int(len(obj.wall_x)/30) )
 						if self.wallCp.IsChecked():
@@ -2085,15 +2099,20 @@ def force_calc( self, boundary, parameters, state, gas ):
 			else:
 				q = p0 - parameters.p_in
 
-			obj.Cp = np.hstack( [ ( state.p[x[0]-1,y-obj.wall_n[1]] - parameters.p_in ) / q, \
-								 ( state.p[x[1:-1],y] - parameters.p_in ) / q, \
-								 ( state.p[x[0]-1,y-obj.wall_n[1]] - parameters.p_in ) / q ] )
-			obj.p = self.units.conv_press( np.hstack( [ state.p[x[0]-1,y-obj.wall_n[1]], \
-								 						state.p[x[1:-1],y], \
-								 						state.p[x[0]-1,y-obj.wall_n[1]] ] ) )
-			obj.T = self.units.conv_temp( np.hstack( [  state.T[x[0]-1,y-obj.wall_n[1]], \
-								 		                state.T[x[1:-1],y], \
-								 						state.T[x[0]-1,y-obj.wall_n[1]] ] ) )
+			if len(obj.wall_x) > self.domain.M+1:
+				obj.Cp = ( state.p[x[1:-1],y] - parameters.p_in ) / q
+				obj.p = state.p[x[1:-1], y]
+				obj.T = state.T[x[1:-1],y]
+			else:
+				obj.Cp = np.hstack( [ ( state.p[x[0]-1,y-obj.wall_n[1]] - parameters.p_in ) / q, \
+									( state.p[x[1:-1],y] - parameters.p_in ) / q, \
+									( state.p[x[0]-1,y-obj.wall_n[1]] - parameters.p_in ) / q ] )
+				obj.p = self.units.conv_press( np.hstack( [ state.p[x[0]-1,y-obj.wall_n[1]], \
+															state.p[x[1:-1],y], \
+															state.p[x[0]-1,y-obj.wall_n[1]] ] ) )
+				obj.T = self.units.conv_temp( np.hstack( [  state.T[x[0]-1,y-obj.wall_n[1]], \
+															state.T[x[1:-1],y], \
+															state.T[x[0]-1,y-obj.wall_n[1]] ] ) )
 
 
 class RedirectText:
