@@ -1099,7 +1099,7 @@ class MainFrame ( wx.Frame ):
 		plt.close('all')
 
 		# length to height ratio
-		r = min(1, (1.35/1.3) / ( ( np.max(self.mesh.xxc) - np.min(self.mesh.xxc) ) / \
+		r = min(1, (1.38/1.3) / ( ( np.max(self.mesh.xxc) - np.min(self.mesh.xxc) ) / \
 							   ( np.max(self.mesh.yyc - np.min(self.mesh.yyc) ) ) ) )
 		
 		# post processing
