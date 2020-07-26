@@ -2353,28 +2353,6 @@ class tvdWindow(wx.Frame):
 
 		sizer = wx.BoxSizer(wx.VERTICAL)
 
-		# Gas information grid
-		# self.musclGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
-		# self.musclGrid.CreateGrid( 2, 1 )
-		# self.musclGrid.SetRowLabelSize( 160 )
-		# self.musclGrid.SetColLabelSize( 0 )
-		# self.musclGrid.SetRowLabelValue( 0, u"$\epsilon$" )
-		# self.musclGrid.SetRowLabelValue( 1, u"$\kappa$" )
-
-		# if hasattr( parent.parameters, 'epsilon'):
-		# 	self.musclGrid.SetCellValue( 0, 0, str(parent.parameters.epsilon) )
-		# 	self.musclGrid.SetCellValue( 1, 0, str(parent.parameters.kappa) )
-		# else:
-		# 	self.musclGrid.SetCellValue( 0, 0, str(0) )
-		# 	self.musclGrid.SetCellValue( 1, 0, str(0) )
-
-		# self.musclGrid.EnableEditing( True )
-		# self.musclGrid.EnableGridLines( True )
-		# self.musclGrid.EnableDragGridSize( False )
-		# self.musclGrid.SetMargins( 0, 0 )
-
-		# self.musclGrid.SetDefaultCellAlignment( wx.ALIGN_LEFT, wx.ALIGN_TOP )
-		# sizer.Add( self.musclGrid, 0, wx.EXPAND | wx.ALL, 0 )
 		self.tvdPanel = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		sizer.Add( self.tvdPanel, 1, wx.EXPAND | wx.ALL, 0 )
 		self.tvdPanel.SetBackgroundColour( wx.Colour( 256, 256, 256 ) )
@@ -2389,7 +2367,7 @@ class tvdWindow(wx.Frame):
 		rplot = np.linspace(0, 4, 100)
 		self.tvdPanel.ax.plot( rplot, parent.parameters.limiter(rplot, 1.5), color='b', linewidth=2 )
 		self.tvdPanel.ax.plot( np.array([0, 1]), np.array([0, 2]), color='r', linestyle='--', linewidth=0.75 )
-		self.tvdPanel.ax.plot( np.array([0, 2]), np.array([0, 2]), color='r', linestyle='--', linewidth=0.75 )
+		self.tvdPanel.ax.plot( np.array([0, 1]), np.array([0, 1]), color='r', linestyle='--', linewidth=0.75 )
 		self.tvdPanel.ax.plot( np.array([1, 4]), np.array([1, 1]), color='r', linestyle='--', linewidth=0.75 )
 		self.tvdPanel.ax.plot( np.array([1, 4]), np.array([2, 2]), color='r', linestyle='--', linewidth=0.75 )
 
