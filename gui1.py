@@ -15,6 +15,7 @@ from matplotlib import cm
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+from matplotlib.backends.backend_wx import NavigationToolbar2Wx as NavigationToolbar
 import matplotlib.ticker as ticker
 
 import numpy as np
@@ -2150,7 +2151,6 @@ class NewWindow( wx.Frame ):
 		self.contourPanel.cax = self.contourPanel.figure.gca()
 		self.contourPanel.cax.set_facecolor((0.4, 0.4, 0.4))
 		self.contourPanel.cax.set_position([0.15, 0.1, 0.8, 0.72])
-
 
 class tableWindow(wx.Frame):
 	def __init__(self, parent):

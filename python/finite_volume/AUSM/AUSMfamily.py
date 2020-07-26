@@ -138,13 +138,13 @@ def AUSM( domain, mesh, boundary, parameters, state, gas ):
             pass
 
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
-        state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
-                                  ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
-                                    - E_hat_left * np.dstack([mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4]]) ) + \
-                                    ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
-                                    - F_hat_bot * np.dstack([mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5]]) ) )
-        # flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
-        #                   mesh.s_proj[1:-1,1:-1,:], domain.M, domain.N ) 
+        # state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
+        #                           ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
+        #                             - E_hat_left * np.dstack([mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4]]) ) + \
+        #                             ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
+        #                             - F_hat_bot * np.dstack([mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5]]) ) )
+        flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
+                          mesh.s_proj, domain.M, domain.N ) 
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
 
         # L_inf-norm residual
@@ -308,14 +308,14 @@ def AUSMplusup( domain, mesh, boundary, parameters, state, gas ):
         # flux vector reconstruction
         flux.face_flux( mdot_half_zeta, mdot_half_eta, Phi, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
 
-        state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
-                                  ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
-                                    - E_hat_left * np.dstack([mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4]]) ) + \
-                                    ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
-                                    - F_hat_bot * np.dstack([mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5]]) ) )
+        # state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
+        #                           ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
+        #                             - E_hat_left * np.dstack([mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4]]) ) + \
+        #                             ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
+        #                             - F_hat_bot * np.dstack([mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5]]) ) )
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
-        # flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
-        #                   mesh.s_proj[1:-1,1:-1,:], domain.M, domain.N ) 
+        flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
+                          mesh.s_proj, domain.M, domain.N ) 
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
 
         # L_inf-norm residual
@@ -459,14 +459,14 @@ def AUSMDV( domain, mesh, boundary, parameters, state, gas ):
         # flux vector reconstruction
         flux.face_flux( mdot_half_zeta, mdot_half_eta, Phi, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
 
-        state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
-                                  ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
-                                    - E_hat_left * np.dstack([mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4]]) ) + \
-                                    ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
-                                    - F_hat_bot * np.dstack([mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5]]) ) )
+        # state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
+        #                           ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
+        #                             - E_hat_left * np.dstack([mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4]]) ) + \
+        #                             ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
+        #                             - F_hat_bot * np.dstack([mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5]]) ) )
 
-        # flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
-        #                   mesh.s_proj[1:-1,1:-1,:], domain.M, domain.N ) 
+        flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
+                          mesh.s_proj, domain.M, domain.N ) 
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
 
         # L_inf-norm residual
@@ -630,15 +630,15 @@ def SLAU( domain, mesh, boundary, parameters, state, gas ):
         # flux vector reconstruction
         flux.face_flux( mdot_half_zeta, mdot_half_eta, Phi, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
 
-        state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
-                                  ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
-                                    - E_hat_left * np.dstack([mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4]]) ) + \
-                                    ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
-                                    - F_hat_bot * np.dstack([mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5]]) ) )
+        # state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
+        #                           ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
+        #                             - E_hat_left * np.dstack([mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4]]) ) + \
+        #                             ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
+        #                             - F_hat_bot * np.dstack([mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5]]) ) )
 
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
-        # flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
-        #                   mesh.s_proj[1:-1,1:-1,:], domain.M, domain.N ) 
+        flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
+                          mesh.s_proj, domain.M, domain.N ) 
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
 
         # L_inf-norm residual
@@ -864,15 +864,15 @@ def AUSMmuscl( domain, mesh, boundary, parameters, state, gas ):
         #             -(1/2) * np.abs(mdot_half_eta[1:-1,1:]) * ( Phi[1:-1,2:,:] - Phi[1:-1,1:-1,:] ) \
         #                    + P_eta[1:-1,1:,:]
 
-        state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
-                                  ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
-                                    - E_hat_left * np.dstack([mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4]]) ) + \
-                                    ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
-                                    - F_hat_bot * np.dstack([mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5]]) ) )
+        # state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
+        #                           ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
+        #                             - E_hat_left * np.dstack([mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4]]) ) + \
+        #                             ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
+        #                             - F_hat_bot * np.dstack([mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5]]) ) )
 
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
-        # flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
-        #                   mesh.s_proj[1:-1,1:-1,:], domain.M, domain.N ) 
+        flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
+                          mesh.s_proj, domain.M, domain.N ) 
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
 
         # L_inf-norm residual
@@ -1097,14 +1097,14 @@ def AUSMplusupmuscl( domain, mesh, boundary, parameters, state, gas ):
         # compute flux at each cell face
         flux.face_flux_muscl( mdot_half_zeta, mdot_half_eta, PhiL, PhiR, PhiB, PhiT, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
 
-        state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
-                                  ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
-                                    - E_hat_left * np.dstack([mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4]]) ) + \
-                                    ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
-                                    - F_hat_bot * np.dstack([mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5]]) ) )
+        # state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
+        #                           ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
+        #                             - E_hat_left * np.dstack([mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4]]) ) + \
+        #                             ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
+        #                             - F_hat_bot * np.dstack([mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5]]) ) )
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
-        # flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
-        #                   mesh.s_proj[1:-1,1:-1,:], domain.M, domain.N ) 
+        flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
+                          mesh.s_proj, domain.M, domain.N ) 
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
 
         # L_inf-norm residual
@@ -1338,15 +1338,15 @@ def AUSMDVmuscl( domain, mesh, boundary, parameters, state, gas ):
 
         flux.face_flux_muscl( mdot_half_zeta, mdot_half_eta, PhiL, PhiR, PhiB, PhiT, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
 
-        state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
-                                  ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
-                                    - E_hat_left * np.dstack([mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4]]) ) + \
-                                    ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
-                                    - F_hat_bot * np.dstack([mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5]]) ) )
+        # state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
+        #                           ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
+        #                             - E_hat_left * np.dstack([mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4]]) ) + \
+        #                             ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
+        #                             - F_hat_bot * np.dstack([mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5]]) ) )
 
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
-        # flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
-        #                   mesh.s_proj[1:-1,1:-1,:], domain.M, domain.N ) 
+        flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
+                          mesh.s_proj, domain.M, domain.N ) 
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
 
         # L_inf-norm residual
@@ -1566,15 +1566,15 @@ def SLAUmuscl( domain, mesh, boundary, parameters, state, gas ):
         # flux vector reconstruction
         flux.face_flux( mdot_half_zeta, mdot_half_eta, Phi, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
 
-        state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
-                                  ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
-                                    - E_hat_left * np.dstack([mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4]]) ) + \
-                                    ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
-                                    - F_hat_bot * np.dstack([mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5]]) ) )
+        # state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
+        #                           ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
+        #                             - E_hat_left * np.dstack([mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4]]) ) + \
+        #                             ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
+        #                             - F_hat_bot * np.dstack([mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5]]) ) )
 
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
-        # flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
-        #                   mesh.s_proj[1:-1,1:-1,:], domain.M, domain.N ) 
+        flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
+                          mesh.s_proj, domain.M, domain.N ) 
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
 
         # L_inf-norm residual
