@@ -1920,7 +1920,7 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
 			self.domainGrid.SetRowLabelValue( 2, u"Throat Size (" + self.units.length + ')' )
 			# self.domainGrid.SetRowLabelValue( 3, u"Capsule Right (" + self.units.length + ')' )
-			self.domainGrid.SetRowLabelValue( 4, u"$Theta_{1}$ (°)" )
+			self.domainGrid.SetRowLabelValue( 4, u"Theta (°)" )
 			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
 			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
 
@@ -1943,7 +1943,7 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
 			self.domainGrid.SetRowLabelValue( 2, u"Throat Size (" + self.units.length + ')' )
 			self.domainGrid.SetRowLabelValue( 3, u"Exit Length (" + self.units.length + ')' )
-			self.domainGrid.SetRowLabelValue( 4, u"$Theta_{1}$ (°)" )
+			self.domainGrid.SetRowLabelValue( 4, u"Theta (°)" )
 			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
 			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
 
