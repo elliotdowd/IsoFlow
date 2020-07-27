@@ -38,7 +38,7 @@ subroutine residual( res, dt, E_left, E_right, F_bot, F_top, s_proj, M, N )
     real(kind=8), intent(inout) :: res(M,N,4)
     real(kind=8), intent(in) :: dt(M,N)
     real(kind=8), intent(in) :: E_left(M,N,R), E_right(M,N,R), F_bot(M,N,R), F_top(M,N,R)
-    real(kind=8), intent(in) :: s_proj(M,N,6)
+    real(kind=8), intent(in) :: s_proj(M+2,N+2,6)
 
     do i = 1, M
 
@@ -46,8 +46,8 @@ subroutine residual( res, dt, E_left, E_right, F_bot, F_top, s_proj, M, N )
 
             do k = 1, R
 
-                res(i,j,k) = -dt(i,j) * ( (E_right(i,j,k)*s_proj(i,j,5) - E_left(i,j,k) * s_proj(i,j,5)) &
-                                        & + (F_top(i,j,k)*s_proj(i,j,6) - F_bot(i,j,k)*s_proj(i,j,6)) )
+                res(i,j,k) = -dt(i,j) * ( (E_right(i,j,k)*s_proj(i+1,j+1,5) - E_left(i,j,k) * s_proj(i,j+1,5)) &
+                                      & + (F_top(i,j,k)*s_proj(i+1,j+1,6) - F_bot(i,j,k)*s_proj(i+1,j,6)) )
                 
             end do
 
