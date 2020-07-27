@@ -3,17 +3,17 @@ import numpy as np
 
 def MUSCL( Q, eps, kap, limiter ):
 
-    M, N, void = Q.shape
+    M, N, R = Q.shape
 
-    QL_half = np.zeros( (M-1, N, 4), dtype='float', order='F' )
-    QR_half = np.zeros( (M-1, N, 4), dtype='float', order='F' )
-    QB_half = np.zeros( (M, N-1, 4), dtype='float', order='F' )
-    QU_half = np.zeros( (M, N-1, 4), dtype='float', order='F' )
+    QL_half = np.zeros( (M-1, N, R), dtype='float', order='F' )
+    QR_half = np.zeros( (M-1, N, R), dtype='float', order='F' )
+    QB_half = np.zeros( (M, N-1, R), dtype='float', order='F' )
+    QU_half = np.zeros( (M, N-1, R), dtype='float', order='F' )
 
-    Qm2 = np.zeros( (M-1, N, 4) )
-    Qm1 = np.zeros( (M-1, N, 4) )
-    Qi = np.zeros( (M-1, N, 4) )
-    Qp1 = np.zeros( (M-1, N, 4) )
+    Qm2 = np.zeros( (M-1, N, R) )
+    Qm1 = np.zeros( (M-1, N, R) )
+    Qi = np.zeros( (M-1, N, R) )
+    Qp1 = np.zeros( (M-1, N, R) )
 
     Qm2 = np.vstack( ( Q[[0],:,:], Q[0:M-2,:,:] ) )
     Qm1 = np.vstack( ( Q[[0],:,:], Q[1:M-1,:,:] ) )
@@ -23,10 +23,10 @@ def MUSCL( Q, eps, kap, limiter ):
     QL_half[:, :, :] = QL( Qm2, Qm1, Qi, kap, eps, limiter )
     QR_half[:, :, :] = QR( Qm1, Qi, Qp1, kap, eps, limiter )
 
-    Qm2 = np.zeros( (M, N-1, 4) )
-    Qm1 = np.zeros( (M, N-1, 4) )
-    Qi = np.zeros( (M, N-1, 4) )
-    Qp1 = np.zeros( (M, N-1, 4) )
+    Qm2 = np.zeros( (M, N-1, R) )
+    Qm1 = np.zeros( (M, N-1, R) )
+    Qi = np.zeros( (M, N-1, R) )
+    Qp1 = np.zeros( (M, N-1, R) )
 
     Qm2 = np.hstack( ( Q[:,[0],:], Q[:,0:N-2,:] ) )
     Qm1 = np.hstack( ( Q[:,[0],:], Q[:,1:N-1,:] ) )

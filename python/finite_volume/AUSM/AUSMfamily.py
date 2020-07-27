@@ -771,7 +771,16 @@ def AUSMmuscl( domain, mesh, boundary, parameters, state, gas ):
         pB = thermo.calc_p( QB[:,:,0], QB[:,:,3], uB, vB, \
                             gas.gamma_fn(gas.Cp[:,0:domain.N+1], gas.Cv[:,0:domain.N+1]) )
         pT = thermo.calc_p( QT[:,:,0], QT[:,:,3], uT, vT, \
-                            gas.gamma_fn(gas.Cp[:,1:domain.N+2], gas.Cv[:,1:domain.N+2]) )             
+                            gas.gamma_fn(gas.Cp[:,1:domain.N+2], gas.Cv[:,1:domain.N+2]) )
+
+        htL = thermo.calc_rho_et(pL, QL[:,:,0], uL, vL, gas.gamma_fn(gas.Cp[0:-1,:], gas.Cv[0:-1,:])) / \
+                                     QL[:,:,0] + pL/QL[:,:,0]   
+        htR = thermo.calc_rho_et(pL, QR[:,:,0], uR, vR, gas.gamma_fn(gas.Cp[1:,:], gas.Cv[1:,:])) / \
+                                     QR[:,:,0] + pR/QR[:,:,0]      
+        htB = thermo.calc_rho_et(pB, QB[:,:,0], uB, vB, gas.gamma_fn(gas.Cp[:,0:-1], gas.Cv[:,0:-1])) / \
+                                     QB[:,:,0] + pB/QB[:,:,0]   
+        htT = thermo.calc_rho_et(pT, QT[:,:,0], uT, vT, gas.gamma_fn(gas.Cp[:,1:], gas.Cv[:,1:])) / \
+                                     QT[:,:,0] + pT/QT[:,:,0]         
 
         # simplify variable notation from state vector
         state.u = state.Q[:,:,1] / state.Q[:,:,0]
@@ -824,23 +833,19 @@ def AUSMmuscl( domain, mesh, boundary, parameters, state, gas ):
 
         PhiT[:,:,1] = QT[:,:,1]/QT[:,:,0]
         PhiT[:,:,2] = QT[:,:,2]/QT[:,:,0]
-        PhiT[:,:,3] = state.ht[:,1:]
-        # PhiT[:,:,3] = QT[:,:,3]/QT[:,:,0]
+        PhiT[:,:,3] = QT[:,:,3]/QT[:,:,0] + pT/QT[:,:,0]
         
         PhiB[:,:,1] = QB[:,:,1]/QB[:,:,0]
         PhiB[:,:,2] = QB[:,:,2]/QB[:,:,0]
-        PhiB[:,:,3] = state.ht[:,0:-1]
-        # PhiB[:,:,3] = QB[:,:,3]/QB[:,:,0]
+        PhiB[:,:,3] = QB[:,:,3]/QB[:,:,0] + pB/QB[:,:,0]
         
         PhiL[:,:,1] = QL[:,:,1]/QL[:,:,0]
         PhiL[:,:,2] = QL[:,:,2]/QL[:,:,0]
-        PhiL[:,:,3] = state.ht[0:-1,:]
-        # PhiL[:,:,3] = QL[:,:,3]/QL[:,:,0]
+        PhiL[:,:,3] = QL[:,:,3]/QL[:,:,0] + pL/QL[:,:,0]
         
         PhiR[:,:,1] = QR[:,:,1]/QR[:,:,0]
         PhiR[:,:,2] = QR[:,:,2]/QR[:,:,0]
-        PhiR[:,:,3] = state.ht[1:,:]
-        # PhiR[:,:,3] = QR[:,:,3]/QR[:,:,0]
+        PhiR[:,:,3] = QR[:,:,3]/QR[:,:,0] + pR/QR[:,:,0]
         
         # pressure flux vector
         P_zeta[:,:,1] = p_half_zeta * mesh.s_proj[0:-1,:,0] / mesh.s_proj[0:-1,:,4]
@@ -1069,23 +1074,19 @@ def AUSMplusupmuscl( domain, mesh, boundary, parameters, state, gas ):
 
         PhiT[:,:,1] = QT[:,:,1]/QT[:,:,0]
         PhiT[:,:,2] = QT[:,:,2]/QT[:,:,0]
-        PhiT[:,:,3] = state.ht[:,1:]
-        # PhiT[:,:,3] = QT[:,:,3]/QT[:,:,0]
+        PhiT[:,:,3] = QT[:,:,3]/QT[:,:,0] + pT/QT[:,:,0]
         
         PhiB[:,:,1] = QB[:,:,1]/QB[:,:,0]
         PhiB[:,:,2] = QB[:,:,2]/QB[:,:,0]
-        PhiB[:,:,3] = state.ht[:,0:-1]
-        # PhiB[:,:,3] = QB[:,:,3]/QB[:,:,0]
+        PhiB[:,:,3] = QB[:,:,3]/QB[:,:,0] + pB/QB[:,:,0]
         
         PhiL[:,:,1] = QL[:,:,1]/QL[:,:,0]
         PhiL[:,:,2] = QL[:,:,2]/QL[:,:,0]
-        PhiL[:,:,3] = state.ht[0:-1,:]
-        # PhiL[:,:,3] = QL[:,:,3]/QL[:,:,0]
+        PhiL[:,:,3] = QL[:,:,3]/QL[:,:,0] + pL/QL[:,:,0]
         
         PhiR[:,:,1] = QR[:,:,1]/QR[:,:,0]
         PhiR[:,:,2] = QR[:,:,2]/QR[:,:,0]
-        PhiR[:,:,3] = state.ht[1:,:]
-        # PhiR[:,:,3] = QR[:,:,3]/QR[:,:,0]
+        PhiR[:,:,3] = QR[:,:,3]/QR[:,:,0] + pR/QR[:,:,0]
         
         # pressure flux vector
         P_zeta[:,:,1] = p_half_zeta * mesh.s_proj[0:-1,:,0] / mesh.s_proj[0:-1,:,4]
@@ -1310,23 +1311,19 @@ def AUSMDVmuscl( domain, mesh, boundary, parameters, state, gas ):
 
         PhiT[:,:,1] = QT[:,:,1]/QT[:,:,0]
         PhiT[:,:,2] = QT[:,:,2]/QT[:,:,0]
-        PhiT[:,:,3] = state.ht[:,1:]
-        # PhiT[:,:,3] = QT[:,:,3]/QT[:,:,0]
+        PhiT[:,:,3] = QT[:,:,3]/QT[:,:,0] + pT/QT[:,:,0]
         
         PhiB[:,:,1] = QB[:,:,1]/QB[:,:,0]
         PhiB[:,:,2] = QB[:,:,2]/QB[:,:,0]
-        PhiB[:,:,3] = state.ht[:,0:-1]
-        # PhiB[:,:,3] = QB[:,:,3]/QB[:,:,0]
+        PhiB[:,:,3] = QB[:,:,3]/QB[:,:,0] + pB/QB[:,:,0]
         
         PhiL[:,:,1] = QL[:,:,1]/QL[:,:,0]
         PhiL[:,:,2] = QL[:,:,2]/QL[:,:,0]
-        PhiL[:,:,3] = state.ht[0:-1,:]
-        # PhiL[:,:,3] = QL[:,:,3]/QL[:,:,0]
+        PhiL[:,:,3] = QL[:,:,3]/QL[:,:,0] + pL/QL[:,:,0]
         
         PhiR[:,:,1] = QR[:,:,1]/QR[:,:,0]
         PhiR[:,:,2] = QR[:,:,2]/QR[:,:,0]
-        PhiR[:,:,3] = state.ht[1:,:]
-        # PhiR[:,:,3] = QR[:,:,3]/QR[:,:,0]
+        PhiR[:,:,3] = QR[:,:,3]/QR[:,:,0] + pR/QR[:,:,0]
         
         # pressure flux vector
         P_zeta[:,:,1] = p_half_zeta * mesh.s_proj[0:-1,:,0] / mesh.s_proj[0:-1,:,4]
@@ -1538,23 +1535,19 @@ def SLAUmuscl( domain, mesh, boundary, parameters, state, gas ):
         # update phi vector components
         PhiT[:,:,1] = QT[:,:,1]/QT[:,:,0]
         PhiT[:,:,2] = QT[:,:,2]/QT[:,:,0]
-        PhiT[:,:,3] = state.ht[:,1:]
-        # PhiT[:,:,3] = QT[:,:,3]/QT[:,:,0]
+        PhiT[:,:,3] = QT[:,:,3]/QT[:,:,0] + pT/QT[:,:,0]
         
         PhiB[:,:,1] = QB[:,:,1]/QB[:,:,0]
         PhiB[:,:,2] = QB[:,:,2]/QB[:,:,0]
-        PhiB[:,:,3] = state.ht[:,0:-1]
-        # PhiB[:,:,3] = QB[:,:,3]/QB[:,:,0]
+        PhiB[:,:,3] = QB[:,:,3]/QB[:,:,0] + pB/QB[:,:,0]
         
         PhiL[:,:,1] = QL[:,:,1]/QL[:,:,0]
         PhiL[:,:,2] = QL[:,:,2]/QL[:,:,0]
-        PhiL[:,:,3] = state.ht[0:-1,:]
-        # PhiL[:,:,3] = QL[:,:,3]/QL[:,:,0]
+        PhiL[:,:,3] = QL[:,:,3]/QL[:,:,0] + pL/QL[:,:,0]
         
         PhiR[:,:,1] = QR[:,:,1]/QR[:,:,0]
         PhiR[:,:,2] = QR[:,:,2]/QR[:,:,0]
-        PhiR[:,:,3] = state.ht[1:,:]
-        # PhiR[:,:,3] = QR[:,:,3]/QR[:,:,0]
+        PhiR[:,:,3] = QR[:,:,3]/QR[:,:,0] + pR/QR[:,:,0]
         
         # pressure flux vector
         P_zeta[:,:,1] = p_half_zeta * mesh.s_proj[0:-1,:,0] / mesh.s_proj[0:-1,:,4]
