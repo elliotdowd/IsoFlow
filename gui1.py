@@ -984,7 +984,7 @@ class MainFrame ( wx.Frame ):
 		from pytictoc import TicToc
 		from python.finite_volume.AUSM.AUSMfamily import AUSM, AUSMmuscl, AUSMplusup, AUSMplusupmuscl, \
 														 AUSMDV, AUSMDVmuscl, SLAU, SLAUmuscl
-		from python.finite_volume.Roe.Roefamily import RoeFDS, RoeFVS, RoeFVSimproved
+		from python.finite_volume.Roe.Roefamily import RoeFDS, RoeFVS, RoeFVSimproved, RoeFVSmuscl
 		import python.finite_volume.gasdata as gasdata
 
 		t = TicToc()
@@ -1044,7 +1044,10 @@ class MainFrame ( wx.Frame ):
 		elif scheme == 'Roe FDS':
 			self.state = RoeFDS( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 		elif scheme == 'Roe FVS':
-			self.state = RoeFVS( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
+			if self.higherorder.IsChecked():
+				self.state = RoeFVSmuscl( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
+			else:
+				self.state = RoeFVS( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 		elif scheme == 'Improved Roe FVS':
 			self.state = RoeFVSimproved( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
 
@@ -1433,7 +1436,7 @@ class MainFrame ( wx.Frame ):
 				if hasattr(obj, 'Cp'):
 
 					# account for object wall being entire domain length
-					if len(obj.wall_x) > self.domain.M+1:
+					if len(obj.wall_x) > self.domain.M+1 or obj.wall_y == 0 or obj.wall_y > self.domain.N:
 						wall_x = obj.wall_x
 					else:
 						wall_x = np.hstack([obj.wall_x[0], obj.wall_x, obj.wall_x[-1]])					
@@ -1947,7 +1950,6 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.SetRowLabelValue( 5, u"Horizontal Cells" )
 			self.domainGrid.SetRowLabelValue( 6, u"Vertical Cells" )
 
-
 	def force_change( self, event ):
 
 		self.call_forceplot( self.contourPanel, 1, 1 )
@@ -2082,6 +2084,7 @@ class MainFrame ( wx.Frame ):
 		self.new.Show()
 		event.Skip()
 
+
 # calculate Cp on object wall
 def force_calc( self, boundary, parameters, state, gas ):
 
@@ -2100,10 +2103,10 @@ def force_calc( self, boundary, parameters, state, gas ):
 			else:
 				q = p0 - parameters.p_in
 
-			if len(obj.wall_x) > self.domain.M+1:
+			if len(obj.wall_x) > self.domain.M+1 or obj.wall_y == 0 or obj.wall_y > self.domain.N:
 				obj.Cp = ( state.p[x[1:-1],y] - parameters.p_in ) / q
-				obj.p = state.p[x[1:-1], y]
-				obj.T = state.T[x[1:-1],y]
+				obj.p = self.units.conv_press( state.p[x[1:-1], y] )
+				obj.T = self.units.conv_temp( state.T[x[1:-1],y] )
 			else:
 				obj.Cp = np.hstack( [ ( state.p[x[0]-1,y-obj.wall_n[1]] - parameters.p_in ) / q, \
 									( state.p[x[1:-1],y] - parameters.p_in ) / q, \
@@ -2151,6 +2154,7 @@ class NewWindow( wx.Frame ):
 		self.contourPanel.cax = self.contourPanel.figure.gca()
 		self.contourPanel.cax.set_facecolor((0.4, 0.4, 0.4))
 		self.contourPanel.cax.set_position([0.15, 0.1, 0.8, 0.72])
+
 
 class tableWindow(wx.Frame):
 	def __init__(self, parent):

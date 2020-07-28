@@ -688,9 +688,15 @@ def AUSMmuscl( domain, mesh, boundary, parameters, state, gas ):
     c_half_zeta = np.zeros( (domain.M+1, domain.N+2), dtype='float', order='F' )
     c_half_eta = np.zeros( (domain.M+2, domain.N+1), dtype='float', order='F' )
 
-    # initialize speed of sound arrays
-    c_half_zeta = np.zeros( (domain.M+1, domain.N+2), dtype='float', order='F' )
-    c_half_eta = np.zeros( (domain.M+2, domain.N+1), dtype='float', order='F' )
+    # initialize interpolated covariant velocities
+    # UL = np.zeros( (domain.M+1, domain.N+2), dtype='float', order='F' )
+    # VL = np.zeros( (domain.M+1, domain.N+2), dtype='float', order='F' )
+    # UR = np.zeros( (domain.M+1, domain.N+2), dtype='float', order='F' )
+    # VR = np.zeros( (domain.M+1, domain.N+2), dtype='float', order='F' )
+    # UB = np.zeros( (domain.M+2, domain.N+1), dtype='float', order='F' )
+    # VB = np.zeros( (domain.M+2, domain.N+1), dtype='float', order='F' )
+    # UT = np.zeros( (domain.M+2, domain.N+1), dtype='float', order='F' )
+    # VT = np.zeros( (domain.M+2, domain.N+1), dtype='float', order='F' )
 
     # initialize phi and p state vectors
     Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
@@ -755,6 +761,11 @@ def AUSMmuscl( domain, mesh, boundary, parameters, state, gas ):
         vB = QB[:,:,2] / QB[:,:,0]
         vT = QT[:,:,2] / QT[:,:,0]
 
+        # soln_vars.calc_covariant(mesh.s_proj[0:domain.M+1,:,:], uL, vL, UL, VL, domain.M+1, domain.N+2)
+        # soln_vars.calc_covariant(mesh.s_proj[1:domain.M+2,:,:], uR, vR, UR, VR, domain.M+1, domain.N+2)
+        # soln_vars.calc_covariant(mesh.s_proj[:,0:domain.N+1,:], uB, vB, UB, VB, domain.M+2, domain.N+1)
+        # soln_vars.calc_covariant(mesh.s_proj[:,1:domain.N+2,:], uT, vT, UT, VT, domain.M+2, domain.N+1)
+
         UL = (1 / mesh.s_proj[0:domain.M+1,:, 4]) * ( (QL[:,:,1]/QL[:,:,0])*mesh.s_proj[0:domain.M+1,:,0] + \
                                                       (QL[:,:,2]/QL[:,:,0])*mesh.s_proj[0:domain.M+1,:,1] )
         UR = (1 / mesh.s_proj[1:domain.M+2,:,4]) * ( (QR[:,:,1]/QR[:,:,0])*mesh.s_proj[1:domain.M+2,:,0] + \
@@ -771,16 +782,7 @@ def AUSMmuscl( domain, mesh, boundary, parameters, state, gas ):
         pB = thermo.calc_p( QB[:,:,0], QB[:,:,3], uB, vB, \
                             gas.gamma_fn(gas.Cp[:,0:domain.N+1], gas.Cv[:,0:domain.N+1]) )
         pT = thermo.calc_p( QT[:,:,0], QT[:,:,3], uT, vT, \
-                            gas.gamma_fn(gas.Cp[:,1:domain.N+2], gas.Cv[:,1:domain.N+2]) )
-
-        htL = thermo.calc_rho_et(pL, QL[:,:,0], uL, vL, gas.gamma_fn(gas.Cp[0:-1,:], gas.Cv[0:-1,:])) / \
-                                     QL[:,:,0] + pL/QL[:,:,0]   
-        htR = thermo.calc_rho_et(pL, QR[:,:,0], uR, vR, gas.gamma_fn(gas.Cp[1:,:], gas.Cv[1:,:])) / \
-                                     QR[:,:,0] + pR/QR[:,:,0]      
-        htB = thermo.calc_rho_et(pB, QB[:,:,0], uB, vB, gas.gamma_fn(gas.Cp[:,0:-1], gas.Cv[:,0:-1])) / \
-                                     QB[:,:,0] + pB/QB[:,:,0]   
-        htT = thermo.calc_rho_et(pT, QT[:,:,0], uT, vT, gas.gamma_fn(gas.Cp[:,1:], gas.Cv[:,1:])) / \
-                                     QT[:,:,0] + pT/QT[:,:,0]         
+                            gas.gamma_fn(gas.Cp[:,1:domain.N+2], gas.Cv[:,1:domain.N+2]) )     
 
         # simplify variable notation from state vector
         state.u = state.Q[:,:,1] / state.Q[:,:,0]
@@ -1602,152 +1604,6 @@ def SLAUmuscl( domain, mesh, boundary, parameters, state, gas ):
 
     return state
 
-
-# AUSM with Navier-Stokes viscosity terms
-def AUSMvisc( domain, mesh, boundary, parameters, state, gas ):
-
-    print('AUSM Scheme: ' + 'CFL = ' + str(parameters.CFL))
-    print('________________________________________________________________________________________________________________________________________')
-    print('                          mass          u            v        energy')
-    print('________________________________________________________________________________________________________________________________________')
-
-    n = 0
-
-    # initialize speed of sound arrays
-    c_half_zeta = np.zeros( (domain.M+1, domain.N+2), dtype='float', order='F' )
-    c_half_eta = np.zeros( (domain.M+2, domain.N+1), dtype='float', order='F' )
-
-    # initialize phi and p state vectors
-    Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
-    Phi[:,:,0] = np.ones( (domain.M+2, domain.N+2) )
-
-    P_zeta = np.zeros( (domain.M+1, domain.N+2, 4) )
-    P_zeta[:,:,0] = np.zeros( (domain.M+1, domain.N+2) )
-    P_zeta[:,:,3] = np.zeros( (domain.M+1, domain.N+2) )
-
-    P_eta = np.zeros( (domain.M+2, domain.N+1, 4) )
-    P_eta[:,:,0] = np.zeros( (domain.M+2, domain.N+1) )
-    P_eta[:,:,3] = np.zeros( (domain.M+2, domain.N+1) )
-
-    E_hat_left = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
-    Ev_left = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
-    E_hat_right = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
-    Ev_right = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
-    F_hat_bot = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
-    Fv_bot = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
-    F_hat_top = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
-    Fv_top = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
-
-    state.residual = np.zeros( [domain.M, domain.N, 4], dtype='float', order='F' )
-    if state.n == 0:
-        state.res = np.ones( [parameters.iterations + 1, 4] )
-    else:
-        state.res = np.vstack( (state.res, np.ones( [parameters.iterations + 1, 4] )) )
-
-    mesh.dV4 = np.dstack([mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1]])
-
-    t = TicToc()
-
-    while n <= parameters.iterations and max(state.res[n-1+np.int(n<10),:]) > parameters.tolerance: 
-
-        t.tic()
-
-        n = n+1
-        state.n = state.n+1
-
-        # state at previous timestep, use for outflow BCs
-        state.Qn = state.Q
-
-        # local timestepping
-        state = local_timestep( domain, mesh, state, parameters, gas )
-
-        # simplify variable notation from state vector
-        state.u = state.Q[:,:,1] / state.Q[:,:,0]
-        state.v = state.Q[:,:,2] / state.Q[:,:,0]
-        state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / \
-                                      state.Q[:,:,0] + state.p/state.Q[:,:,0]
-
-        # speed of sound at cell interfaces
-        # from Liou 2006 (JCP 214)
-        flux.c_entropy_fixed( c_half_zeta, c_half_eta, state.ht, gas.gamma_fn(gas.Cp, gas.Cv), \
-                              state.U, state.V, domain.M, domain.N )
-
-        # cell face Mach numbers
-        M_L = state.U[0:-1,:] / c_half_zeta
-        M_R = state.U[1:,:] / c_half_zeta
-        M_D = state.V[:,0:-1] / c_half_eta
-        M_U = state.V[:,1:] / c_half_eta
-
-        # split interface Mach numbers in the zeta and eta directions
-        M_half_zeta = split.Mvp( M_L ) + split.Mvm( M_R )
-        M_half_eta = split.Mvp( M_D ) + split.Mvm( M_U )
-
-        # calculate mass flux at cell interfaces
-        mdot_half_zeta = c_half_zeta * M_half_zeta * ( np.double(M_half_zeta>0) * state.Q[0:-1,:,0] + np.double(M_half_zeta<=0) * state.Q[1:,:,0] )
-        mdot_half_eta =  c_half_eta  * M_half_eta  * ( np.double(M_half_eta>0)  * state.Q[:,0:-1,0] + np.double(M_half_eta<=0)  * state.Q[:,1:,0] )
-
-        cr = 1e-60
-        # calculate pressure flux at cell interfaces
-        p_half_zeta = split.P1p( M_L+cr )*state.p[0:-1,:] + split.P1m( M_R+cr )*state.p[1:,:]
-        p_half_eta =  split.P1p( M_D+cr )*state.p[:,0:-1] + split.P1m( M_U+cr )*state.p[:,1:]
-
-        # initialize Phi vector components
-        Phi[:,:,1] = state.u
-        Phi[:,:,2] = state.v
-        Phi[:,:,3] = state.ht
-        
-        # pressure flux vector
-        P_zeta[:,:,1] = p_half_zeta * mesh.s_proj[0:-1,:,0] / mesh.s_proj[0:-1,:,4]
-        P_zeta[:,:,2] = p_half_zeta * mesh.s_proj[0:-1,:,1] / mesh.s_proj[0:-1,:,4]
-
-        P_eta[:,:,1] = p_half_eta * mesh.s_proj[:,0:-1,2] / mesh.s_proj[:,0:-1,5]
-        P_eta[:,:,2] = p_half_eta * mesh.s_proj[:,0:-1,3] / mesh.s_proj[:,0:-1,5]
-
-        # face flux terms
-        flux.face_flux( mdot_half_zeta, mdot_half_eta, Phi, P_zeta, P_eta, E_hat_left, E_hat_right, F_hat_bot, F_hat_top, domain.M, domain.N)
-
-        # update residuals and state vector at each interior cell, from Fortran 90 subroutine
-        state.residual = -np.dstack( (state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1], state.dt[1:-1, 1:-1]) ) * \
-                                  ( ( E_hat_right * np.dstack([mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4], mesh.s_proj[1:-1,1:-1,4]]) \
-                                    - E_hat_left * np.dstack([mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4], mesh.s_proj[0:-2,1:-1,4]]) ) + \
-                                    ( F_hat_top * np.dstack([mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5], mesh.s_proj[1:-1,1:-1,5]])\
-                                    - F_hat_bot * np.dstack([mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5], mesh.s_proj[1:-1,0:-2,5]]) ) )
-        # flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
-        #                   mesh.s_proj[1:-1,1:-1,:], domain.M, domain.N ) 
-        state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
-
-        # L_inf-norm residual
-        state.res[state.n-1,0] = np.log10( np.max(state.residual[:,:,0] * mesh.dV[1:-1,1:-1]) ) 
-        state.res[state.n-1,1] = np.log10( np.max(state.residual[:,:,1] * mesh.dV[1:-1,1:-1]) ) 
-        state.res[state.n-1,2] = np.log10( np.max(state.residual[:,:,2] * mesh.dV[1:-1,1:-1]) )
-        state.res[state.n-1,3] = np.log10( np.max(state.residual[:,:,3] * mesh.dV[1:-1,1:-1]) ) 
-
-        #state.res[n-1] = np.log10( np.max(state.residual * mesh.dV4) ) 
-
-        # update cell temperatures and pressures
-        state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], \
-                                 state.Q[:,:,1]/state.Q[:,:,0], state.Q[:,:,2]/state.Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv) )
-        state.T = state.p / (gas.R_fn(gas.Cp, gas.Cv) * state.Q[:,:,0])
-
-        # update covariant velocities
-        #state = covariant(mesh, state)
-        soln_vars.calc_covariant(mesh.s_proj, state.Q[:,:,1]/state.Q[:,:,0], state.Q[:,:,2]/state.Q[:,:,0], state.U, state.V, domain.M+2, domain.N+2)
-
-        # enforce boundary conditions
-        state = enforce_bc(domain, mesh, boundary, parameters, state, gas)
-
-        # print iteration output
-        if n % 10 == 0:
-            print('Iteration: ' + str(state.n) + '    ' + str(round(state.res[n-1,0],3)) + '    ' + str(round(state.res[n-1,1],3)) + \
-                                                 '    ' + str(round(state.res[n-1,2],3)) + '    ' + str(round(state.res[n-1,3],3)) )
-            t.toc('Iteration time:')
-
-    print('________________________________________________________________________________________________________________________________________')
-
-    # post processing variables
-    state = calc_postvars(state, gas)
-
-    return state
 
 
 # calculate viscous stress components 

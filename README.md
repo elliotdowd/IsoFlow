@@ -6,6 +6,10 @@
 - Added meshing for converging-diverging nozzles
 - Implemented different outflow condition options
 
+## IsoFlow 0.6.1
+- Fixed higher order interpolation calculation of total enthalpy (more stable now)
+- Added unit conversions for wall quantity plotting
+
 ###########################################################################
 ## IsoFlow 0.5.0
 ###########################################################################

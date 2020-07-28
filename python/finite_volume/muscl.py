@@ -5,36 +5,21 @@ def MUSCL( Q, eps, kap, limiter ):
 
     M, N, R = Q.shape
 
-    QL_half = np.zeros( (M-1, N, R), dtype='float', order='F' )
-    QR_half = np.zeros( (M-1, N, R), dtype='float', order='F' )
-    QB_half = np.zeros( (M, N-1, R), dtype='float', order='F' )
-    QU_half = np.zeros( (M, N-1, R), dtype='float', order='F' )
+    Qm2_zeta = np.vstack( ( Q[[0],:,:], Q[0:M-2,:,:] ) )
+    Qm1_zeta = np.vstack( ( Q[[0],:,:], Q[1:M-1,:,:] ) )
+    Qi_zeta =  Q[1:M,:,:]
+    Qp1_zeta = np.vstack( ( Q[2:M,:,:], Q[[M-1],:,:] ) )
 
-    Qm2 = np.zeros( (M-1, N, R) )
-    Qm1 = np.zeros( (M-1, N, R) )
-    Qi = np.zeros( (M-1, N, R) )
-    Qp1 = np.zeros( (M-1, N, R) )
+    QL_half = QL( Qm2_zeta, Qm1_zeta, Qi_zeta, kap, eps, limiter )
+    QR_half = QR( Qm1_zeta, Qi_zeta, Qp1_zeta, kap, eps, limiter )
 
-    Qm2 = np.vstack( ( Q[[0],:,:], Q[0:M-2,:,:] ) )
-    Qm1 = np.vstack( ( Q[[0],:,:], Q[1:M-1,:,:] ) )
-    Qi =  Q[1:M,:,:]
-    Qp1 = np.vstack( ( Q[2:M,:,:], Q[[M-1],:,:] ) )
+    Qm2_eta = np.hstack( ( Q[:,[0],:], Q[:,0:N-2,:] ) )
+    Qm1_eta = np.hstack( ( Q[:,[0],:], Q[:,1:N-1,:] ) )
+    Qi_eta =  Q[:,1:N,:]
+    Qp1_eta = np.hstack( ( Q[:,2:N,:], Q[:,[N-1],:] ) )
 
-    QL_half[:, :, :] = QL( Qm2, Qm1, Qi, kap, eps, limiter )
-    QR_half[:, :, :] = QR( Qm1, Qi, Qp1, kap, eps, limiter )
-
-    Qm2 = np.zeros( (M, N-1, R) )
-    Qm1 = np.zeros( (M, N-1, R) )
-    Qi = np.zeros( (M, N-1, R) )
-    Qp1 = np.zeros( (M, N-1, R) )
-
-    Qm2 = np.hstack( ( Q[:,[0],:], Q[:,0:N-2,:] ) )
-    Qm1 = np.hstack( ( Q[:,[0],:], Q[:,1:N-1,:] ) )
-    Qi =  Q[:,1:N,:]
-    Qp1 = np.hstack( ( Q[:,2:N,:], Q[:,[N-1],:] ) )
-
-    QB_half[:, :, :] = QL( Qm2, Qm1, Qi, kap, eps, limiter )
-    QU_half[:, :, :] = QR( Qm1, Qi, Qp1, kap, eps, limiter )
+    QB_half = QL( Qm2_eta, Qm1_eta, Qi_eta, kap, eps, limiter )
+    QU_half = QR( Qm1_eta, Qi_eta, Qp1_eta, kap, eps, limiter )
 
     return QL_half, QR_half, QB_half, QU_half
 

@@ -179,6 +179,10 @@ def RoeFVS( domain, mesh, boundary, parameters, state, gas ):
 
     n = 0
 
+    # initialize speed of sound arrays
+    c_half_zeta = np.zeros( (domain.M+1, domain.N+2), dtype='float', order='F' )
+    c_half_eta = np.zeros( (domain.M+2, domain.N+1), dtype='float', order='F' )
+
     # initialize phi and p state vectors
     Phi = np.zeros( (domain.M+2, domain.N+2, 4), dtype='float', order='F' )
     Psi = np.zeros( (domain.M+2, domain.N+2, 4), dtype='float', order='F' )
@@ -256,6 +260,10 @@ def RoeFVS( domain, mesh, boundary, parameters, state, gas ):
         state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / \
                                       state.Q[:,:,0] + state.p/state.Q[:,:,0]
 
+        # cell face sound speeds
+        c_half_zeta = ( state.c[0:-1,:] + state.c[1:,:] ) / 2
+        c_half_eta = ( state.c[:,0:-1] + state.c[:,1:] ) / 2
+
         # initialize Phi vector components
         Phi[:,:,0] = state.Q[:,:,0]
         Phi[:,:,1] = state.Q[:,:,0]*state.u
@@ -266,7 +274,7 @@ def RoeFVS( domain, mesh, boundary, parameters, state, gas ):
         rho_zeta = np.sqrt( state.Q[0:-1,:,0] * state.Q[1:,:,0] )
         rho_eta = np.sqrt( state.Q[:,0:-1,0] * state.Q[:,1:,0] )
         U_roe = roe_average( state.Q[0:-1,:,0], state.Q[1:,:,0], state.U[0:-1,:], state.U[1:,:] )
-        V_roe = roe_average( state.Q[:,0:-1,0], state.Q[:,1:,0], state.U[:,0:-1], state.U[:,1:] )
+        V_roe = roe_average( state.Q[:,0:-1,0], state.Q[:,1:,0], state.V[:,0:-1], state.V[:,1:] )
 
         # [0, nx, ny, U]
         Psi_zeta[:,:,3] = U_roe
@@ -289,15 +297,15 @@ def RoeFVS( domain, mesh, boundary, parameters, state, gas ):
         D_eta  = state.eig[1,0,:,:]
 
         # equations 13-16 in Ren et Al 2011.
-        Pu_zeta = np.maximum( 0, state.c[1:,:] - np.abs(state.U[1:,:]) ) * rho_zeta * ( state.U[1:,:]-state.U[0:-1,:] )
-        Pp_zeta = np.sign(state.U[1:,:]) * np.minimum( np.abs(state.U[1:,:]), state.c[1:,:] ) * ( state.p[1:,:]-state.p[0:-1,:] )/state.c[1:,:]
-        Uu_zeta = np.sign(state.U[1:,:]) * np.minimum( np.abs(state.U[1:,:]), state.c[1:,:] ) * ( state.U[1:,:]-state.U[0:-1,:] )/state.c[1:,:]
-        Up_zeta = np.maximum( 0, state.c[1:,:]-np.abs(state.U[1:,:])) * ( state.p[1:,:]-state.p[0:-1,:] ) / (rho_zeta*state.c[1:,:]**2)
+        Pu_zeta = np.maximum( 0, c_half_zeta - np.abs(U_roe) ) * rho_zeta * ( state.U[1:,:]-state.U[0:-1,:] )
+        Pp_zeta = np.sign(U_roe) * np.minimum( np.abs(U_roe), c_half_zeta ) * ( state.p[1:,:]-state.p[0:-1,:] )/c_half_zeta
+        Uu_zeta = np.sign(U_roe) * np.minimum( np.abs(U_roe), c_half_zeta ) * ( state.U[1:,:]-state.U[0:-1,:] )/c_half_zeta
+        Up_zeta = np.maximum( 0, c_half_zeta-np.abs(U_roe)) * ( state.p[1:,:]-state.p[0:-1,:] ) / (rho_zeta*c_half_zeta**2)
 
-        Pu_eta  = np.maximum( 0, state.c[:,1:] - np.abs(state.V[:,1:]) ) * rho_eta * ( state.V[:,1:]-state.V[:,0:-1] )
-        Pp_eta  = np.sign(state.V[:,1:]) * np.minimum( np.abs(state.V[:,1:]), state.c[:,1:] ) * ( state.p[:,1:]-state.p[:,0:-1] )/state.c[:,1:]
-        Uu_eta  = np.sign(state.V[:,1:]) * np.minimum( np.abs(state.V[:,1:]), state.c[:,1:] ) * ( state.V[:,1:]-state.V[:,0:-1] )/state.c[:,1:]
-        Up_eta  = np.maximum( 0, state.c[:,1:]-np.abs(state.V[:,1:]) ) * ( state.p[:,1:]-state.p[:,0:-1] ) / (rho_eta*state.c[:,1:]**2)
+        Pu_eta  = np.maximum( 0, c_half_eta - np.abs(V_roe) ) * rho_eta * ( state.V[:,1:]-state.V[:,0:-1] )
+        Pp_eta  = np.sign(V_roe) * np.minimum( np.abs(V_roe), c_half_eta ) * ( state.p[:,1:]-state.p[:,0:-1] )/c_half_eta
+        Uu_eta  = np.sign(V_roe) * np.minimum( np.abs(V_roe), c_half_eta ) * ( state.V[:,1:]-state.V[:,0:-1] )/c_half_eta
+        Up_eta  = np.maximum( 0, c_half_eta-np.abs(V_roe) ) * ( state.p[:,1:]-state.p[:,0:-1] ) / (rho_eta*c_half_eta**2)
 
         # numerical dissipation terms
         flux.roe_dissipation( Ed_half, Fd_half, state.p, Phi, Psi_zeta, Psi_eta, D_zeta, D_eta, Pu_zeta, Pp_zeta, Uu_zeta, Up_zeta, \
@@ -329,7 +337,7 @@ def RoeFVS( domain, mesh, boundary, parameters, state, gas ):
 
         # update residuals and state vector at each interior cell, from Fortran 90 subroutine
         flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
-                          mesh.s_proj[1:-1,1:-1,:], domain.M, domain.N ) 
+                          mesh.s_proj, domain.M, domain.N ) 
         state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
 
         # L_inf-norm residual
@@ -362,6 +370,251 @@ def RoeFVS( domain, mesh, boundary, parameters, state, gas ):
     state = calc_postvars(state, gas)
 
     return state
+
+
+# Roe FV scheme with MUSCL interpolation
+# see Ren, Gu, Li "New Roe Scheme For All Speed Flow" (2011)
+def RoeFVSmuscl( domain, mesh, boundary, parameters, state, gas ):
+
+    print('Roe Scheme: ' + 'CFL = ' + str(parameters.CFL))
+    print('________________________________________________________________________________________________________________________________________')
+    print('                          mass          u            v        energy')
+    print('________________________________________________________________________________________________________________________________________')
+
+    n = 0
+
+    # initialize phi and psi state vectors
+    PhiL = np.zeros( (domain.M+1, domain.N+2, 4) )
+    PhiR = np.zeros( (domain.M+1, domain.N+2, 4) )
+    PhiB = np.zeros( (domain.M+2, domain.N+1, 4) )
+    PhiT = np.zeros( (domain.M+2, domain.N+1, 4) )
+    
+    PsiL = np.zeros( (domain.M+1, domain.N+2, 4) )
+    PsiR = np.zeros( (domain.M+1, domain.N+2, 4) )
+    PsiB = np.zeros( (domain.M+2, domain.N+1, 4) )
+    PsiT = np.zeros( (domain.M+2, domain.N+1, 4) )
+
+    P_zeta = np.zeros( (domain.M+1, domain.N+2, 4) )
+    P_zeta[:,:,0] = np.zeros( (domain.M+1, domain.N+2) )
+    P_zeta[:,:,3] = np.zeros( (domain.M+1, domain.N+2) )
+
+    P_eta = np.zeros( (domain.M+2, domain.N+1, 4), dtype='float', order='F' )
+    P_eta[:,:,0] = np.zeros( (domain.M+2, domain.N+1) )
+    P_eta[:,:,3] = np.zeros( (domain.M+2, domain.N+1) )
+
+    # initialize Psi vector components
+    Psi_zeta = np.zeros( (domain.M+1, domain.N+2, 4), dtype='float', order='F' )
+    Psi_zeta[:,:,1] = mesh.s_proj[1:,:,0]/mesh.s_proj[1:,:,4]
+    Psi_zeta[:,:,2] = mesh.s_proj[1:,:,1]/mesh.s_proj[1:,:,4]
+
+    Psi_eta = np.zeros( (domain.M+2, domain.N+1, 4), dtype='float', order='F' )
+    Psi_eta[:,:,1] = mesh.s_proj[:,1:,2]/mesh.s_proj[:,1:,5]
+    Psi_eta[:,:,2] = mesh.s_proj[:,1:,3]/mesh.s_proj[:,1:,5]
+
+    # normal vectors
+    N_zeta = np.zeros( (domain.M+1, domain.N+2, 4) )
+    N_zeta[:,:,1] = mesh.s_proj[0:-1,:,0]/mesh.s_proj[0:-1,:,4]
+    N_zeta[:,:,2] = mesh.s_proj[0:-1,:,1]/mesh.s_proj[0:-1,:,4]
+
+    N_eta = np.zeros( (domain.M+2, domain.N+1, 4) )
+    N_eta[:,:,1] = mesh.s_proj[:,0:-1,2]/mesh.s_proj[:,0:-1,5]
+    N_eta[:,:,2] = mesh.s_proj[:,0:-1,3]/mesh.s_proj[:,0:-1,5]
+
+    E_hat_left = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
+    E_hat_right = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
+    F_hat_bot = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
+    F_hat_top = np.zeros( (domain.M, domain.N, 4), dtype='float', order='F' )
+
+    # convective terms
+
+    Fbar_left = np.zeros( (domain.M+1, domain.N+2, 4), dtype='float', order='F' )
+    Fbar_right = np.zeros( (domain.M+1, domain.N+2, 4), dtype='float', order='F' )
+    Fbar_bot = np.zeros( (domain.M+2, domain.N+1, 4), dtype='float', order='F' )
+    Fbar_top = np.zeros( (domain.M+2, domain.N+1, 4), dtype='float', order='F' )
+
+    Ec_half = np.zeros( (domain.M+1, domain.N+2, 4), dtype='float', order='F' )
+    Fc_half = np.zeros( (domain.M+2, domain.N+1, 4), dtype='float', order='F' )
+
+    Ed_half = np.zeros( (domain.M+1, domain.N+2, 4), dtype='float', order='F' )
+    Fd_half = np.zeros( (domain.M+2, domain.N+1, 4), dtype='float', order='F' )
+
+    state.residual = np.zeros( [domain.M, domain.N, 4], dtype='float', order='F' )
+    if state.n == 0:
+        state.res = np.ones( [parameters.iterations + 1, 4] )
+    else:
+        state.res = np.vstack( (state.res, np.ones( [parameters.iterations + 1, 4] )) )
+
+    mesh.dV4 = np.dstack([mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1], mesh.dV[1:-1,1:-1]])
+
+    t = TicToc()
+
+    while n <= parameters.iterations and max(state.res[n-1+np.int(n<10),:]) > parameters.tolerance: 
+
+        t.tic()
+
+        n = n+1
+        state.n = state.n+1
+
+        # state at previous timestep, use for outflow BCs
+        state.Qn = state.Q
+
+        # local timestepping
+        state = local_timestep( domain, mesh, state, parameters, gas )
+
+        # MUSCL interpolation
+        QL, QR, QB, QT = muscl.MUSCL( state.Q, parameters.epsilon, parameters.kappa, parameters.limiter )
+
+        uL = QL[:,:,1] / QL[:,:,0]
+        uR = QR[:,:,1] / QR[:,:,0]
+        uB = QB[:,:,1] / QB[:,:,0]
+        uT = QT[:,:,1] / QT[:,:,0]
+
+        vL = QL[:,:,2] / QL[:,:,0]
+        vR = QR[:,:,2] / QR[:,:,0]
+        vB = QB[:,:,2] / QB[:,:,0]
+        vT = QT[:,:,2] / QT[:,:,0]
+
+        UL = (1 / mesh.s_proj[0:domain.M+1,:, 4]) * ( (QL[:,:,1]/QL[:,:,0])*mesh.s_proj[0:domain.M+1,:,0] + \
+                                                      (QL[:,:,2]/QL[:,:,0])*mesh.s_proj[0:domain.M+1,:,1] )
+        UR = (1 / mesh.s_proj[1:domain.M+2,:,4]) * ( (QR[:,:,1]/QR[:,:,0])*mesh.s_proj[1:domain.M+2,:,0] + \
+                                                     (QR[:,:,2]/QR[:,:,0])*mesh.s_proj[1:domain.M+2,:,1] ) 
+        VB = (1 / mesh.s_proj[:, 0:domain.N+1, 5]) * ( (QB[:,:,1]/QB[:,:,0])*mesh.s_proj[:,0:domain.N+1,2] + \
+                                                       (QB[:,:,2]/QB[:,:,0])*mesh.s_proj[:,0:domain.N+1,3] )
+        VT = (1 / mesh.s_proj[:, 1:domain.N+2, 5]) * ( (QT[:,:,1]/QT[:,:,0])*mesh.s_proj[:,1:domain.N+2,2] + \
+                                                       (QT[:,:,2]/QT[:,:,0])*mesh.s_proj[:,1:domain.N+2,3] )   
+
+        pL = (gas.gamma_fn(gas.Cp[0:domain.M+1,:], gas.Cv[0:domain.M+1,:])-1) * \
+             ( QL[:,:,3] - (1/2)*QL[:,:,0]*((QL[:,:,1]/QL[:,:,0])**2 + (QL[:,:,2]/QL[:,:,0])**2))
+        pR = (gas.gamma_fn(gas.Cp[1:domain.M+2,:], gas.Cv[1:domain.M+2,:])-1) * \
+             ( QR[:,:,3] - (1/2)*QR[:,:,0]*((QR[:,:,1]/QR[:,:,0])**2 + (QR[:,:,2]/QR[:,:,0])**2))  
+        pB = (gas.gamma_fn(gas.Cp[:,0:domain.N+1], gas.Cv[:,0:domain.N+1])-1) * \
+             ( QB[:,:,3] - (1/2)*QB[:,:,0]*((QB[:,:,1]/QB[:,:,0])**2 + (QB[:,:,2]/QB[:,:,0])**2))
+        pT = (gas.gamma_fn(gas.Cp[:,1:domain.N+2], gas.Cv[:,1:domain.N+2])-1) * \
+             ( QT[:,:,3] - (1/2)*QT[:,:,0]*((QT[:,:,1]/QT[:,:,0])**2 + (QT[:,:,2]/QT[:,:,0])**2))      
+
+        # simplify variable notation from state vector
+        state.u = state.Q[:,:,1] / state.Q[:,:,0]
+        state.v = state.Q[:,:,2] / state.Q[:,:,0]
+        state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / \
+                                      state.Q[:,:,0] + state.p/state.Q[:,:,0]
+
+        # cell face sound speeds
+        c_half_zeta = ( state.c[0:-1,:] + state.c[1:,:] ) / 2
+        c_half_eta = ( state.c[:,0:-1] + state.c[:,1:] ) / 2
+
+        # initialize Phi vector components
+        PhiL[:,:,0] = QL[:,:,0]
+        PhiL[:,:,1] = QL[:,:,0]*uL
+        PhiL[:,:,2] = QL[:,:,0]*vL
+        PhiL[:,:,3] = QL[:,:,0]*( QL[:,:,3] + pL/QL[:,:,0] )
+
+        PhiR[:,:,0] = QR[:,:,0]
+        PhiR[:,:,1] = QR[:,:,0]*uR
+        PhiR[:,:,2] = QR[:,:,0]*vR
+        PhiR[:,:,3] = QR[:,:,0]*( QR[:,:,3] + pR/QR[:,:,0] )
+
+        PhiB[:,:,0] = QB[:,:,0]
+        PhiB[:,:,1] = QB[:,:,0]*uB
+        PhiB[:,:,2] = QB[:,:,0]*vB
+        PhiB[:,:,3] = QB[:,:,0]*( QB[:,:,3] + pB/QB[:,:,0] )
+
+        PhiT[:,:,0] = QT[:,:,0]
+        PhiT[:,:,1] = QT[:,:,0]*uT
+        PhiT[:,:,2] = QT[:,:,0]*vT
+        PhiT[:,:,3] = QT[:,:,0]*( QT[:,:,3] + pT/QT[:,:,0] )
+
+        # Roe averaged quantities
+        rho_zeta = np.sqrt( QL[:,:,0] * QR[:,:,0] )
+        rho_eta = np.sqrt( QB[:,:,0] * QT[:,:,0] )
+        U_roe = roe_average( QL[:,:,0], QR[:,:,0], UL, UR )
+        V_roe = roe_average( QB[:,:,0], QT[:,:,0], VB, VT )
+
+        # [0, nx, ny, U]
+        Psi_zeta[:,:,3] = U_roe
+        Psi_eta[:,:,3]  = V_roe
+        
+        # calculate central term in eqch computational direction
+        # Fbar_left = flux.roe_fbar( Fbar_left, Phi[0:-1,:,:], state.U[0:-1,:], N_zeta, state.p[0:-1,:], domain.M+1, domain.N+2 )
+        # Fbar_right = flux.roe_fbar( Fbar_right, Phi[1:,:,:], state.U[1:,:], N_zeta, state.p[1:,:], domain.M+1, domain.N+2 )
+
+        # Ec_half =  (1/2) * ( Fbar_left + Fbar_right )
+        # Fc_half =  (1/2) * ( Fbar_bot + Fbar_top )
+
+        Ec_half =  (1/2) * ( F_bar( PhiL, UL, N_zeta, pL, domain.M+1, domain.N+2 ) + \
+                             F_bar( PhiR, UR, N_zeta, pR, domain.M+1, domain.N+2 ) )
+        Fc_half =  (1/2) * ( F_bar( PhiB, VB, N_eta, pB, domain.M+2, domain.N+1 ) + \
+                             F_bar( PhiT, VT, N_eta, pT, domain.M+2, domain.N+1 ) )
+
+        # upwind dissipation
+        D_zeta = state.eig[0,0,:,:]
+        D_eta  = state.eig[1,0,:,:]
+
+        # equations 13-16 in Ren et Al 2011.
+        Pu_zeta = np.maximum( 0, c_half_zeta - np.abs(U_roe) ) * rho_zeta * ( UR-UL )
+        Pp_zeta = np.sign(U_roe) * np.minimum( np.abs(U_roe), c_half_zeta ) * ( pR-pL )/c_half_zeta
+        Uu_zeta = np.sign(U_roe) * np.minimum( np.abs(U_roe), c_half_zeta ) * ( UR-UL )/c_half_zeta
+        Up_zeta = np.maximum( 0, c_half_zeta-np.abs(U_roe)) * ( pR-pL ) / (rho_zeta*c_half_zeta**2)
+
+        Pu_eta  = np.maximum( 0, c_half_eta - np.abs(V_roe) ) * rho_eta * ( VT-VB )
+        Pp_eta  = np.sign(V_roe) * np.minimum( np.abs(V_roe), c_half_eta ) * ( pT-pB )/c_half_eta
+        Uu_eta  = np.sign(V_roe) * np.minimum( np.abs(V_roe), c_half_eta ) * ( VT-VB )/c_half_eta
+        Up_eta  = np.maximum( 0, c_half_eta-np.abs(V_roe) ) * ( pT-pB ) / (rho_eta*c_half_eta**2)
+
+        # numerical dissipation terms
+        for i in range(0, 4):
+            if i < 3:
+                Ed_half[:,:,i] = -(1/2) * ( D_zeta[1:,:] * (PhiR[:,:,i]-PhiL[:,:,i]) + (Pu_zeta+Pp_zeta)*Psi_zeta[:,:,i] + \
+                                                                                       (Uu_zeta+Up_zeta)*(PhiL[:,:,i]+PhiR[:,:,i])/2 )
+                Fd_half[:,:,i] = -(1/2) * ( D_eta[:,1:] * (PhiT[:,:,i]-PhiB[:,:,i]) +  (Pu_eta+Pp_eta)*Psi_eta[:,:,i] + \
+                                                                                       (Uu_eta+Up_eta)*(PhiB[:,:,i]+PhiT[:,:,i])/2 )
+            else:
+                Ed_half[:,:,i] = -(1/2) * ( D_zeta[1:,:] * ((PhiR[:,:,i]-pR)-(PhiL[:,:,i]-pL)) + (Pu_zeta+Pp_zeta)*Psi_zeta[:,:,i] + \
+                                                                                                 (Uu_zeta+Up_zeta)*(PhiL[:,:,i]+PhiR[:,:,i])/2 )
+                Fd_half[:,:,i] = -(1/2) * ( D_eta[:,1:] * ((PhiT[:,:,i]-pT)-(PhiB[:,:,i]-pB)) +  (Pu_eta+Pp_eta)*Psi_eta[:,:,i] + \
+                                                                                                 (Uu_eta+Up_eta)*(PhiB[:,:,i]+PhiT[:,:,i])/2 )
+
+        # flux summation
+        E_hat_left  = Ec_half[0:-1,1:-1,:] + Ed_half[0:-1,1:-1,:]
+        E_hat_right = Ec_half[1:,1:-1,:] + Ed_half[1:,1:-1,:]
+        F_hat_bot   = Fc_half[1:-1,0:-1,:] + Fd_half[1:-1,0:-1,:]
+        F_hat_top   = Fc_half[1:-1,1:,:] + Fd_half[1:-1,1:,:]
+
+        # update residuals and state vector at each interior cell, from Fortran 90 subroutine
+        flux.residual( state.residual, state.dt[1:-1, 1:-1], E_hat_left, E_hat_right, F_hat_bot, F_hat_top,\
+                          mesh.s_proj, domain.M, domain.N ) 
+        state.Q[1:-1,1:-1,:] = state.Qn[1:-1,1:-1,:] + state.residual / mesh.dV4
+
+        # L_inf-norm residual
+        state.res[state.n-1,0] = np.log10( np.max(state.residual[:,:,0] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,1] = np.log10( np.max(state.residual[:,:,1] * mesh.dV[1:-1,1:-1]) ) 
+        state.res[state.n-1,2] = np.log10( np.max(state.residual[:,:,2] * mesh.dV[1:-1,1:-1]) )
+        state.res[state.n-1,3] = np.log10( np.max(state.residual[:,:,3] * mesh.dV[1:-1,1:-1]) ) 
+
+        #state.res[n-1] = np.log10( np.max(state.residual * mesh.dV4) ) 
+
+        # update cell temperatures and pressures
+        state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv) )
+        state.T = state.p / (gas.R_fn(gas.Cp, gas.Cv) * state.Q[:,:,0])
+
+        # update covariant velocities
+        soln_vars.calc_covariant(mesh.s_proj, state.u, state.v, state.U, state.V, domain.M+2, domain.N+2)
+
+        # enforce boundary conditions
+        state = enforce_bc(domain, mesh, boundary, parameters, state, gas)
+
+        # print iteration output
+        if n % 10 == 0:
+            print('Iteration: ' + str(state.n) + '    ' + str(round(state.res[n-1,0],3)) + '    ' + str(round(state.res[n-1,1],3)) + \
+                                                 '    ' + str(round(state.res[n-1,2],3)) + '    ' + str(round(state.res[n-1,3],3)) )
+            t.toc('Iteration time:')
+
+    print('________________________________________________________________________________________________________________________________________')
+
+    # post processing variables
+    state = calc_postvars(state, gas)
+
+    return state
+
 
 
 # Improved Roe FV scheme

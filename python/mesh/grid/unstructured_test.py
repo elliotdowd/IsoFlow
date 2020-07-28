@@ -29,25 +29,44 @@ import numpy as np
 # plt.show()
 
 class domain:
-    name = 'wedge'
+    name = 'airfoil'
     M = 30
     N = 26
-    obj_start = .25
-    obj_end = 1.5
+    obj_start = .5
+    obj_end = 1
     length = 1.5
     height = 1.2
-    theta = np.deg2rad(20)
+    naca = '0012'
+    alpha = np.rad2deg( 5 )
 
 # calculate wedge grid coordinates
-from python.mesh.grid.gen_grid import mesh_wedge, mesh_cylinder, mesh_airfoil
-xx, yy = mesh_airfoil(domain)
-
-z = np.linspace(0, 2, 30)
+from gen_grid import mesh_wedge, mesh_cylinder, mesh_naca4
+xx, yy, walls = mesh_naca4(domain)
 
 triang = tri.Triangulation(xx.flatten(), yy.flatten())
+
+
+N, void = np.shape(trang.triangles)
+
 
 fig1, ax1 = plt.subplots()
 ax1.set_aspect('equal')
 ax1.triplot(triang, 'go-', lw=1)
 ax1.set_title('triplot of Delaunay triangulation')
 plt.show()
+
+
+class mesh: 
+    def __init__(self, elements, walls):
+
+    elements = []
+    for i in range( 0, N ):
+
+        elements.append( element( triang.triangles[i,:], np.array([triang.x, triang.y]) ) )
+
+    class element:
+        def __init__(self, nodeID, edge):
+            import numpy as np
+
+            self.nodes = node
+            self.edge = edge

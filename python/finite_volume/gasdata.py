@@ -23,7 +23,7 @@ class air_cpg:
     R_p = 287
     theta = 3055.556
 
-    mu_p = 1.803e5
+    mu_p = 1.803e-5
 
     def Cp_fn( k_p, Cp_p, th, T ):
         import numpy as np

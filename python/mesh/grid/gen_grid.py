@@ -102,7 +102,7 @@ def mesh_corner(domain):
     walls = []
 
     # set boundary class values
-    walls.append( wall( 'domain', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'object', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
     walls.append( wall( 'domain', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
     walls.append( wall( 'inlet', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
     walls.append( wall( 'domain', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
@@ -247,10 +247,10 @@ def mesh_planar_nozzle_exit(domain):
     walls = []
 
     # set boundary class values
-    walls.append( wall( 'object', 0, Msplit, 0, 0, np.array( ( 0, 1 ) ) ) )
-    walls.append( wall( 'object', 0, Msplit, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
-    walls.append( wall( 'domain', Msplit+1, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
-    walls.append( wall( 'domain', Msplit+1, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
+    walls.append( wall( 'object', 0, Msplit+1, 0, 0, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'object', 0, Msplit+1, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
+    walls.append( wall( 'domain', Msplit+2, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'domain', Msplit+2, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
     walls.append( wall( 'inlet', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
     walls.append( wall( 'domain', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
 
