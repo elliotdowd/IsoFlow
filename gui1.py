@@ -231,6 +231,9 @@ class MainFrame ( wx.Frame ):
 		self.thermalgas = wx.MenuItem( self.gasOptions, wx.ID_ANY, u"Thermally Perfect", wx.EmptyString, wx.ITEM_CHECK )
 		self.gasOptions.Append( self.thermalgas )
 
+		self.dissociation = wx.MenuItem( self.gasOptions, wx.ID_ANY, u"Dissociation Modeling", wx.EmptyString, wx.ITEM_CHECK )
+		self.gasOptions.Append( self.dissociation )
+
 		self.gasOptions.AppendSeparator()
 
 		self.gasinfo = wx.MenuItem( self.gasOptions, wx.ID_ANY, u"Show More Information", wx.EmptyString, wx.ITEM_NORMAL )
@@ -283,13 +286,13 @@ class MainFrame ( wx.Frame ):
 		self.boundOptions.Append( self.botwall_visc )
 
 		self.botwall_thermal = wx.Menu()
-		self.botwall_adiabatic = wx.MenuItem( self.botwall_thermal, wx.ID_ANY, u"Adiabatic", wx.EmptyString, wx.ITEM_RADIO )
+		self.botwall_adiabatic = wx.MenuItem( self.botwall_thermal, 440, u"Adiabatic", wx.EmptyString, wx.ITEM_RADIO )
 		self.botwall_thermal.Append( self.botwall_adiabatic )
 		
-		self.botwall_isothermal = wx.MenuItem( self.botwall_thermal, wx.ID_ANY, u"Isothermal", wx.EmptyString, wx.ITEM_RADIO )
+		self.botwall_isothermal = wx.MenuItem( self.botwall_thermal, 441, u"Isothermal", wx.EmptyString, wx.ITEM_RADIO )
 		self.botwall_thermal.Append( self.botwall_isothermal )
 
-		self.botwall_fixed = wx.MenuItem( self.botwall_thermal, wx.ID_ANY, u"Fixed Temperature", wx.EmptyString, wx.ITEM_RADIO )
+		self.botwall_fixed = wx.MenuItem( self.botwall_thermal, 442, u"Fixed Temperature", wx.EmptyString, wx.ITEM_RADIO )
 		self.botwall_thermal.Append( self.botwall_fixed )
 		
 		self.boundOptions.AppendSubMenu( self.botwall_thermal, u"Bottom Wall Thermal Options" )
@@ -306,13 +309,13 @@ class MainFrame ( wx.Frame ):
 		self.boundOptions.Append( self.topwall_visc )
 
 		self.topwall_thermal = wx.Menu()
-		self.topwall_adiabatic = wx.MenuItem( self.topwall_thermal, wx.ID_ANY, u"Adiabatic", wx.EmptyString, wx.ITEM_RADIO )
+		self.topwall_adiabatic = wx.MenuItem( self.topwall_thermal, 540, u"Adiabatic", wx.EmptyString, wx.ITEM_RADIO )
 		self.topwall_thermal.Append( self.topwall_adiabatic )
 		
-		self.topwall_isothermal = wx.MenuItem( self.topwall_thermal, wx.ID_ANY, u"Isothermal", wx.EmptyString, wx.ITEM_RADIO )
+		self.topwall_isothermal = wx.MenuItem( self.topwall_thermal, 541, u"Isothermal", wx.EmptyString, wx.ITEM_RADIO )
 		self.topwall_thermal.Append( self.topwall_isothermal )
 
-		self.topwall_fixed = wx.MenuItem( self.topwall_thermal, wx.ID_ANY, u"Fixed Temperature", wx.EmptyString, wx.ITEM_RADIO )
+		self.topwall_fixed = wx.MenuItem( self.topwall_thermal, 542, u"Fixed Temperature", wx.EmptyString, wx.ITEM_RADIO )
 		self.topwall_thermal.Append( self.topwall_fixed )
 
 		self.botwall_adiabatic.Enable(False)
@@ -1020,7 +1023,14 @@ class MainFrame ( wx.Frame ):
 				self.gas = gasdata.C02_tpg
 			elif self.H2.IsChecked() == True:
 				self.gas = gasdata.H2_tpg
-		
+
+		# dissociation option
+		if self.dissociation.IsChecked():
+			self.gas.option = 'dissociation'
+		else:
+			self.gas.option = 'perfect'
+
+		# selected scheme
 		if scheme == 'AUSM':
 			if self.higherorder.IsChecked():
 				self.state = AUSMmuscl( self.domain, self.mesh, self.boundary, self.parameters, self.state, self.gas )
@@ -1368,12 +1378,12 @@ class MainFrame ( wx.Frame ):
 							    		      	self.state.Mach[self.domain.obj_i:self.domain.obj_f,self.domain.wallL:self.domain.wallU], self.contGrad, colors = 'gray')
 
 		# plot settings
-		if self.topwall_out.IsChecked():
-			panel.cax.set(xlim=[np.min(self.mesh.xxc[1:-1,1:-1]) * cl, np.max(self.mesh.xxc[1:-1,1:-1]) * cl], \
-					  	  ylim=[np.min(self.mesh.yyc[1:-1,1:-1]) * cl, np.max(self.mesh.yyc[1:-1,1:-1]) * cl])
-		else:
-			panel.cax.set(xlim=[np.min(self.mesh.xxc[1:-1,1:-1]) * cl, np.max(self.mesh.xxc[1:-1,1:-1]) * cl], \
-					  	  ylim=[np.min(self.mesh.yyc[1:-1,1:-2]) * cl, np.max(self.mesh.yyc[1:-1,1:-2]) * cl])
+		# if self.topwall_out.IsChecked():
+		panel.cax.set(xlim=[np.min(self.mesh.xxc[1:-1,1:-1]) * cl, np.max(self.mesh.xxc[1:-1,1:-1]) * cl], \
+						ylim=[np.min(self.mesh.yyc[1:-1,1:-1]) * cl, np.max(self.mesh.yyc[1:-1,1:-1]) * cl])
+		# # else:
+		# panel.cax.set(xlim=[np.min(self.mesh.xxc[1:-1,1:-1]) * cl, np.max(self.mesh.xxc[1:-1,1:-1]) * cl], \
+		# 				ylim=[np.min(self.mesh.yyc[1:-1,1:-2]) * cl, np.max(self.mesh.yyc[1:-1,1:-2]) * cl])
 
 		panel.cax.set_aspect(self.axisOption, adjustable='box', anchor='C')
 
@@ -1718,10 +1728,13 @@ class MainFrame ( wx.Frame ):
 	def gas_change( self, event ):
 		if self.air.IsChecked() == True:
 			self.gasSelect = 'Air'
+			self.dissociation.Enable(True)
 		elif self.C02.IsChecked() == True:
 			self.gasSelect = 'Carbon Dioxide'
+			self.dissociation.Enable(False)
 		elif self.H2.IsChecked() == True:
 			self.gasSelect = 'Hydrogen'
+			self.dissociation.Enable(False)
 		event.Skip()
 	
 	def thermalgas_change( self, event ):
@@ -1788,6 +1801,21 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.HideRow( 3 )
 			self.domainGrid.ShowRow( 4 )
 
+			# enable object walls
+			wx.MenuBar.Enable(self.menuBar, 330, True)
+			wx.MenuBar.Enable(self.menuBar, 331, True)
+			wx.MenuBar.Enable(self.menuBar, 340, True)
+			wx.MenuBar.Enable(self.menuBar, 341, True)
+			wx.MenuBar.Enable(self.menuBar, 342, True)
+
+			# enable bottom and top walls
+			wx.MenuBar.Enable(self.menuBar, 430, True)
+			wx.MenuBar.Enable(self.menuBar, 431, True)
+			wx.MenuBar.Enable(self.menuBar, 432, True)
+			wx.MenuBar.Enable(self.menuBar, 530, True)
+			wx.MenuBar.Enable(self.menuBar, 531, True)
+			wx.MenuBar.Enable(self.menuBar, 532, True)
+
 			# check inviscid wall
 			if self.botwall_visc.IsChecked():
 				pass
@@ -1807,17 +1835,31 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.ShowRow( 3 )
 			self.domainGrid.ShowRow( 4 )
 
-			wx.MenuBar.Enable(self.menuBar, 330, False)
-			wx.MenuBar.Enable(self.menuBar, 331, False)
-			wx.MenuBar.Enable(self.menuBar, 340, False)
-			wx.MenuBar.Enable(self.menuBar, 341, False)
-			wx.MenuBar.Enable(self.menuBar, 342, False)
+			# enable object walls
+			wx.MenuBar.Enable(self.menuBar, 330, True)
+			wx.MenuBar.Enable(self.menuBar, 331, True)
+			wx.MenuBar.Enable(self.menuBar, 340, True)
+			wx.MenuBar.Enable(self.menuBar, 341, True)
+			wx.MenuBar.Enable(self.menuBar, 342, True)
+
+			# enable bottom and top walls
+			wx.MenuBar.Enable(self.menuBar, 430, True)
+			wx.MenuBar.Enable(self.menuBar, 431, True)
+			wx.MenuBar.Enable(self.menuBar, 432, True)
+			wx.MenuBar.Enable(self.menuBar, 530, True)
+			wx.MenuBar.Enable(self.menuBar, 531, True)
+			wx.MenuBar.Enable(self.menuBar, 532, True)
 
 			# check inviscid wall
 			if self.botwall_visc.IsChecked():
 				pass
 			else:
 				self.boundOptions.Check(431, True)
+
+			if self.topwall_visc.IsChecked():
+				pass
+			else:
+				self.boundOptions.Check(531, True)
 
 			self.domainGrid.SetRowLabelValue( 0, u"Length (" + self.units.length + ')' )
 			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
@@ -1843,11 +1885,20 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.ShowRow( 3 )
 			self.domainGrid.ShowRow( 4 )
 
+			# enable object walls
 			wx.MenuBar.Enable(self.menuBar, 330, True)
 			wx.MenuBar.Enable(self.menuBar, 331, True)
 			wx.MenuBar.Enable(self.menuBar, 340, True)
 			wx.MenuBar.Enable(self.menuBar, 341, True)
 			wx.MenuBar.Enable(self.menuBar, 342, True)
+
+			# enable bottom and top walls
+			wx.MenuBar.Enable(self.menuBar, 430, True)
+			wx.MenuBar.Enable(self.menuBar, 431, True)
+			wx.MenuBar.Enable(self.menuBar, 432, True)
+			wx.MenuBar.Enable(self.menuBar, 530, True)
+			wx.MenuBar.Enable(self.menuBar, 531, True)
+			wx.MenuBar.Enable(self.menuBar, 532, True)
 
 			# check inviscid wall
 			self.boundOptions.Check(430, True)
@@ -1865,11 +1916,20 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.ShowRow( 3 )
 			self.domainGrid.ShowRow( 4 )
 
+			# enable object walls
 			wx.MenuBar.Enable(self.menuBar, 330, True)
 			wx.MenuBar.Enable(self.menuBar, 331, True)
 			wx.MenuBar.Enable(self.menuBar, 340, True)
 			wx.MenuBar.Enable(self.menuBar, 341, True)
 			wx.MenuBar.Enable(self.menuBar, 342, True)
+
+			# enable bottom and top walls
+			wx.MenuBar.Enable(self.menuBar, 430, True)
+			wx.MenuBar.Enable(self.menuBar, 431, True)
+			wx.MenuBar.Enable(self.menuBar, 432, True)
+			wx.MenuBar.Enable(self.menuBar, 530, True)
+			wx.MenuBar.Enable(self.menuBar, 531, True)
+			wx.MenuBar.Enable(self.menuBar, 532, True)
 
 			# check inviscid wall
 			self.boundOptions.Check(430, True)
@@ -1887,11 +1947,20 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.ShowRow( 3 )
 			self.domainGrid.ShowRow( 4 )
 
+			# enable object walls
 			wx.MenuBar.Enable(self.menuBar, 330, True)
 			wx.MenuBar.Enable(self.menuBar, 331, True)
 			wx.MenuBar.Enable(self.menuBar, 340, True)
 			wx.MenuBar.Enable(self.menuBar, 341, True)
 			wx.MenuBar.Enable(self.menuBar, 342, True)
+
+			# enable bottom and top walls
+			wx.MenuBar.Enable(self.menuBar, 430, True)
+			wx.MenuBar.Enable(self.menuBar, 431, True)
+			wx.MenuBar.Enable(self.menuBar, 432, True)
+			wx.MenuBar.Enable(self.menuBar, 530, True)
+			wx.MenuBar.Enable(self.menuBar, 531, True)
+			wx.MenuBar.Enable(self.menuBar, 532, True)
 
 			# check inviscid wall
 			self.boundOptions.Check(430, True)
@@ -1909,15 +1978,24 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.HideRow( 3 )
 			self.domainGrid.ShowRow( 4 )
 
-			wx.MenuBar.Enable(self.menuBar, 330, False)
-			wx.MenuBar.Enable(self.menuBar, 331, False)
-			wx.MenuBar.Enable(self.menuBar, 340, False)
-			wx.MenuBar.Enable(self.menuBar, 341, False)
-			wx.MenuBar.Enable(self.menuBar, 342, False)
+			# enable object walls
+			wx.MenuBar.Enable(self.menuBar, 330, True)
+			wx.MenuBar.Enable(self.menuBar, 331, True)
+			wx.MenuBar.Enable(self.menuBar, 340, True)
+			wx.MenuBar.Enable(self.menuBar, 341, True)
+			wx.MenuBar.Enable(self.menuBar, 342, True)
+
+			# enable bottom and top walls
+			wx.MenuBar.Enable(self.menuBar, 430, True)
+			wx.MenuBar.Enable(self.menuBar, 431, True)
+			wx.MenuBar.Enable(self.menuBar, 432, True)
+			wx.MenuBar.Enable(self.menuBar, 530, True)
+			wx.MenuBar.Enable(self.menuBar, 531, True)
+			wx.MenuBar.Enable(self.menuBar, 532, True)
 
 			# check inviscid walls
-			self.boundOptions.Check(431, True)
-			self.boundOptions.Check(531, True)
+			# self.boundOptions.Check(430, True)
+			# self.boundOptions.Check(530, True)
 
 			self.domainGrid.SetRowLabelValue( 0, u"Length (" + self.units.length + ')' )
 			self.domainGrid.SetRowLabelValue( 1, u"Height (" + self.units.length + ')')
@@ -1932,11 +2010,20 @@ class MainFrame ( wx.Frame ):
 			self.domainGrid.ShowRow( 3 )
 			self.domainGrid.ShowRow( 4 )
 
+			# enable object walls
 			wx.MenuBar.Enable(self.menuBar, 330, True)
 			wx.MenuBar.Enable(self.menuBar, 331, True)
 			wx.MenuBar.Enable(self.menuBar, 340, True)
 			wx.MenuBar.Enable(self.menuBar, 341, True)
 			wx.MenuBar.Enable(self.menuBar, 342, True)
+
+			# enable bottom and top walls
+			wx.MenuBar.Enable(self.menuBar, 430, True)
+			wx.MenuBar.Enable(self.menuBar, 431, True)
+			wx.MenuBar.Enable(self.menuBar, 432, True)
+			wx.MenuBar.Enable(self.menuBar, 530, True)
+			wx.MenuBar.Enable(self.menuBar, 531, True)
+			wx.MenuBar.Enable(self.menuBar, 532, True)
 
 			# check inviscid walls
 			self.boundOptions.Check(430, True)

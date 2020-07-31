@@ -69,8 +69,10 @@ def AUSM( domain, mesh, boundary, parameters, state, gas ):
         # simplify variable notation from state vector
         state.u = state.Q[:,:,1] / state.Q[:,:,0]
         state.v = state.Q[:,:,2] / state.Q[:,:,0]
-        state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / \
-                                      state.Q[:,:,0] + state.p/state.Q[:,:,0]
+        # state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / \
+        #                               state.Q[:,:,0] + state.p/state.Q[:,:,0]
+        state.ht = gas.ht_fn( gas, state )
+        # state.Q[:,:,3] = state.Q[:,:,0]*(state.ht - state.p/state.Q[:,:,0])
 
         # speed of sound at cell interfaces
         # from Liou 2006 (JCP 214)
@@ -239,7 +241,9 @@ def AUSMplusup( domain, mesh, boundary, parameters, state, gas ):
         # simplify variable notation from state vector
         state.u = state.Q[:,:,1] / state.Q[:,:,0]
         state.v = state.Q[:,:,2] / state.Q[:,:,0]
-        state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / state.Q[:,:,0] + state.p/state.Q[:,:,0]
+        # state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / state.Q[:,:,0] + state.p/state.Q[:,:,0]
+        state.ht = gas.ht_fn( gas, state )
+        # state.Q[:,:,3] = state.Q[:,:,0]*(state.ht - state.p/state.Q[:,:,0])
 
         # density at cell interfaces, upwinded
         rho_half_zeta = ( state.Q[0:-1,:,0] + state.Q[1:,:,0] ) / 2
@@ -409,7 +413,9 @@ def AUSMDV( domain, mesh, boundary, parameters, state, gas ):
         # simplify variable notation from state vector
         state.u = state.Q[:,:,1] / state.Q[:,:,0]
         state.v = state.Q[:,:,2] / state.Q[:,:,0]
-        state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / state.Q[:,:,0] + state.p/state.Q[:,:,0]
+        # state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / state.Q[:,:,0] + state.p/state.Q[:,:,0]
+        state.ht = gas.ht_fn( gas, state )
+        # state.Q[:,:,3] = state.Q[:,:,0]*(state.ht - state.p/state.Q[:,:,0])
 
         # speed of sound at cell interfaces
         # from Liou 2006 (JCP 214)
@@ -558,7 +564,9 @@ def SLAU( domain, mesh, boundary, parameters, state, gas ):
         # simplify variable notation from state vector
         state.u = state.Q[:,:,1] / state.Q[:,:,0]
         state.v = state.Q[:,:,2] / state.Q[:,:,0]
-        state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / state.Q[:,:,0] + state.p/state.Q[:,:,0]
+        # state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / state.Q[:,:,0] + state.p/state.Q[:,:,0]
+        state.ht = gas.ht_fn( gas, state )
+        # state.Q[:,:,3] = state.Q[:,:,0]*(state.ht - state.p/state.Q[:,:,0])
 
         # density at cell interfaces, upwinded
         rho_half_zeta = ( state.Q[0:-1,:,0] + state.Q[1:,:,0] ) / 2
@@ -688,16 +696,6 @@ def AUSMmuscl( domain, mesh, boundary, parameters, state, gas ):
     c_half_zeta = np.zeros( (domain.M+1, domain.N+2), dtype='float', order='F' )
     c_half_eta = np.zeros( (domain.M+2, domain.N+1), dtype='float', order='F' )
 
-    # initialize interpolated covariant velocities
-    # UL = np.zeros( (domain.M+1, domain.N+2), dtype='float', order='F' )
-    # VL = np.zeros( (domain.M+1, domain.N+2), dtype='float', order='F' )
-    # UR = np.zeros( (domain.M+1, domain.N+2), dtype='float', order='F' )
-    # VR = np.zeros( (domain.M+1, domain.N+2), dtype='float', order='F' )
-    # UB = np.zeros( (domain.M+2, domain.N+1), dtype='float', order='F' )
-    # VB = np.zeros( (domain.M+2, domain.N+1), dtype='float', order='F' )
-    # UT = np.zeros( (domain.M+2, domain.N+1), dtype='float', order='F' )
-    # VT = np.zeros( (domain.M+2, domain.N+1), dtype='float', order='F' )
-
     # initialize phi and p state vectors
     Phi = np.zeros( (domain.M+2, domain.N+2, 4) )
     Phi[:,:,0] = np.ones( (domain.M+2, domain.N+2) )
@@ -747,6 +745,14 @@ def AUSMmuscl( domain, mesh, boundary, parameters, state, gas ):
         # local timestepping
         state = local_timestep( domain, mesh, state, parameters, gas )
 
+        # simplify variable notation from state vector
+        state.u = state.Q[:,:,1] / state.Q[:,:,0]
+        state.v = state.Q[:,:,2] / state.Q[:,:,0]
+        # state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / \
+        #                               state.Q[:,:,0] + state.p/state.Q[:,:,0]
+        state.ht = gas.ht_fn( gas, state )
+        # state.Q[:,:,3] = state.Q[:,:,0]*(state.ht - state.p/state.Q[:,:,0])
+
         # MUSCL interpolation
 
         QL, QR, QB, QT = muscl.MUSCL( state.Q, parameters.epsilon, parameters.kappa, parameters.limiter )
@@ -783,12 +789,6 @@ def AUSMmuscl( domain, mesh, boundary, parameters, state, gas ):
                             gas.gamma_fn(gas.Cp[:,0:domain.N+1], gas.Cv[:,0:domain.N+1]) )
         pT = thermo.calc_p( QT[:,:,0], QT[:,:,3], uT, vT, \
                             gas.gamma_fn(gas.Cp[:,1:domain.N+2], gas.Cv[:,1:domain.N+2]) )     
-
-        # simplify variable notation from state vector
-        state.u = state.Q[:,:,1] / state.Q[:,:,0]
-        state.v = state.Q[:,:,2] / state.Q[:,:,0]
-        state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / \
-                                      state.Q[:,:,0] + state.p/state.Q[:,:,0]
 
         # speed of sound at cell interfaces
         # from Liou 2006 (JCP 214)
@@ -976,6 +976,14 @@ def AUSMplusupmuscl( domain, mesh, boundary, parameters, state, gas ):
         # local timestepping
         state = local_timestep( domain, mesh, state, parameters, gas )
 
+        # simplify variable notation from state vector
+        state.u = state.Q[:,:,1] / state.Q[:,:,0]
+        state.v = state.Q[:,:,2] / state.Q[:,:,0]
+        # state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / \
+        #                               state.Q[:,:,0] + state.p/state.Q[:,:,0]
+        state.ht = gas.ht_fn( gas, state )
+        # state.Q[:,:,3] = state.Q[:,:,0]*(state.ht - state.p/state.Q[:,:,0])
+
         # MUSCL interpolation
 
         QL, QR, QB, QT = muscl.MUSCL( state.Q, parameters.epsilon, parameters.kappa, parameters.limiter )
@@ -1007,12 +1015,6 @@ def AUSMplusupmuscl( domain, mesh, boundary, parameters, state, gas ):
                             gas.gamma_fn(gas.Cp[:,0:domain.N+1], gas.Cv[:,0:domain.N+1]) )
         pT = thermo.calc_p( QT[:,:,0], QT[:,:,3], uT, vT, \
                             gas.gamma_fn(gas.Cp[:,1:domain.N+2], gas.Cv[:,1:domain.N+2]) )             
-
-        # simplify variable notation from state vector
-        state.u = state.Q[:,:,1] / state.Q[:,:,0]
-        state.v = state.Q[:,:,2] / state.Q[:,:,0]
-        state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / \
-                                      state.Q[:,:,0] + state.p/state.Q[:,:,0]
 
         # speed of sound at cell interfaces
         # from Liou 2006 (JCP 214)
@@ -1211,6 +1213,14 @@ def AUSMDVmuscl( domain, mesh, boundary, parameters, state, gas ):
         # local timestepping
         state = local_timestep( domain, mesh, state, parameters, gas )
 
+        # simplify variable notation from state vector
+        state.u = state.Q[:,:,1] / state.Q[:,:,0]
+        state.v = state.Q[:,:,2] / state.Q[:,:,0]
+        # state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / \
+        #                               state.Q[:,:,0] + state.p/state.Q[:,:,0]
+        state.ht = gas.ht_fn( gas, state )
+        # state.Q[:,:,3] = state.Q[:,:,0]*(state.ht - state.p/state.Q[:,:,0])
+
         # MUSCL interpolation
 
         QL, QR, QB, QT = muscl.MUSCL( state.Q, parameters.epsilon, parameters.kappa, parameters.limiter )
@@ -1232,12 +1242,6 @@ def AUSMDVmuscl( domain, mesh, boundary, parameters, state, gas ):
              ( QB[:,:,3] - (1/2)*QB[:,:,0]*((QB[:,:,1]/QB[:,:,0])**2 + (QB[:,:,2]/QB[:,:,0])**2))
         pT = (gas.gamma_fn(gas.Cp[:,1:domain.N+2], gas.Cv[:,1:domain.N+2])-1) * \
              ( QT[:,:,3] - (1/2)*QT[:,:,0]*((QT[:,:,1]/QT[:,:,0])**2 + (QT[:,:,2]/QT[:,:,0])**2))                
-
-        # simplify variable notation from state vector
-        state.u = state.Q[:,:,1] / state.Q[:,:,0]
-        state.v = state.Q[:,:,2] / state.Q[:,:,0]
-        state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / \
-                                      state.Q[:,:,0] + state.p/state.Q[:,:,0]
 
         # density at cell interfaces, upwinded
         rho_half_zeta = ( QL + QR ) / 2
@@ -1444,10 +1448,14 @@ def SLAUmuscl( domain, mesh, boundary, parameters, state, gas ):
         # local timestepping
         state = local_timestep( domain, mesh, state, parameters, gas )
 
+
         # simplify variable notation from state vector
         state.u = state.Q[:,:,1] / state.Q[:,:,0]
         state.v = state.Q[:,:,2] / state.Q[:,:,0]
-        state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / state.Q[:,:,0] + state.p/state.Q[:,:,0]
+        # state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / \
+        #                               state.Q[:,:,0] + state.p/state.Q[:,:,0]
+        state.ht = gas.ht_fn( gas, state )
+        # state.Q[:,:,3] = state.Q[:,:,0]*(state.ht - state.p/state.Q[:,:,0])
 
         # MUSCL interpolation
         QL, QR, QB, QT = muscl.MUSCL( state.Q, parameters.epsilon, parameters.kappa, parameters.limiter )

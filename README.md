@@ -10,6 +10,9 @@
 - Fixed higher order interpolation calculation of total enthalpy (more stable now)
 - Added unit conversions for wall quantity plotting
 
+## IsoFlow 0.6.2
+- Fixed enabling and disabling of boundary options
+
 ###########################################################################
 ## IsoFlow 0.5.0
 ###########################################################################
