@@ -411,6 +411,9 @@ class MainFrame ( wx.Frame ):
 		self.stagtemp = wx.MenuItem( self.contOptions, 8, u"Stagnation Temperature", wx.EmptyString, wx.ITEM_RADIO )
 		self.contOptions.Append( self.stagtemp )
 
+		self.dissfrac = wx.MenuItem( self.contOptions, 9, u"Dissociation Fraction", wx.EmptyString, wx.ITEM_RADIO )
+		self.contOptions.Append( self.dissfrac )
+
 		self.contOptions.AppendSeparator()
 
 		self.coarse = wx.MenuItem( self.contOptions, 31, u"Coarse", wx.EmptyString, wx.ITEM_RADIO )
@@ -575,6 +578,7 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.cont_change, id = self.stagp.GetId() )
 		self.Bind( wx.EVT_MENU, self.cont_change, id = self.temp.GetId() )
 		self.Bind( wx.EVT_MENU, self.cont_change, id = self.stagtemp.GetId() )
+		self.Bind( wx.EVT_MENU, self.cont_change, id = self.dissfrac.GetId() )
 		self.Bind( wx.EVT_MENU, self.contlevel_change, id = self.coarse.GetId() )
 		self.Bind( wx.EVT_MENU, self.contlevel_change, id = self.medium.GetId() )
 		self.Bind( wx.EVT_MENU, self.contlevel_change, id = self.fine.GetId() )
@@ -1242,6 +1246,14 @@ class MainFrame ( wx.Frame ):
 				CB = panel.figure.colorbar(cont, ticks=ticks, \
 													shrink=r, extend='both', ax=panel.cax)
 				CB.set_label(contQuantity + ' (' + self.units.temp + ')', rotation=90)
+			if contQuantity == 'Dissociation Fraction ':
+				cont = panel.cax.contourf(cl*self.mesh.xxc[1:-1,1:-1], cl*self.mesh.yyc[1:-1,1:-1], \
+													self.state.dissFrac[1:-1,1:-1], self.contGrad, cmap=self.cmOption)
+				# colorbar settings
+				ticks = np.linspace(round(np.min(self.state.dissFrac),9), round(np.max(self.state.dissFrac),9), 6)
+				CB = panel.figure.colorbar(cont, ticks=ticks, \
+													shrink=r, extend='both', ax=panel.cax)
+				CB.set_label(self.dissWindow.dissGas + ' ' + contQuantity, rotation=90)
 
 		else: 
 			fill = panel.cax.contourf(cl*self.mesh.xxc[0:-1,1:-1], cl*self.mesh.yyc[0:-1,1:-1], \
@@ -1517,6 +1529,10 @@ class MainFrame ( wx.Frame ):
 			self.contQuantity = 'Temperature'
 		elif self.stagtemp.IsChecked():
 			self.contQuantity = 'Stagnation Temperature'
+		elif self.dissfrac.IsChecked():
+			self.dissWindow = dissWindow( parent=self )
+			self.dissWindow.Show()
+			self.contQuantity = 'Dissociation Fraction'
 
 		if hasattr(self, 'state'):
 			self.call_contplot(self.contourPanel, 1, 1)
@@ -2470,3 +2486,43 @@ class tvdWindow(wx.Frame):
 		self.tvdPanel.ax.set_position([0.152, 0.174, 0.74, 0.7], which='both')
 		self.tvdPanel.ax.set_aspect('auto', adjustable='box', anchor='C')
 		self.tvdPanel.canvas = FigureCanvas(self.tvdPanel, -1, self.tvdPanel.fig)
+
+
+class dissWindow(wx.Frame):
+	def __init__(self, parent):
+		wx.Frame.__init__( self, parent, title = 'Select' + ' Gas',\
+						size = wx.Size( 236, 58 ), style=wx.DEFAULT_FRAME_STYLE )
+
+		mix = parent.gas.mix
+
+		formulas = []
+		for i in mix:
+			formulas.append( i.formula )
+		
+		sizer = wx.BoxSizer(wx.HORIZONTAL)
+		self.SetSizer( sizer )
+		self.Layout()
+		self.Centre( wx.BOTH )
+
+		# gridChoiceChoices = [ u"Wedge", u"Corner", u'NACA XXXX Airfoil', u'Biconvex Airfoil', u'Capsule', u'Planar C-D Nozzle', u'C-D Nozzle w/ Exit' ]
+		self.dissChoice = wx.Choice( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, formulas, 0 )
+		self.dissChoice.SetSelection( 0 )
+		# sizer.Add( self.dissChoice, wx.GBPosition( 12, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
+
+		self.parent = parent
+		self.dissGas = self.dissChoice.StringSelection
+		self.diss_change(wx.EVT_CHOICE)
+		self.dissChoice.Bind( wx.EVT_CHOICE, self.diss_change )
+
+	def diss_change( self, event ):
+		self.dissGas = self.dissChoice.StringSelection
+
+		parent = self.parent
+
+		# gas selection
+		if self.dissGas == 'O2':
+			parent.state.dissFrac = parent.state.O2alpha
+		elif self.dissGas == 'N2':
+			parent.state.dissFrac = parent.state.N2alpha
+
+		parent.call_contplot(parent.contourPanel, 1, 1)

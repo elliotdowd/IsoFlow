@@ -72,7 +72,6 @@ def AUSM( domain, mesh, boundary, parameters, state, gas ):
         # state.ht = thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv)) / \
         #                               state.Q[:,:,0] + state.p/state.Q[:,:,0]
         state.ht = gas.ht_fn( gas, state )
-        # state.Q[:,:,3] = state.Q[:,:,0]*(state.ht - state.p/state.Q[:,:,0])
 
         # speed of sound at cell interfaces
         # from Liou 2006 (JCP 214)
