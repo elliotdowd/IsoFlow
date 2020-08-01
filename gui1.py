@@ -1103,6 +1103,10 @@ class MainFrame ( wx.Frame ):
 		panel.cax.set_aspect(self.axisOption, adjustable='box', anchor='C')
 		panel.canvas = FigureCanvas(panel, -1, panel.figure)
 
+		# set up toolbar for expanded window
+		if scx > 1:
+			self.call_toolbar(panel)
+
 	def call_contplot( self, panel, scalex, scaley ):
 
 		# panel input as self.contourPanel
@@ -1414,7 +1418,6 @@ class MainFrame ( wx.Frame ):
 		if scalex > 1:
 			self.call_toolbar(panel)
 
-
 	def call_resplot( self ):
 
 		# residual plotting
@@ -1518,9 +1521,14 @@ class MainFrame ( wx.Frame ):
 			plt.grid(True)
 			panel.canvas = FigureCanvas(panel, -1, panel.figure)
 
+			# set up toolbar for expanded window
+			if scalex > 1:
+				self.call_toolbar(panel)
+
 		else:
 
 			self.call_contplot( self.contourPanel, 1, 1 )
+
 
 	# toolbar functions
 	def call_toolbar(self, panel):
@@ -1530,10 +1538,10 @@ class MainFrame ( wx.Frame ):
 		
 		self.new.toolbar = self.new.CreateToolBar(style=wx.TB_HORIZONTAL|wx.TB_DOCKABLE|wx.TB_TEXT)
 
-		hometool = self.new.toolbar.AddTool(wx.ID_ANY, 'Home', wx.Bitmap(1,1))
-		pantool = self.new.toolbar.AddTool(wx.ID_ANY, 'Pan', wx.Bitmap(1,1))
-		zoomtool = self.new.toolbar.AddTool(wx.ID_ANY, 'Zoom', wx.Bitmap(1,1))
-		savetool = self.new.toolbar.AddTool(wx.ID_ANY, 'Save', wx.Bitmap(1,1))
+		hometool = self.new.toolbar.AddTool(wx.ID_ANY, 'Home', wx.Bitmap('venv\Lib\site-packages\matplotlib\mpl-data\images\home.png'))
+		pantool = self.new.toolbar.AddTool(wx.ID_ANY, 'Pan', wx.Bitmap('venv\Lib\site-packages\matplotlib\mpl-data\images\move.png'))
+		zoomtool = self.new.toolbar.AddTool(wx.ID_ANY, 'Zoom', wx.Bitmap('venv\Lib\site-packages\matplotlib\mpl-data\images\zoom_to_rect.png'))
+		savetool = self.new.toolbar.AddTool(wx.ID_ANY, 'Save', wx.Bitmap('venv/Lib/site-packages/matplotlib/mpl-data/images/filesave.png'))
 
 		self.new.Bind(wx.EVT_TOOL, self.home, hometool)
 		self.new.Bind(wx.EVT_TOOL, self.pan, pantool)
@@ -1542,14 +1550,11 @@ class MainFrame ( wx.Frame ):
 
 		self.new.toolbar.Realize()
 
-		self.new.statusbar=self.new.CreateStatusBar()
-
+		# self.new.statusbar=self.new.CreateStatusBar()
 
 	def home(self,event):
 		# self.statusbar.SetStatusText("Home")
 		self.new.mpltoolbar.home()
-        # Also scroll panel to start position
-		# self.new.mpltoolbar.Scroll(0,0)
 
 	def pan(self,event):
 		# self.new.statusbar.SetStatusText("Pan")
@@ -2315,6 +2320,8 @@ class tableWindow(wx.Frame):
 	def __init__(self, parent):
 		wx.Frame.__init__( self, parent, title = parent.gasSelect + ' Properties',\
 						size = wx.Size( 300, 294 ), style=wx.DEFAULT_FRAME_STYLE )
+		self.SetIcon(wx.Icon("bmp\gas.ico"))
+
 		import gui1
 		import python.finite_volume.gasdata as gasdata
 		import numpy as np
@@ -2431,6 +2438,7 @@ class thermalWindow(wx.Frame):
 	def __init__(self, parent):
 		wx.Frame.__init__( self, parent, title = 'Wall' + ' Properties',\
 						size = wx.Size( 236, 58 ), style=wx.DEFAULT_FRAME_STYLE )
+		self.SetIcon(wx.Icon("bmp/thermometer.ico"))
 
 		self.wallGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.wallGrid.CreateGrid( 1, 1 )
@@ -2458,11 +2466,12 @@ class thermalWindow(wx.Frame):
 class outletWindow(wx.Frame):
 	def __init__(self, parent):
 		wx.Frame.__init__( self, parent, title = 'Outlet' + ' Properties',\
-						size = wx.Size( 256, 96 ), style=wx.DEFAULT_FRAME_STYLE )
+						size = wx.Size( 296, 96 ), style=wx.DEFAULT_FRAME_STYLE )
+		self.SetIcon(wx.Icon("bmp\gauge.ico"))
 
 		self.outGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.outGrid.CreateGrid( 3, 1 )
-		self.outGrid.SetRowLabelSize( 160 )
+		self.outGrid.SetRowLabelSize( 200 )
 		self.outGrid.SetColLabelSize( 0 )
 
 		self.outGrid.SetRowLabelValue( 0, u"Outlet Backpressure " + '(' + parent.units.press + ')' )
@@ -2503,7 +2512,9 @@ class outletWindow(wx.Frame):
 class tvdWindow(wx.Frame):
 	def __init__(self, parent):
 		wx.Frame.__init__( self, parent, title = 'Flux Limiter Function',\
-						size = wx.Size( 376, 264 ), style=wx.DEFAULT_FRAME_STYLE )
+						size = wx.Size( 376, 260 ), style=wx.DEFAULT_FRAME_STYLE )
+		self.SetIcon(wx.Icon("bmp\phi.ico"))
+
 		import gui1
 		import python.finite_volume.gasdata as gasdata
 		import numpy as np
@@ -2525,10 +2536,10 @@ class tvdWindow(wx.Frame):
 
 		rplot = np.linspace(0, 4, 100)
 		self.tvdPanel.ax.plot( rplot, parent.parameters.limiter(rplot, 1.5), color='b', linewidth=2 )
-		self.tvdPanel.ax.plot( np.array([0, 1]), np.array([0, 2]), color='r', linestyle='--', linewidth=0.75 )
-		self.tvdPanel.ax.plot( np.array([0, 1]), np.array([0, 1]), color='r', linestyle='--', linewidth=0.75 )
-		self.tvdPanel.ax.plot( np.array([1, 4]), np.array([1, 1]), color='r', linestyle='--', linewidth=0.75 )
-		self.tvdPanel.ax.plot( np.array([1, 4]), np.array([2, 2]), color='r', linestyle='--', linewidth=0.75 )
+		self.tvdPanel.ax.plot( np.array([0, 0.5]), np.array([0, 1]), color='r', linestyle='--', linewidth=0.75 )
+		self.tvdPanel.ax.plot( np.array([0, 2]), np.array([0, 2]), color='r', linestyle='--', linewidth=0.75 )
+		self.tvdPanel.ax.plot( np.array([0.5, 4]), np.array([1, 1]), color='r', linestyle='--', linewidth=0.75 )
+		self.tvdPanel.ax.plot( np.array([2, 4]), np.array([2, 2]), color='r', linestyle='--', linewidth=0.75 )
 
 		self.tvdPanel.ax.set_xlabel('r', fontsize=8)
 		self.tvdPanel.ax.tick_params( axis='x', labelsize=8 )
@@ -2543,7 +2554,8 @@ class tvdWindow(wx.Frame):
 class dissWindow(wx.Frame):
 	def __init__(self, parent):
 		wx.Frame.__init__( self, parent, title = 'Select' + ' Gas',\
-						size = wx.Size( 256, 58 ), style=wx.DEFAULT_FRAME_STYLE )
+						size = wx.Size( 242, 58 ), style=wx.DEFAULT_FRAME_STYLE )
+		self.SetIcon(wx.Icon("bmp\O2.ico"))
 
 		mix = parent.gas.mix
 

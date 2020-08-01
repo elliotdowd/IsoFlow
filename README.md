@@ -11,7 +11,7 @@
 
 ## IsoFlow 0.7.2
 - Added custom toolbar
-- Pan and zoom features implemented for expanded window
+- Pan, zoom, home and save features implemented for expanded window
 
 ###########################################################################
 ## IsoFlow 0.6.0 (7/23/2020)
