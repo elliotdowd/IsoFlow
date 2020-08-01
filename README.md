@@ -5,9 +5,13 @@
 - Added dissociation modeling from a simplified gas mixture model (based off of Hermann's 1965 work)
 - Updated enthalpy calculations to work off of gas specific methods
 
-## IsoFlow 0.6.1
+## IsoFlow 0.7.1
 - Added dissociation fraction contour plotting
 - Gas in mixture can be selected for dissociation fraction plotting via a small external window
+
+## IsoFlow 0.7.2
+- Added custom toolbar
+- Pan and zoom features implemented for expanded window
 
 ###########################################################################
 ## IsoFlow 0.6.0 (7/23/2020)

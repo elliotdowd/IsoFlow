@@ -618,7 +618,6 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.copyxy, id = self.coordinates.GetId() )
 		self.Bind( wx.EVT_MENU, self.copyres, id = self.residual.GetId() )
 		
-
 		# initialize grid values and class attributes
 		self.init_grids()
 
@@ -1246,7 +1245,7 @@ class MainFrame ( wx.Frame ):
 				CB = panel.figure.colorbar(cont, ticks=ticks, \
 													shrink=r, extend='both', ax=panel.cax)
 				CB.set_label(contQuantity + ' (' + self.units.temp + ')', rotation=90)
-			if contQuantity == 'Dissociation Fraction ':
+			elif contQuantity == 'Dissociation Fraction ':
 				cont = panel.cax.contourf(cl*self.mesh.xxc[1:-1,1:-1], cl*self.mesh.yyc[1:-1,1:-1], \
 													self.state.dissFrac[1:-1,1:-1], self.contGrad, cmap=self.cmOption)
 				# colorbar settings
@@ -1366,6 +1365,14 @@ class MainFrame ( wx.Frame ):
 				CB = panel.figure.colorbar(cont, ticks=ticks, \
 													shrink=r, extend='both', ax=panel.cax)
 				CB.set_label(contQuantity + ' (' + self.units.temp + ')', rotation=90)
+			elif contQuantity == 'Dissociation Fraction ':
+				cont = panel.cax.contour(cl*self.mesh.xxc[1:-1,1:-1], cl*self.mesh.yyc[1:-1,1:-1], \
+													self.state.dissFrac[1:-1,1:-1], self.contGrad, cmap=self.cmOption)
+				# colorbar settings
+				ticks = np.linspace(round(np.min(self.state.dissFrac),9), round(np.max(self.state.dissFrac),9), 6)
+				CB = panel.figure.colorbar(cont, ticks=ticks, \
+													shrink=r, extend='both', ax=panel.cax)
+				CB.set_label(self.dissWindow.dissGas + ' ' + contQuantity, rotation=90)
 
 
 		# set up contour labels
@@ -1402,6 +1409,11 @@ class MainFrame ( wx.Frame ):
 		panel.cax.set_xlabel('x-coordinate' + ' (' + self.units.length + ')')
 		panel.cax.set_ylabel('y-coordinate' + ' (' + self.units.length + ')')
 		panel.canvas = FigureCanvas(panel, -1, panel.figure)
+
+		# set up toolbar for expanded window
+		if scalex > 1:
+			self.call_toolbar(panel)
+
 
 	def call_resplot( self ):
 
@@ -1510,6 +1522,46 @@ class MainFrame ( wx.Frame ):
 
 			self.call_contplot( self.contourPanel, 1, 1 )
 
+	# toolbar functions
+	def call_toolbar(self, panel):
+		# initialize and hide mpl toolbar
+		self.new.mpltoolbar = NavigationToolbar(panel.canvas)
+		self.new.mpltoolbar.Hide()
+		
+		self.new.toolbar = self.new.CreateToolBar(style=wx.TB_HORIZONTAL|wx.TB_DOCKABLE|wx.TB_TEXT)
+
+		hometool = self.new.toolbar.AddTool(wx.ID_ANY, 'Home', wx.Bitmap(1,1))
+		pantool = self.new.toolbar.AddTool(wx.ID_ANY, 'Pan', wx.Bitmap(1,1))
+		zoomtool = self.new.toolbar.AddTool(wx.ID_ANY, 'Zoom', wx.Bitmap(1,1))
+		savetool = self.new.toolbar.AddTool(wx.ID_ANY, 'Save', wx.Bitmap(1,1))
+
+		self.new.Bind(wx.EVT_TOOL, self.home, hometool)
+		self.new.Bind(wx.EVT_TOOL, self.pan, pantool)
+		self.new.Bind(wx.EVT_TOOL, self.zoom, zoomtool)
+		self.new.Bind(wx.EVT_TOOL, self.save, savetool)
+
+		self.new.toolbar.Realize()
+
+		self.new.statusbar=self.new.CreateStatusBar()
+
+
+	def home(self,event):
+		# self.statusbar.SetStatusText("Home")
+		self.new.mpltoolbar.home()
+        # Also scroll panel to start position
+		# self.new.mpltoolbar.Scroll(0,0)
+
+	def pan(self,event):
+		# self.new.statusbar.SetStatusText("Pan")
+		self.new.mpltoolbar.pan()
+
+	def zoom(self,event):
+		# self.new.statusbar.SetStatusText("Zoom")
+		self.new.mpltoolbar.zoom()
+
+	def save(self,event):
+		# self.new.statusbar.SetStatusText("Save")
+		self.new.mpltoolbar.save_figure()
 
 	# menubar events
 	def cont_change( self, event ):
@@ -2161,8 +2213,8 @@ class MainFrame ( wx.Frame ):
 		x = self.new.screenInX
 		y = self.new.screenInY
 
-		scx = x/5.56 * 0.9
-		scy = y/4.0 * 0.9
+		scx = x/5.56
+		scy = y/4.0 * 0.8
 		#scale = min(scx, scy)
 
 		if self.force.IsChecked():
@@ -2491,7 +2543,7 @@ class tvdWindow(wx.Frame):
 class dissWindow(wx.Frame):
 	def __init__(self, parent):
 		wx.Frame.__init__( self, parent, title = 'Select' + ' Gas',\
-						size = wx.Size( 236, 58 ), style=wx.DEFAULT_FRAME_STYLE )
+						size = wx.Size( 256, 58 ), style=wx.DEFAULT_FRAME_STYLE )
 
 		mix = parent.gas.mix
 
@@ -2504,10 +2556,9 @@ class dissWindow(wx.Frame):
 		self.Layout()
 		self.Centre( wx.BOTH )
 
-		# gridChoiceChoices = [ u"Wedge", u"Corner", u'NACA XXXX Airfoil', u'Biconvex Airfoil', u'Capsule', u'Planar C-D Nozzle', u'C-D Nozzle w/ Exit' ]
 		self.dissChoice = wx.Choice( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, formulas, 0 )
 		self.dissChoice.SetSelection( 0 )
-		# sizer.Add( self.dissChoice, wx.GBPosition( 12, 0 ), wx.GBSpan( 1, 1 ), wx.ALL|wx.EXPAND, 5 )
+		sizer.Add( self.dissChoice, wx.ALL|wx.EXPAND, 5 )
 
 		self.parent = parent
 		self.dissGas = self.dissChoice.StringSelection

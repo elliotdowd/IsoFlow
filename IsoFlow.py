@@ -6,7 +6,7 @@ import logging.config
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
+from matplotlib.backends.backend_wx import NavigationToolbar2Wx as NavigationToolbar
 
 ###########################################################################
 ## import wxFormBuilder file, initialize table values
@@ -16,7 +16,7 @@ import gui1
 # initialize main frame  
 app = wx.App(False, useBestVisual=True)
 frame = gui1.MainFrame(None)
-frame.SetTitle('IsoFlow 0.7.0')
+frame.SetTitle('IsoFlow 0.7.2')
 # frame.SetIcon(wx.Icon("/Users/Elliot/Documents/Python/compressible_wedge/bmp/IsoFlow.ico"))
 frame.SetPosition(wx.Point(240, 0))
 frame.Show(True)
