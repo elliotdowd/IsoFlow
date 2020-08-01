@@ -1538,10 +1538,10 @@ class MainFrame ( wx.Frame ):
 		
 		self.new.toolbar = self.new.CreateToolBar(style=wx.TB_HORIZONTAL|wx.TB_DOCKABLE|wx.TB_TEXT)
 
-		hometool = self.new.toolbar.AddTool(wx.ID_ANY, 'Home', wx.Bitmap('venv\Lib\site-packages\matplotlib\mpl-data\images\home.png'))
-		pantool = self.new.toolbar.AddTool(wx.ID_ANY, 'Pan', wx.Bitmap('venv\Lib\site-packages\matplotlib\mpl-data\images\move.png'))
-		zoomtool = self.new.toolbar.AddTool(wx.ID_ANY, 'Zoom', wx.Bitmap('venv\Lib\site-packages\matplotlib\mpl-data\images\zoom_to_rect.png'))
-		savetool = self.new.toolbar.AddTool(wx.ID_ANY, 'Save', wx.Bitmap('venv/Lib/site-packages/matplotlib/mpl-data/images/filesave.png'))
+		hometool = self.new.toolbar.AddTool(wx.ID_ANY, 'Home', wx.Bitmap('bmp/mpl/home.png'))
+		pantool = self.new.toolbar.AddTool(wx.ID_ANY, 'Pan', wx.Bitmap('bmp/mpl/move.png'))
+		zoomtool = self.new.toolbar.AddTool(wx.ID_ANY, 'Zoom', wx.Bitmap('bmp/mpl/zoom_to_rect.png'))
+		savetool = self.new.toolbar.AddTool(wx.ID_ANY, 'Save', wx.Bitmap('bmp/mpl/filesave.png'))
 
 		self.new.Bind(wx.EVT_TOOL, self.home, hometool)
 		self.new.Bind(wx.EVT_TOOL, self.pan, pantool)
