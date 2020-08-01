@@ -404,6 +404,8 @@ def mesh_naca4(domain):
     # set class values
     walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallL, domain.wallL, np.array( ( 0, -1 ) ) ) )
     walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallU-1, domain.wallU-1, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallL-1, domain.wallL-1, np.array( ( 0, -1 ) ) ) )
+    walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallU, domain.wallU, np.array( ( 0, 1 ) ) ) )
     walls.append( wall( 'domain', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
     walls.append( wall( 'domain', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
     walls.append( wall( 'inlet', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
@@ -484,6 +486,8 @@ def mesh_biconvex(domain):
     # set boundary class values
     walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallL, domain.wallL, np.array( ( 0, -1 ) ) ) )
     walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallU-1, domain.wallU-1, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallL-1, domain.wallL-1, np.array( ( 0, -1 ) ) ) )
+    walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallU, domain.wallU, np.array( ( 0, 1 ) ) ) )
     walls.append( wall( 'domain', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
     walls.append( wall( 'domain', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
     walls.append( wall( 'inlet', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
@@ -573,6 +577,8 @@ def mesh_capsule(domain):
     # set boundary class values
     walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallL, domain.wallL, np.array( ( 0, -1 ) ) ) )
     walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallU-1, domain.wallU-1, np.array( ( 0, 1 ) ) ) )
+    walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallL-1, domain.wallL-1, np.array( ( 0, -1 ) ) ) )
+    walls.append( wall( 'object', domain.obj_i, domain.obj_f, domain.wallU, domain.wallU, np.array( ( 0, 1 ) ) ) )
     walls.append( wall( 'inlet', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
     walls.append( wall( 'domain', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
     walls.append( wall( 'inlet', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )

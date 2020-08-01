@@ -1396,9 +1396,9 @@ class MainFrame ( wx.Frame ):
 		if self.gridChoice.StringSelection == 'NACA XXXX Airfoil' or \
 		   self.gridChoice.StringSelection == 'Biconvex Airfoil' or \
 		   self.gridChoice.StringSelection == 'Capsule':
-			panel.cax.contourf(cl*self.mesh.xxc[self.domain.obj_i:self.domain.obj_f,self.domain.wallL:self.domain.wallU], \
-							   cl*self.mesh.yyc[self.domain.obj_i:self.domain.obj_f,self.domain.wallL:self.domain.wallU], \
-							    		      	self.state.Mach[self.domain.obj_i:self.domain.obj_f,self.domain.wallL:self.domain.wallU], self.contGrad, colors = 'gray')
+			panel.cax.contourf(cl*self.mesh.xxc[self.domain.obj_i:self.domain.obj_f,self.domain.wallL-1:self.domain.wallU+1], \
+							   cl*self.mesh.yyc[self.domain.obj_i:self.domain.obj_f,self.domain.wallL-1:self.domain.wallU+1], \
+							    		      	self.state.Mach[self.domain.obj_i:self.domain.obj_f,self.domain.wallL-1:self.domain.wallU+1], self.contGrad, colors = 'gray')
 
 		# plot settings
 		# if self.topwall_out.IsChecked():

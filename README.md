@@ -16,6 +16,9 @@
 ## IsoFlow 0.7.3
 - Icons added for each window
 
+## IsoFlow 0.7.4
+-Created extra object wall classes to better represent object thicknesses
+
 ###########################################################################
 ## IsoFlow 0.6.0 (7/23/2020)
 ###########################################################################
