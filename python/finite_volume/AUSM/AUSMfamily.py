@@ -161,6 +161,9 @@ def AUSM( domain, mesh, boundary, parameters, state, gas ):
                                  state.Q[:,:,1]/state.Q[:,:,0], state.Q[:,:,2]/state.Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv) )
         state.T = state.p / (gas.R_fn(gas.Cp, gas.Cv) * state.Q[:,:,0])
 
+        # pressure and temperature excess handling
+        state = state_error( state )
+
         # update covariant velocities
         #state = covariant(mesh, state)
         soln_vars.calc_covariant(mesh.s_proj, state.Q[:,:,1]/state.Q[:,:,0], state.Q[:,:,2]/state.Q[:,:,0], state.U, state.V, domain.M+2, domain.N+2)
@@ -333,6 +336,9 @@ def AUSMplusup( domain, mesh, boundary, parameters, state, gas ):
         state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv) )
         state.T = state.p / (gas.R_fn(gas.Cp, gas.Cv) * state.Q[:,:,0])
 
+        # pressure and temperature excess handling
+        state = state_error( state )
+
         # update covariant velocities
         #state = covariant(mesh, state)
         soln_vars.calc_covariant(mesh.s_proj, state.u, state.v, state.U, state.V, domain.M+2, domain.N+2)
@@ -483,6 +489,9 @@ def AUSMDV( domain, mesh, boundary, parameters, state, gas ):
         # update cell temperatures and pressures
         state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv) )
         state.T = state.p / (gas.R_fn(gas.Cp, gas.Cv) * state.Q[:,:,0])
+
+        # pressure and temperature excess handling
+        state = state_error( state )
 
         # update covariant velocities
         #state = covariant(mesh, state)
@@ -659,6 +668,9 @@ def SLAU( domain, mesh, boundary, parameters, state, gas ):
         # update cell temperatures and pressures
         state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv) )
         state.T = state.p / (gas.R_fn(gas.Cp, gas.Cv) * state.Q[:,:,0])
+
+        # pressure and temperature excess handling
+        state = state_error( state )
 
         # update covariant velocities
         #state = covariant(mesh, state)
@@ -893,6 +905,9 @@ def AUSMmuscl( domain, mesh, boundary, parameters, state, gas ):
         state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv) )
         state.T = state.p / (gas.R_fn(gas.Cp, gas.Cv) * state.Q[:,:,0])
 
+        # pressure and temperature excess handling
+        state = state_error( state )
+
         # update covariant velocities
         #state = covariant(mesh, state)
         soln_vars.calc_covariant(mesh.s_proj, state.u, state.v, state.U, state.V, domain.M+2, domain.N+2)
@@ -1122,6 +1137,9 @@ def AUSMplusupmuscl( domain, mesh, boundary, parameters, state, gas ):
         # update cell temperatures and pressures
         state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv) )
         state.T = state.p / (gas.R_fn(gas.Cp, gas.Cv) * state.Q[:,:,0])
+
+        # pressure and temperature excess handling
+        state = state_error( state )
 
         # update covariant velocities
         #state = covariant(mesh, state)
@@ -1363,6 +1381,9 @@ def AUSMDVmuscl( domain, mesh, boundary, parameters, state, gas ):
         state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv) )
         state.T = state.p / (gas.R_fn(gas.Cp, gas.Cv) * state.Q[:,:,0])
 
+        # pressure and temperature excess handling
+        state = state_error( state )
+
         # update covariant velocities
         #state = covariant(mesh, state)
         soln_vars.calc_covariant(mesh.s_proj, state.u, state.v, state.U, state.V, domain.M+2, domain.N+2)
@@ -1591,6 +1612,9 @@ def SLAUmuscl( domain, mesh, boundary, parameters, state, gas ):
         state.p = thermo.calc_p( state.Q[:,:,0], state.Q[:,:,3], state.u, state.v, gas.gamma_fn(gas.Cp, gas.Cv) )
         state.T = state.p / (gas.R_fn(gas.Cp, gas.Cv) * state.Q[:,:,0])
 
+        # pressure and temperature excess handling
+        state = state_error( state )
+
         # update covariant velocities
         #state = covariant(mesh, state)
         soln_vars.calc_covariant(mesh.s_proj, state.u, state.v, state.U, state.V, domain.M+2, domain.N+2)
@@ -1642,6 +1666,7 @@ def calc_stress( mesh, state, gas, face ):
     return Txx, Tyy, Txy
 
 
+# state variable post processing
 def calc_postvars(state, gas):
 
     state.Mach = np.sqrt( (state.Q[:,:,1]/state.Q[:,:,0])**2 + (state.Q[:,:,2]/state.Q[:,:,0])**2 ) / \
@@ -1653,3 +1678,28 @@ def calc_postvars(state, gas):
     state.T0 = state.isenRatio * state.T
 
     return state
+
+
+# state variable error handling for non-physical T, p
+def state_error( state ):
+
+    # detect excessively low temperature
+    lowT = np.where( state.T < 5 )
+    if np.any(lowT):
+        print('Excessively low temperature detected in ' + str(np.count_nonzero(lowT)) + ' cells, corrected to 5K.' )
+        state.T[lowT] = 5
+
+    # detect excessively high temperature
+    highT = np.where( state.T > 25000 )
+    if np.any(highT):
+        print('Excessively high temperature detected in ' + str(np.count_nonzero(highT)) + ' cells, corrected to 25000K.' )
+        state.T[highT] = 25000
+
+    # detect excessively low pressures
+    lowP = np.where( state.p < 1E-6 )
+    if np.any(lowP):
+        print('Excessively low pressure detected in ' + str(np.count_nonzero(lowP)) + ' cells, corrected to 1E-9Pa.' )
+        state.p[highT] = 1E-9
+
+    return state
+

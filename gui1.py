@@ -941,6 +941,10 @@ class MainFrame ( wx.Frame ):
 		print('Mesh elements: ' + str((self.domain.M+2) * (self.domain.N*2)))
 		t.toc('Meshing time:')
 
+		if np.any(self.mesh.dV < 0):
+			skewed = np.count_nonzero(self.mesh.dV < 0)
+			print('WARNING: ' + str(skewed) + ' skewed elements present.')
+
 		self.call_gridplot( self.contourPanel, 1, 1 )
 
 		event.Skip()
@@ -1399,6 +1403,15 @@ class MainFrame ( wx.Frame ):
 			panel.cax.contourf(cl*self.mesh.xxc[self.domain.obj_i:self.domain.obj_f,self.domain.wallL-1:self.domain.wallU+1], \
 							   cl*self.mesh.yyc[self.domain.obj_i:self.domain.obj_f,self.domain.wallL-1:self.domain.wallU+1], \
 							    		      	self.state.Mach[self.domain.obj_i:self.domain.obj_f,self.domain.wallL-1:self.domain.wallU+1], self.contGrad, colors = 'gray')
+			# object outlines
+			panel.cax.plot(cl*self.mesh.xxc[self.domain.obj_i:self.domain.obj_f,self.domain.wallL-1], \
+						   cl*self.mesh.yyc[self.domain.obj_i:self.domain.obj_f,self.domain.wallL-1], 'k', linewidth=0.4)
+			panel.cax.plot(cl*self.mesh.xxc[self.domain.obj_i:self.domain.obj_f,self.domain.wallU], \
+						   cl*self.mesh.yyc[self.domain.obj_i:self.domain.obj_f,self.domain.wallU], 'k', linewidth=0.4)
+			panel.cax.plot(cl*self.mesh.xxc[self.domain.obj_i,self.domain.wallL-1:self.domain.wallU+1], \
+						   cl*self.mesh.yyc[self.domain.obj_i,self.domain.wallL-1:self.domain.wallU+1], 'k', linewidth=0.4)
+			panel.cax.plot(cl*self.mesh.xxc[self.domain.obj_f-1,self.domain.wallL-1:self.domain.wallU+1], \
+						   cl*self.mesh.yyc[self.domain.obj_f-1,self.domain.wallL-1:self.domain.wallU+1], 'k', linewidth=0.4)
 
 		# plot settings
 		# if self.topwall_out.IsChecked():
