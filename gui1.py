@@ -38,6 +38,9 @@ class MainFrame ( wx.Frame ):
 		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 		self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INACTIVEBORDER ) )
 		self.SetBackgroundColour( wx.Colour( 222, 222, 222 ) )
+
+		# set frame gradient color
+		# self.Bind(wx.EVT_PAINT, self.on_paint)
 		
 		MainSizer = wx.GridBagSizer( 0, 0 )
 		MainSizer.SetFlexibleDirection( wx.BOTH )
@@ -657,6 +660,13 @@ class MainFrame ( wx.Frame ):
 		self.gasSelect = 'Air'
 		self.thermoModel = 'cpg'
 
+	def on_paint(self, event):
+		# establish the painting canvas
+		dc = wx.PaintDC(self)
+		x = 0
+		y = 0
+		w, h = self.GetSize()
+		dc.GradientFillLinear((x, y, w, h), 'gray', 'white')
 
 	def __del__( self ):
 		pass

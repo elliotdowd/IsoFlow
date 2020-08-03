@@ -6,6 +6,18 @@ def local_timestep( domain, mesh, state, parameters, gas ):
     gas.Cp = gas.Cp_fn( gas.gamma_p, gas.Cp_p, gas.theta, state.T )
     gas.Cv = gas.Cv_fn( gas.gamma_p, gas.Cv_p, gas.theta, state.T )
 
+    # error handling for specific heat calculations
+    divergingCp = np.isnan(gas.Cp)
+    divergingCv = np.isnan(gas.Cv)
+
+    if np.any(divergingCp):
+        gas.Cp[divergingCp] = gas.Cp_fn( gas.gamma_p, gas.Cp_p, gas.theta, 25000 )
+        print('Invalid Cp, correcting to asymptotic high temperature value.')
+    if np.any(divergingCv):
+        gas.Cv[divergingCv] = gas.Cv_fn( gas.gamma_p, gas.Cv_p, gas.theta, 25000 )
+        print('Invalid Cv, correcting to asymptotic high temperature value.')
+
+
     # find temperature at centroids
     c = thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv) )
     state.c = c
@@ -29,3 +41,4 @@ def local_timestep( domain, mesh, state, parameters, gas ):
                             np.abs(state.V), np.abs(state.V), np.abs(state.V), np.abs(state.V-c), np.abs(state.V+c) ) ).reshape( (2, 5, domain.M+2, domain.N+2) )
 
     return state
+

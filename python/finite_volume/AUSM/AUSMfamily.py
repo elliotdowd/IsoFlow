@@ -1690,10 +1690,10 @@ def state_error( state ):
         state.T[lowT] = 5
 
     # detect excessively high temperature
-    highT = np.where( state.T > 25000 )
+    highT = np.where( state.T > 30000 )
     if np.any(highT):
         print('Excessively high temperature detected in ' + str(np.count_nonzero(highT)) + ' cells, corrected to 25000K.' )
-        state.T[highT] = 25000
+        state.T[highT] = 30000
 
     # detect excessively low pressures
     lowP = np.where( state.p < 1E-6 )
