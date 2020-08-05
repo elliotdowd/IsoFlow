@@ -247,7 +247,7 @@ class air_tpg:
                                              (1-state.O2alpha)*O2.b*(O2.tc/((np.exp(O2.tc/state.T)-1))) + \
                                              (N2.b)*(1-state.N2alpha)*(N2.tc/((np.exp(N2.tc/state.T)-1))) )
 
-            et = e + thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, self.gamma_fn(self.Cp, self.Cv))/state.Q[:,:,0]                  
+            # et = e + thermo.calc_rho_et(state.p, state.Q[:,:,0], state.u, state.v, self.gamma_fn(self.Cp, self.Cv))/state.Q[:,:,0]                  
 
             # h = self.R_fn(self.Cp,self.Cv)*( O2.b*state.O2alpha*O2.D + N2.b*state.N2alpha*N2.D + \
             #                                 (3/2)*O2.b*state.O2alpha*state.T + (3/2)*N2.b*state.N2alpha*state.T + \

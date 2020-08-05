@@ -60,6 +60,9 @@ def enforce_bc(domain, mesh, boundary, parameters, state, gas):
             state.Q[x0,y0,2] = state.Q[x0,y0,0] * parameters.M_in * np.sin(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_in/state.Q[x0,y0,0])
             state.Q[x0,y0,3] = thermo.calc_rho_et(parameters.p_in, state.Q[x0,y0,0], state.u[x0,y0], state.v[x0,y0], gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]))
 
+            state.T[x0,y0] = parameters.T_in
+            state.p[x0,y0] = parameters.p_in
+
         # elif obj.type == 'Symmetry':
         #     if len(y0) > 1:
                 

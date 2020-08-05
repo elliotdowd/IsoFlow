@@ -11,11 +11,13 @@ def local_timestep( domain, mesh, state, parameters, gas ):
     divergingCv = np.isnan(gas.Cv)
 
     if np.any(divergingCp):
-        gas.Cp[divergingCp] = gas.Cp_fn( gas.gamma_p, gas.Cp_p, gas.theta, 25000 )
-        print('Invalid Cp, correcting to asymptotic high temperature value.')
+        # gas.Cp[divergingCp] = gas.Cp_fn( gas.gamma_p, gas.Cp_p, gas.theta, 25000 )
+        gas.Cp[divergingCp] = gas.Cp_p
+        print('Invalid Cp, correcting to calorically perfect gas value.')
     if np.any(divergingCv):
-        gas.Cv[divergingCv] = gas.Cv_fn( gas.gamma_p, gas.Cv_p, gas.theta, 25000 )
-        print('Invalid Cv, correcting to asymptotic high temperature value.')
+        # gas.Cv[divergingCv] = gas.Cv_fn( gas.gamma_p, gas.Cv_p, gas.theta, 25000 )
+        gas.Cv[divergingCv] = gas.Cv_p
+        print('Invalid Cv, correcting to calorically perfect gas value.')
 
 
     # find temperature at centroids
