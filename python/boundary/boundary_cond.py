@@ -29,8 +29,8 @@ def enforce_bc(domain, mesh, boundary, parameters, state, gas):
             elif parameters.outlet == 'hybrid':
                 # dynamic outflow boundary condition, leave alone if subsonic, propagate if supersonic
                 state.Q[x0,y0,0] = parameters.p_out / (gas.R_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]) * parameters.T_out)
-                state.Q[x0,y0,1] = state.Q[x0,y0,0] * parameters.M_out * np.cos(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_out/state.Q[x0,y0,0])
-                state.Q[x0,y0,2] = state.Q[x0,y0,0] * parameters.M_out * np.sin(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_out/state.Q[x0,y0,0])
+                state.Q[x0,y0,1] = state.Q[x0,y0,0] * parameters.M_in * np.cos(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_out/state.Q[x0,y0,0])
+                state.Q[x0,y0,2] = state.Q[x0,y0,0] * parameters.M_in * np.sin(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_out/state.Q[x0,y0,0])
                 state.Q[x0,y0,3] = thermo.calc_rho_et(parameters.p_out, state.Q[x0,y0,0], state.u[x0,y0], state.v[x0,y0], gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]))
 
                 M = np.sqrt( (state.Q[x1,y1,1]/state.Q[x1,y1,0])**2 + (state.Q[x1,y1,2]/state.Q[x1,y1,0])**2 ) / \
@@ -49,10 +49,25 @@ def enforce_bc(domain, mesh, boundary, parameters, state, gas):
                     state.T[x0,sonic_mask] = state.T[x1,sonic_mask]
 
             elif parameters.outlet == 'subsonic':
-                state.Q[x0,y0,0] = parameters.p_out / (gas.R_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]) * parameters.T_out)
-                state.Q[x0,y0,1] = state.Q[x0,y0,0] * parameters.M_out * np.cos(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_out/state.Q[x0,y0,0])
-                state.Q[x0,y0,2] = state.Q[x0,y0,0] * parameters.M_out * np.sin(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_out/state.Q[x0,y0,0])
+                # outlet state for c (see p. 279 of Blazek, CFD Prin. and App.)
+                rho0 = parameters.p_in / (gas.R_fn(gas.Cp_p, gas.Cv_p)*parameters.T_in)
+                c0 = np.sqrt(gas.gamma_p*parameters.p_in/rho0)
+
+                # set outlet pressure to user specification
+                state.p[x0,y0] = parameters.p_out
+                state.T[x0,y0] = parameters.T_out
+
+                state.Q[x0,y0,0] = state.Q[x1,y1,0] + ( state.p[x0,y0]-state.p[x1,y1]) / state.c[x1,y1]**2
+                state.Q[x0,y0,1] = state.Q[x0,y0,0] * ( state.u[x1,y1] ) + -obj.wall_n[0]*( state.p[x1,y1]-state.p[x0,y0] ) / (state.Q[x1,y1,0]*state.c[x1,y1] )
+                state.Q[x0,y0,2] = state.Q[x0,y0,0] * ( state.v[x1,y1] ) + -obj.wall_n[1]*( state.p[x1,y1]-state.p[x0,y0] ) / (state.Q[x1,y1,0]*state.c[x1,y1] )
+                state.u[x0,y0] = state.Q[x0,y0,1] / state.Q[x0,y0,0]
+                state.v[x0,y0] = state.Q[x0,y0,2] / state.Q[x0,y0,0]
                 state.Q[x0,y0,3] = thermo.calc_rho_et(parameters.p_out, state.Q[x0,y0,0], state.u[x0,y0], state.v[x0,y0], gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]))
+
+                # state.Q[x0,y0,0] = parameters.p_out / (gas.R_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]) * parameters.T_out)
+                # state.Q[x0,y0,1] = state.Q[x0,y0,0] * parameters.M_out * np.cos(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_out/state.Q[x0,y0,0])
+                # state.Q[x0,y0,2] = state.Q[x0,y0,0] * parameters.M_out * np.sin(domain.alpha) * np.sqrt(gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0])*parameters.p_out/state.Q[x0,y0,0])
+                # state.Q[x0,y0,3] = thermo.calc_rho_et(parameters.p_out, state.Q[x0,y0,0], state.u[x0,y0], state.v[x0,y0], gas.gamma_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]))
 
         elif obj.type == 'Inlet':
             state.Q[x0,y0,0] = parameters.p_in / (gas.R_fn(gas.Cp[x0,y0], gas.Cv[x0,y0]) * parameters.T_in)
@@ -62,29 +77,6 @@ def enforce_bc(domain, mesh, boundary, parameters, state, gas):
 
             state.T[x0,y0] = parameters.T_in
             state.p[x0,y0] = parameters.p_in
-
-        # elif obj.type == 'Symmetry':
-        #     if len(y0) > 1:
-                
-
-        #     else:
-        #         x = 
-        #         if y0 > y1:
-        #             y = np.array( (y1, y0) )
-        #         else: 
-        #             y = np.array( (y0, y1) )
-
-        #     state.T[x0,y0] = state.T[x1,y1]
-        #     state.p[x0,y0] = state.p[x1,y1]
-
-        #     if obj.wall_n[0] == 0:
-        #         pass
-            # state.Q[x0, y[0]:y[1]+1, :] = invisc_wall(state.Q[x0, y[0]:y[1]+1, :], state.p[x0, y0], state.T[x0, y0], mesh.s_proj[x0, y[0]:y[1]+1, :], \
-            #                                             gas, x0, y0, flip)
-            # state.Q[x0,y0] = 
-
-            # state.Q[x0, y[0]:y[1]+1, :] = invisc_wall(state.Q[x0, y[0]:y[1]+1, :], state.p[x0, y0], state.T[x0, y0], mesh.s_proj[x0, y[0]:y[1]+1, :], \
-            #                                             gas, x0, y0, flip)
 
         else:
             if y0 > y1:
@@ -177,6 +169,11 @@ def visc_wall(Qwall, pwall, Twall, s_proj, gas, M, N, flip):
                                          Qwall[:, i, 2]/Qwall[:, i, 0], gas.gamma_fn(gas.Cp[M,N], gas.Cv[M,N]) )
     
     return Qwall
+
+
+# characteristic variable subsonic outlet
+# def subsonic_outflow(Qwall, pwall, Twall, cwall, M, N, n)
+
 
 
 # covariant velocities 

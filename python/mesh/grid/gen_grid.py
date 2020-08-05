@@ -277,14 +277,14 @@ def mesh_cylinder(domain):
     # r = r / ratio
     # r = r + start
 
-    th = np.linspace( -2*np.pi*(3/N/2), 2*np.pi*(1+(3/N/2)), N+3)
+    th = np.linspace( -(1/2)*np.pi*(1+(3/(N))), (1/2)*np.pi*(1+(3/(N))), N+3)
 
 
     rr, tt = np.meshgrid(r, th)
     xx = rr * np.cos(tt)
     yy = rr * np.sin(tt)
 
-    xx = np.transpose(xx)
+    xx = -np.transpose(xx)
     yy = np.transpose(yy)
 
     # initialize list
@@ -293,8 +293,8 @@ def mesh_cylinder(domain):
     # set boundary class values
     walls.append( wall( 'object', 0, domain.M+2, 0, 0, np.array( ( 0, 1 ) ) ) )
     walls.append( wall( 'inlet', 0, domain.M+2, domain.N+1, domain.N+1, np.array( ( 0, -1 ) ) ) )
-    walls.append( wall( 'symmetry', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
-    walls.append( wall( 'symmetry', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
+    walls.append( wall( 'inlet', 0, 0, 0, domain.N+2, np.array( ( 1, 0 ) ) ) )
+    walls.append( wall( 'inlet', domain.M+1, domain.M+1, 0, domain.N+2, np.array( ( -1, 0 ) ) ) )
 
     return xx, yy, walls
 
@@ -315,7 +315,19 @@ def mesh_naca4(domain):
     obj_end = domain.obj_end
     a = domain.alpha
 
-    x = np.linspace(-(1/M)*length, length*(1+(1/M)), M+3)
+    # concentrate points on object
+    n1 = int((int(2*M/3)+1) * (obj_start/length))
+    x1 = np.linspace(-(1/M)*length, obj_start*(1-(1/M)), n1)
+    n2 = int((int(3*M/2)+1) * ((obj_end-obj_start)/length))
+    x2 = np.linspace(obj_start, obj_end, n2)
+    n3 = int((int(2*M/3)+1) * ((length-obj_end))/length)
+    x3 = np.linspace(obj_end*(1+(1/M)), length*(1+(1/M)), n3)
+
+    x = np.hstack([x1, x2, x3])
+
+    M = n1 + n2 + n3
+    domain.M = M-3
+
     y = np.linspace(-height/2*(1+(1/N)), height/2*(1+(1/N)), N+3)
 
     domain.obj_i = np.where(x>obj_start)
@@ -327,8 +339,11 @@ def mesh_naca4(domain):
     p = float( naca[1] ) / 10
     thick = float( naca[2:4] )
 
+    # focus points on airfoil
+
+
     # focus points around x-axis/centerline
-    nx = 1.5
+    nx = 1
     half = int(N/2)
     for j in range( 0, half ):
         y[half-j] = y[half-j] - 0.875*y[half-j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
@@ -389,6 +404,8 @@ def mesh_naca4(domain):
         # shift x-coordinates near camber line
         xx[domain.obj_i:domain.obj_f, half] = np.min(xaf) + xL
         xx[domain.obj_i:domain.obj_f, half+2] = np.min(xaf) + xU
+        xx[domain.obj_i:domain.obj_f, half-1] = np.min(xaf) + 0.5*xL + 0.5*(xx[domain.obj_i:domain.obj_f, half-1]-np.min(xaf))
+        xx[domain.obj_i:domain.obj_f, half+3] = np.min(xaf) + 0.5*xU + 0.5*(xx[domain.obj_i:domain.obj_f, half+3]-np.min(xaf))
 
         # shift x-coordinates away from camber line
         for j in range( 1, int(N/4)):

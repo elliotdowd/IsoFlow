@@ -17,7 +17,10 @@
 - Icons added for each window
 
 ## IsoFlow 0.7.4
--Created extra object wall classes to better represent object thicknesses
+- Created extra object wall classes to better represent object thicknesses
+
+## IsoFlow 0.7.5
+- Subsonic outlet is now characteristic variable based
 
 ###########################################################################
 ## IsoFlow 0.6.0 (7/23/2020)

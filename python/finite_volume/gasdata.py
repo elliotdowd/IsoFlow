@@ -96,10 +96,10 @@ class air_cpg:
         return gamma
 
     def mu_fn( T ):
-
         T0 = 273.11
         S = 110.56
         mu = air_cpg.mu_p * ( (T/T0)**(3/2) ) * ( (T0+S)/(T+S) )
+        return mu
 
     def ht_fn( self, state ):
 
@@ -214,11 +214,9 @@ class air_tpg:
         return gamma
 
     def mu_fn( T ):
-
         T0 = 273.11
         S = 110.56
         mu = air_cpg.mu_p * ( (T/T0)**(3/2) ) * ( (T0+S)/(T+S) )
-
         return mu
 
     def ht_fn( self, state ):

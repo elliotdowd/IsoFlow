@@ -251,7 +251,7 @@ class MainFrame ( wx.Frame ):
 		self.out_hybrid = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Hybrid Outflow", wx.EmptyString, wx.ITEM_RADIO )
 		self.boundOptions.Append( self.out_hybrid )
 
-		self.out_subsonic = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Subsonic Outlet", wx.EmptyString, wx.ITEM_RADIO )
+		self.out_subsonic = wx.MenuItem( self.boundOptions, wx.ID_ANY, u"Pressure Outlet", wx.EmptyString, wx.ITEM_RADIO )
 		self.boundOptions.Append( self.out_subsonic )
 
 		self.out_parameters = wx.MenuItem( self.boundOptions, 734, u"Change Outflow Parameters", wx.EmptyString, wx.ITEM_NORMAL )
@@ -780,7 +780,6 @@ class MainFrame ( wx.Frame ):
 
 			if hasattr(self, 'out_window'):
 				p_out = self.out_window.p_out / self.units.conv_press(1)
-				M_out = self.out_window.M_out
 				if self.units.temp == '°C':
 					T_out = float(self.out_window.T_out) + self.units.conv_temp(0)
 				elif self.units.temp == '°F':
@@ -790,7 +789,6 @@ class MainFrame ( wx.Frame ):
 			else:
 				p_out = p_in
 				T_out = T_in
-				M_out = M_in
 
 			# MUSCL interpolation parameters
 			from python.finite_volume.muscl import limiters
@@ -2493,13 +2491,13 @@ class outletWindow(wx.Frame):
 		self.SetIcon(wx.Icon("bmp\gauge.ico"))
 
 		self.outGrid = wx.grid.Grid( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.outGrid.CreateGrid( 3, 1 )
+		self.outGrid.CreateGrid( 2, 1 )
 		self.outGrid.SetRowLabelSize( 200 )
 		self.outGrid.SetColLabelSize( 0 )
 
-		self.outGrid.SetRowLabelValue( 0, u"Outlet Backpressure " + '(' + parent.units.press + ')' )
+		self.outGrid.SetRowLabelValue( 0, u"Outlet Pressure " + '(' + parent.units.press + ')' )
 		self.outGrid.SetRowLabelValue( 1, u"Outlet Temperature " + '(' + parent.units.temp + ')' )
-		self.outGrid.SetRowLabelValue( 2, u"Outlet Mach" )
+		# self.outGrid.SetRowLabelValue( 2, u"Outlet Mach" )
 
 		if hasattr(parent, 'parameters'):
 			if hasattr(parent.parameters, 'p_out'):
@@ -2511,23 +2509,15 @@ class outletWindow(wx.Frame):
 				self.outGrid.SetCellValue( 1, 0, str(parent.parameters.T_out/parent.units.conv_temp(1)-parent.units.conv_temp(0)))
 		else:
 			self.outGrid.SetCellValue( 1, 0, str(parent.parameterGrid.GetCellValue(2,0)))
-		if hasattr(parent, 'parameters'):
-			if hasattr(parent.parameters, 'M_out'):
-				self.outGrid.SetCellValue( 2, 0, str(parent.parameters.M_out))
-		else:
-			self.outGrid.SetCellValue( 2, 0, str(parent.parameterGrid.GetCellValue(0,0)))
-
 
 		self.p_out = float(self.outGrid.GetCellValue( 0, 0 ))
 		self.T_out = float(self.outGrid.GetCellValue( 1, 0 ))
-		self.M_out = float(self.outGrid.GetCellValue( 2, 0 ))
 
 		self.outGrid.Bind( wx.grid.EVT_GRID_CELL_CHANGED, self.wall_change )
 
 	def wall_change( self, event ):
 		self.p_out = float(self.outGrid.GetCellValue( 0, 0 ))
 		self.T_out = float(self.outGrid.GetCellValue( 1, 0 ))
-		self.M_out = float(self.outGrid.GetCellValue( 2, 0 ))
 
 		self.Parent.init_parameters(wx.EVT_MENU)
 

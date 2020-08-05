@@ -36,6 +36,10 @@ def init_state(domain, mesh, boundary, parameters, gas):
     state.T0 = (1+((gas.gamma_fn(gas.Cp, gas.Cv)-1)/2)*state.Mach**2) * state.T
     state.n = 0
 
+    # find temperature at centroids
+    c = thermo.calc_c( state.p, state.Q[:,:,0], gas.gamma_fn(gas.Cp, gas.Cv) )
+    state.c = c
+
     # boundary conditions
     from python.boundary.boundary_cond import enforce_bc, covariant
     state = enforce_bc(domain, mesh, boundary, parameters, state, gas)

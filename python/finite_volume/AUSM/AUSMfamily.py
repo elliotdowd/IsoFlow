@@ -1684,10 +1684,10 @@ def calc_postvars(state, gas):
 def state_error( state ):
 
     # detect excessively low temperature
-    lowT = np.where( state.T < 1 )
-    if np.any(lowT):
-        print('Excessively low temperature detected in ' + str(np.count_nonzero(lowT)) + ' cells, corrected to 1K.' )
-        state.T[lowT] = 1
+    # lowT = np.where( state.T < 1 )
+    # if np.any(lowT):
+    #     print('Excessively low temperature detected in ' + str(np.count_nonzero(lowT)) + ' cells, corrected to 1K.' )
+    #     state.T[lowT] = 1
 
     # detect excessively high temperature
     highT = np.where( state.T > 30000 )
