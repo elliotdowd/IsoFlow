@@ -46,7 +46,7 @@ xx, yy, walls = mesh_naca4(domain)
 triang = tri.Triangulation(xx.flatten(), yy.flatten())
 
 
-N, void = np.shape(trang.triangles)
+N, void = np.shape(triang.triangles)
 
 
 fig1, ax1 = plt.subplots()
@@ -59,10 +59,10 @@ plt.show()
 class mesh: 
     def __init__(self, elements, walls):
 
-    elements = []
-    for i in range( 0, N ):
+        elements = []
+        for i in range( 0, N ):
 
-        elements.append( element( triang.triangles[i,:], np.array([triang.x, triang.y]) ) )
+            elements.append( element( triang.triangles[i,:], np.array([triang.x, triang.y]) ) )
 
     class element:
         def __init__(self, nodeID, edge):

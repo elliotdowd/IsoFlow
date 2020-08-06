@@ -447,7 +447,19 @@ def mesh_biconvex(domain):
     obj_end = domain.obj_end
     a = domain.alpha
 
-    x = np.linspace(-(1/M)*length, length*(1+(1/M)), M+3)
+    # concentrate points on object
+    n1 = int((int(2*M/3)+1) * (obj_start/length))
+    x1 = np.linspace(-(1/M)*length, obj_start*(1-(1/M)), n1)
+    n2 = int((int(4*M/3)+1) * ((obj_end-obj_start)/length))
+    x2 = np.linspace(obj_start, obj_end, n2)
+    n3 = int((int(3*M/3)+1) * ((length-obj_end))/length)
+    x3 = np.linspace(obj_end*(1+(1/M)), length*(1+(1/M)), n3)
+
+    x = np.hstack([x1, x2, x3])
+    
+    M = n1 + n2 + n3
+    domain.M = M-3
+
     y = np.linspace(-height/2*(1+(1/N)), height/2*(1+(1/N)), N+3)
 
     domain.obj_i = np.where(x>obj_start)

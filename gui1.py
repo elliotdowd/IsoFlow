@@ -228,7 +228,7 @@ class MainFrame ( wx.Frame ):
 		self.viscouslaminar = wx.MenuItem( self.viscosityOptions, wx.ID_ANY, u"Viscous Laminar", wx.EmptyString, wx.ITEM_RADIO )
 		self.viscosityOptions.Append( self.viscouslaminar )
 
-		self.gasOptions.AppendSubMenu( self.viscosityOptions, u"Viscosity Model" )
+		# self.gasOptions.AppendSubMenu( self.viscosityOptions, u"Viscosity Model" )
 
 		
 		self.thermalgas = wx.MenuItem( self.gasOptions, wx.ID_ANY, u"Thermally Perfect", wx.EmptyString, wx.ITEM_CHECK )
