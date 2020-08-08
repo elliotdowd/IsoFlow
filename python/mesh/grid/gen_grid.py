@@ -330,10 +330,10 @@ def mesh_naca4(domain):
 
     y = np.linspace(-height/2*(1+(1/N)), height/2*(1+(1/N)), N+3)
 
-    domain.obj_i = np.where(x>obj_start)
+    domain.obj_i = np.where(x>obj_start*(1-(1/M)/8))
     domain.obj_i = domain.obj_i[0][0]
     domain.obj_f = np.where(x>obj_end)
-    domain.obj_f = domain.obj_f[0][0]
+    domain.obj_f = domain.obj_f[0][0] - 1
 
     m = float( naca[0] ) / 100
     p = float( naca[1] ) / 10
@@ -447,7 +447,7 @@ def mesh_biconvex(domain):
 
     y = np.linspace(-height/2*(1+(1/N)), height/2*(1+(1/N)), N+3)
 
-    domain.obj_i = np.where(x>obj_start)
+    domain.obj_i = np.where(x>obj_start*(1-(1/M)))
     domain.obj_i = domain.obj_i[0][0]
     domain.obj_f = np.where(x>obj_end)
     domain.obj_f = domain.obj_f[0][0]
@@ -530,7 +530,7 @@ def mesh_capsule(domain):
     y = np.linspace(-height/2*(1+(1/N)), height/2*(1+(1/N)), N+3)
 
     domain.obj_i = np.where(x>obj_start)
-    domain.obj_i = domain.obj_i[0][0]
+    domain.obj_i = domain.obj_i[0][0] - 1
     domain.obj_f = np.where(x>obj_end)
     domain.obj_f = domain.obj_f[0][0]
 
