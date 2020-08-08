@@ -317,11 +317,11 @@ def mesh_naca4(domain):
 
     # concentrate points on object
     n1 = int((int(2*M/3)+1) * (obj_start/length))
-    x1 = np.linspace(-(1/M)*length, obj_start*(1-(1/M)), n1)
+    x1 = front_cospace( np.linspace(-(1/M)*length, obj_start*(1-(1/M)/4), n1) )
     n2 = int((int(3*M/2)+1) * ((obj_end-obj_start)/length))
-    x2 = np.linspace(obj_start, obj_end, n2)
+    x2 = cospace( np.linspace(obj_start, obj_end, n2) )
     n3 = int((int(2*M/3)+1) * ((length-obj_end))/length)
-    x3 = np.linspace(obj_end*(1+(1/M)), length*(1+(1/M)), n3)
+    x3 = back_cospace( np.linspace(obj_end*(1+(1/M)/4), length*(1+(1/M)), n3) )
 
     x = np.hstack([x1, x2, x3])
 
@@ -349,21 +349,6 @@ def mesh_naca4(domain):
         y[half-j] = y[half-j] - 0.875*y[half-j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
         y[half+2+j] = y[half+2+j] - 0.875*y[half+2+j]*(np.sinh((half-j)/half))**nx/np.sinh(1)**nx
 
-    # concentrate x points near leading and trailing edges
-    nL = 1
-    front = int(5)
-    x_stored = x
-    for i in range( 1, front ):
-        x[domain.obj_i+i] = x_stored[domain.obj_i+i] + 0.75*(x[domain.obj_i]-x[domain.obj_i+i])*(np.sinh((front-i)/front))**nL/np.sinh(1)**nL
-        x[domain.obj_i-i] = x_stored[domain.obj_i-i] + 0.75*(x[domain.obj_i]-x[domain.obj_i-i])*(np.sinh((front-i)/front))**nL/np.sinh(1)**nL
-
-    nT = 1
-    back = int(5)
-    for i in range( 1, back ):
-        x[domain.obj_f+i] = x_stored[domain.obj_f+i] + 0.75*(x[domain.obj_f]-x[domain.obj_f+i])*(np.sinh((back-i)/back))**nT/np.sinh(1)**nT
-        x[domain.obj_f-i] = x_stored[domain.obj_f-i] + 0.75*(x[domain.obj_f]-x[domain.obj_f-i])*(np.sinh((back-i)/back))**nT/np.sinh(1)**nT
-
-
     xaf = x[domain.obj_i:domain.obj_f]
     c = np.max(xaf)-np.min(xaf)
     t = thick*c
@@ -380,7 +365,7 @@ def mesh_naca4(domain):
         yy = np.transpose(yy)
 
         # focus points closer to airfoil
-        ny = 2
+        ny = 1
         for j in range( 0, half ):
             yy[domain.obj_i:domain.obj_f, half-j] = -yt*(np.sinh((half-j)/half)**ny)/np.sinh(1)**ny + yy[domain.obj_i:domain.obj_f, half-j]
             yy[domain.obj_i:domain.obj_f, half+2+j] = yt*(np.sinh((half-j)/half)**ny)/np.sinh(1)**ny + yy[domain.obj_i:domain.obj_f, half+2+j]
@@ -453,7 +438,7 @@ def mesh_biconvex(domain):
     n2 = int((int(4*M/3)+1) * ((obj_end-obj_start)/length))
     x2 = np.linspace(obj_start, obj_end, n2)
     n3 = int((int(3*M/3)+1) * ((length-obj_end))/length)
-    x3 = np.linspace(obj_end*(1+(1/M)), length*(1+(1/M)), n3)
+    x3 = back_cospace( np.linspace(obj_end*(1+(1/M)), length*(1+(1/M)), n3) )
 
     x = np.hstack([x1, x2, x3])
     
@@ -663,6 +648,40 @@ def camber_angle( x, c, m, p):
     theta = np.arctan(dy)
 
     return theta
+
+
+# cosine spacing functions
+def cospace( x ):
+    import numpy as np
+    min = np.min(x)
+    max = np.max(x-min)
+    x = x - min
+    x = np.pi * x / max
+    x = np.flipud( np.cos(x) + 1 ) / 2
+    x = x * max + min
+    return x
+
+
+def front_cospace( x ):
+    import numpy as np
+    min = np.min(x)
+    max = np.max(x-min)
+    x = x - min
+    x = (np.pi/2) * x / max
+    x = np.flipud( np.cos(x) )
+    x = x * max + min
+    return x
+
+
+def back_cospace( x ):
+    import numpy as np
+    min = np.min(x)
+    max = np.max(x-min)
+    x = x - min
+    x = (np.pi/2) * x / max
+    x = -np.cos(x) + 1
+    x = x * max + min
+    return x
 
 
 class wall:

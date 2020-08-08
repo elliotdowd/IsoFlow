@@ -32,6 +32,7 @@ class domain:
     name = 'airfoil'
     M = 30
     N = 26
+    obj_M = 12
     obj_start = .5
     obj_end = 1
     length = 1.5
@@ -42,6 +43,8 @@ class domain:
 # calculate wedge grid coordinates
 from gen_grid import mesh_wedge, mesh_cylinder, mesh_naca4
 xx, yy, walls = mesh_naca4(domain)
+
+cospace = np.flipud( ( np.cos( np.linspace(0, np.pi, domain.obj_M) ) + 1 ) / 2 )
 
 triang = tri.Triangulation(xx.flatten(), yy.flatten())
 
@@ -70,3 +73,51 @@ class mesh:
 
             self.nodes = node
             self.edge = edge
+
+
+def NACA4symm( x, c, t ):
+    import numpy as np
+    y = 5*t*c * ( 0.2969*np.sqrt(x/c) - 0.126*(x/c) - 0.3516*(x/c)**2 + 0.2843*(x/c)**3 - 0.1015*(x/c)**4 )
+    return y
+
+
+def NACA4( x, c, naca ):
+    import numpy as np
+    m = naca[0]
+    p = naca[1]
+    t = naca[2] / 100
+
+    pc = np.where(x>p*c)[0][0]
+
+    # camber line angle
+    theta = camber_angle( x, c, m, p)
+
+    # camber line y-coordinate
+    yc = np.zeros(len(x))
+    yc[0:pc+1] = (m/p**2) * (2*p*(x[0:pc+1]/c) - (x[0:pc+1]/c)**2)
+    yc[pc+1:] = (m/(1-p)**2) * ( (1-2*p) + 2*p*(x[pc+1:]/c) - (x[pc+1:]/c)**2 )
+
+    # thickness profile
+    yt = NACA4symm( x, c, t )
+
+    # airfoil coordinates
+    xU = x - yt*np.sin(theta)
+    xL = x + yt*np.sin(theta)
+    yU = yc + yt*np.cos(theta)
+    yL = yc - yt*np.cos(theta)
+
+    return xL, xU, yL, yU, yc
+
+
+def camber_angle( x, c, m, p):
+    import numpy as np
+
+    dy = np.zeros(len(x))
+    
+    pc = np.where(x>p*c)[0][0]
+    dy[0:pc] = (2*m/p**2) * (p - (x[0:pc]/c))
+    dy[pc+1:] = (2*m/(1-p)**2) * (p - (x[pc+1:]/c))
+
+    theta = np.arctan(dy)
+
+    return theta
