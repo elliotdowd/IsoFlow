@@ -103,24 +103,51 @@ mesh = make_nacamesh()
 # calculate element areas and cell face areas
 def calc_cell_metrics( mesh ):
 
-    i = 0
-    for elem in mesh.elements:
-        x1 = mesh.points[elem[0]][0]
-        y1 = mesh.points[elem[0]][1]
-        x2 = mesh.points[elem[1]][0]
-        y2 = mesh.points[elem[1]][1]
-        x3 = mesh.points[elem[2]][0]
-        y3 = mesh.points[elem[2]][1]
+    mesh.face_areas = []
 
-        mesh.element_volumes[i] = (1/2) * ( (x1-x2)*(y1+y2) + (x2-x3)*(y2+y3) + (x3-x1)*(y3+y1) )
-        i = i+1
+    for i, elem in enumerate( mesh.elements ):
+
+        # triangular elements
+        if len( elem ) == 3:
+            x1 = mesh.points[elem[0]][0]
+            y1 = mesh.points[elem[0]][1]
+            x2 = mesh.points[elem[1]][0]
+            y2 = mesh.points[elem[1]][1]
+            x3 = mesh.points[elem[2]][0]
+            y3 = mesh.points[elem[2]][1]
+
+            mesh.element_volumes[i] = (1/2) * ( (x1-x2)*(y1+y2) + (x2-x3)*(y2+y3) + (x3-x1)*(y3+y1) )
+
+        # quadrilateral elements
+        elif len( elem ) == 4:
+            x1 = mesh.points[elem[0]][0]
+            y1 = mesh.points[elem[0]][1]
+            x2 = mesh.points[elem[1]][0]
+            y2 = mesh.points[elem[1]][1]
+            x3 = mesh.points[elem[2]][0]
+            y3 = mesh.points[elem[2]][1]
+            x4 = mesh.points[elem[3]][0]
+            y4 = mesh.points[elem[3]][1]
+
+            mesh.element_volumes[i] = (1/2) * ( (x1-x3)*(y2-y4) + (x4-x2)*(y1-y3) )
+
+        # face area magnitude calculations
+        dS = []
+        for j, pts in enumerate( elem ):
+            pts = ( elem[j], elem[np.mod(j+1, len(elem))] )
+            Sx = mesh.points[pts[0]][0] - mesh.points[pts[1]][0]
+            Sy = mesh.points[pts[0]][1] - mesh.points[pts[1]][1]
+
+            dS.append( np.sqrt( Sx**2 + Sy**2 ) )
+
+        mesh.face_areas.append( dS )
 
     return mesh
 
 mesh = calc_cell_metrics(mesh)
 
 
-# determine neighbors of each cell face
+# determine neighbors of each cell face (left and right cell states)
 def find_facepairs(mesh):
 
     mesh.face_pairs = np.zeros( [len(mesh.faces), 2] )
@@ -131,13 +158,27 @@ def find_facepairs(mesh):
 
         mesh.face_pts[i,:] = face
 
+    # mask for boundary faces
+    mesh.bdry_ind = np.nonzero(mesh.face_tags)
 
+    # loop through element neighbors to find matching face for each
     for i, neighbor in enumerate( mesh.neighbors ):
 
         for j, elem in enumerate( neighbor ):
 
             if elem == -1:
-                pass
+
+                for k in range( 0, len(mesh.elements[i]) ):
+                    # find points which belong to face on boundary
+                    face_pts = np.array( [mesh.elements[i][k], mesh.elements[i][np.mod(k+1, len(mesh.elements[i]))] ] )
+
+                    # find where face points == data structure face definition
+                    face_id_mask = np.logical_or( face_pts == mesh.face_pts, np.flipud(face_pts) ==  mesh.face_pts )
+                    face_id = np.where( np.logical_and( face_id_mask[:,0] == True, face_id_mask[:,1] == True ) )
+                    
+                    if np.any( np.isin( np.nonzero(mesh.face_tags), face_id ) ):
+                        mesh.face_pairs[face_id,:] = ( i, -mesh.face_tags[int(face_id[0])] )
+                
             else:
                 elem_pts = mesh.elements[i]
                 neigh_pts = mesh.elements[elem]
@@ -152,7 +193,8 @@ def find_facepairs(mesh):
                 face_id_mask = np.logical_or( face_pts == mesh.face_pts, np.flipud(face_pts) ==  mesh.face_pts )
                 face_id = np.where( np.logical_and( face_id_mask[:,0] == True, face_id_mask[:,1] == True ) )
 
-            mesh.face_pairs[face_id,:] = (i, elem)
+                # inside(left) element, then right(outside) element in mesh.face_pairs
+                mesh.face_pairs[face_id,:] = (i, elem)
 
     return mesh
 
@@ -169,6 +211,7 @@ for face in enumerate( mesh.faces ):
     tag = mesh.face_tags[i]
 
     if tag == 0:
+        # interior faces
         plt.plot( (pts[0][0], pts[1][0]), (pts[0][1], pts[1][1]), 'g-', linewidth=0.15 )
     else:
         plt.plot( (pts[0][0], pts[1][0]), (pts[0][1], pts[1][1]), 'k-', linewidth=0.5 )
@@ -177,4 +220,4 @@ for face in enumerate( mesh.faces ):
 plt.axis('equal')
 plt.show()
 
-mesh
+
