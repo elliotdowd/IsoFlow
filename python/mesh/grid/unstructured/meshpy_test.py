@@ -2,6 +2,7 @@ import numpy as np
 import numpy.linalg as la
 import matplotlib.pyplot as plt
 
+from collections import defaultdict
 
 import meshpy
 
@@ -24,11 +25,11 @@ def make_nacamesh():
         x = pt[0]
  
         if x < 0:
-            return 1e-2*la.norm(pt)**2 + 1e-5
+            return 2e-2*la.norm(pt)**2 + 1e-5
         elif x > 1:
-            return 1e-2*la.norm(pt-pt_back)**2 + 1e-5
+            return 2e-2*la.norm(pt-pt_back)**2 + 1e-5
         else:
-            return 1e-2*pt[1]**2 + 1e-5
+            return 2e-2*pt[1]**2 + 1e-5
  
     def needs_refinement(vertices, area):
         barycenter =  sum(np.array(v) for v in vertices)/3
@@ -47,9 +48,9 @@ def make_nacamesh():
             facet_markers=profile_marker)
 
     # add circle geometry
-    builder.add_geometry(*meshpy.geometry.make_circle(0.05, center=(1.5, 0), subdivisions=60, marker=100))
+    builder.add_geometry(*meshpy.geometry.make_circle(0.05, center=(1.5, 0), subdivisions=60, marker=1001))
 
-    builder.wrap_in_box((12, 9), (24, 20))
+    builder.wrap_in_box((12, 9), (16, 12))
  
     from meshpy.triangle import MeshInfo, build
     mi = MeshInfo()
@@ -61,6 +62,9 @@ def make_nacamesh():
     mesh = build(mi, refinement_func=needs_refinement,
             #allow_boundary_steiner=False,
             generate_faces=True)
+
+    # allocate memory for element volumes list
+    mesh.element_volumes.setup()
  
     # write_gnuplot_mesh("naca.dat", mesh)
  
@@ -75,23 +79,7 @@ def make_nacamesh():
             Marker.PLUS_X: "outflow",
             Marker.MINUS_Y: "inflow",
             Marker.PLUS_Y: "inflow"
-            #Marker.MINUS_Y: "minus_y",
-            #Marker.PLUS_Y: "plus_y"
             }
- 
-    # def boundary_tagger(fvi, el, fn, all_v):
-    #     face_marker = fvi2fm[fvi]
-    #     return [face_marker_to_tag[face_marker]]
-
-    # get dictionary keys and value
-    def get_nth_key(dictionary, n=0):
-        if n < 0:
-            n += len(dictionary)
-        for i, key in enumerate(dictionary.keys()):
-            if i == n:
-                return key
-
-    vertices = np.asarray(mesh.points, order="C")
 
     # create list of face tags 
     mesh.face_tags = []
@@ -103,11 +91,7 @@ def make_nacamesh():
             if tag == key:
                 tag = face_marker_to_tag[key]
 
-        if tag == 0:
-            tag = 'interior'
-
         mesh.face_tags.append( tag )
-
 
 
     return mesh
@@ -115,11 +99,65 @@ def make_nacamesh():
 # call mesh creation function
 mesh = make_nacamesh()
 
-# calculate element areas and cell face areas
 
+# calculate element areas and cell face areas
 def calc_cell_metrics( mesh ):
-    pass
-    # loop through cell faces 
+
+    i = 0
+    for elem in mesh.elements:
+        x1 = mesh.points[elem[0]][0]
+        y1 = mesh.points[elem[0]][1]
+        x2 = mesh.points[elem[1]][0]
+        y2 = mesh.points[elem[1]][1]
+        x3 = mesh.points[elem[2]][0]
+        y3 = mesh.points[elem[2]][1]
+
+        mesh.element_volumes[i] = (1/2) * ( (x1-x2)*(y1+y2) + (x2-x3)*(y2+y3) + (x3-x1)*(y3+y1) )
+        i = i+1
+
+    return mesh
+
+mesh = calc_cell_metrics(mesh)
+
+
+# determine neighbors of each cell face
+def find_facepairs(mesh):
+
+    mesh.face_pairs = np.zeros( [len(mesh.faces), 2] )
+    mesh.face_pts = np.zeros( [len(mesh.faces), 2] )
+
+    # loop through faces to convert face points to numpy array
+    for i, face in enumerate( mesh.faces ):
+
+        mesh.face_pts[i,:] = face
+
+
+    for i, neighbor in enumerate( mesh.neighbors ):
+
+        for j, elem in enumerate( neighbor ):
+
+            if elem == -1:
+                pass
+            else:
+                elem_pts = mesh.elements[i]
+                neigh_pts = mesh.elements[elem]
+
+                # find points which belong to face between neighbors
+                combine = np.hstack( [elem_pts, neigh_pts] )
+                unq, unq_id, unq_ct = np.unique( combine, return_counts=True, return_inverse=True )
+                mask = unq_ct > 1
+                face_pts = unq[mask]
+
+                # find where face points == data structure face definition
+                face_id_mask = np.logical_or( face_pts == mesh.face_pts, np.flipud(face_pts) ==  mesh.face_pts )
+                face_id = np.where( np.logical_and( face_id_mask[:,0] == True, face_id_mask[:,1] == True ) )
+
+            mesh.face_pairs[face_id,:] = (i, elem)
+
+    return mesh
+
+mesh = find_facepairs(mesh)
+
 
 # plot unstructured mesh
 for face in enumerate( mesh.faces ):
@@ -130,7 +168,7 @@ for face in enumerate( mesh.faces ):
 
     tag = mesh.face_tags[i]
 
-    if tag == 'interior':
+    if tag == 0:
         plt.plot( (pts[0][0], pts[1][0]), (pts[0][1], pts[1][1]), 'g-', linewidth=0.15 )
     else:
         plt.plot( (pts[0][0], pts[1][0]), (pts[0][1], pts[1][1]), 'k-', linewidth=0.5 )
