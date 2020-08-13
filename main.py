@@ -5,32 +5,33 @@ from pytictoc import TicToc
 t = TicToc()
 
 class domain:
-    name = 'wedge'
-    M = 48
-    N = 36
-    obj_start = 1
-    obj_end = 30000
-    length = 4
-    height = 2.4
-    theta = np.deg2rad(20)
+    M = 24
+    N = 20
+    L = 6
+    h = 5
+
+class airfoil:
+    naca = '2412'
+    M = 160
+    alpha = np.deg2rad(0)
+    L = 2
 
 # calculate wedge grid coordinates
 t.tic()
-from python.mesh.grid.gen_grid import mesh_wedge
-xx, yy, walls = mesh_wedge(domain)
+from python.mesh.grid.unstructured.gen_object import gen_naca4points
+from python.mesh.grid.unstructured.gen_unstruct_mesh import gen_nacamesh
 
-boundary = init_boundary( walls )
+airfoil = gen_naca4points( airfoil )
+mesh = gen_nacamesh( domain, airfoil )
 
-# from plotting import plot_mesh
-# class mesh:
-#     pass
-# mesh.xx = xx
-# mesh.yy = yy
-# plot_mesh(mesh)
+# plot mesh
+from python.postprocessing.plotting import plot_unstruct_mesh
+plot_unstruct_mesh(mesh)
+
 
 # determine cell metrics for grid
-from python.mesh.metrics.calc_cell_metrics import cellmetrics
-mesh = cellmetrics(xx, yy, domain)
+# from python.mesh.metrics.calc_unstruct_cell_metrics import unstruct_cellmetrics
+# mesh = unstruct_cellmetrics( mesh )
 
 print('------------------------------------------------------------------')
 t.toc('meshing time:')

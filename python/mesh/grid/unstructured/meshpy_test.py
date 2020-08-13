@@ -50,7 +50,7 @@ def make_nacamesh():
     # add circle geometry
     builder.add_geometry(*meshpy.geometry.make_circle(0.05, center=(1.5, 0), subdivisions=60, marker=1001))
 
-    builder.wrap_in_box((12, 9), (16, 12))
+    builder.wrap_in_box((10, 8), (16, 12))
  
     from meshpy.triangle import MeshInfo, build
     mi = MeshInfo()
@@ -65,6 +65,7 @@ def make_nacamesh():
 
     # allocate memory for element volumes list
     mesh.element_volumes.setup()
+    mesh.normals.setup()
  
     # write_gnuplot_mesh("naca.dat", mesh)
  
@@ -131,16 +132,18 @@ def calc_cell_metrics( mesh ):
 
             mesh.element_volumes[i] = (1/2) * ( (x1-x3)*(y2-y4) + (x4-x2)*(y1-y3) )
 
-        # face area magnitude calculations
-        dS = []
-        for j, pts in enumerate( elem ):
-            pts = ( elem[j], elem[np.mod(j+1, len(elem))] )
-            Sx = mesh.points[pts[0]][0] - mesh.points[pts[1]][0]
-            Sy = mesh.points[pts[0]][1] - mesh.points[pts[1]][1]
+        # face area magnitude and normal vector calculations
 
-            dS.append( np.sqrt( Sx**2 + Sy**2 ) )
+    for j, pts in enumerate( mesh.faces ):
+
+        # outward pointing face vector components
+        Sx = mesh.points[pts[1]][1] - mesh.points[pts[0]][1]
+        Sy = mesh.points[pts[0]][0] - mesh.points[pts[1]][0]
+
+        dS = np.sqrt( Sx**2 + Sy**2 )
 
         mesh.face_areas.append( dS )
+        mesh.normals[j] = ( Sx/dS, Sy/dS )
 
     return mesh
 
@@ -221,3 +224,36 @@ plt.axis('equal')
 plt.show()
 
 
+# initialization scheme
+M_in = 3.0
+T_in = 300
+p_in = 101325
+R = 287
+gam = 1.4
+
+# initialize state vector at each element
+Q = np.zeros( [ len(mesh.elements), 4 ] )
+u = np.zeros( len(mesh.elements) )
+v = np.zeros( len(mesh.elements) )
+p = np.zeros( len(mesh.elements) )
+T = np.zeros( len(mesh.elements) )
+c = np.zeros( len(mesh.elements) ) + np.sqrt( gam*p_in / (p_in / (R * T_in)) )
+
+for i, elem in enumerate( mesh.elements ):
+
+    u[i] = M_in / c
+    v[i] = 0
+
+    Q[i, 0] = p_in / (R * T_in)
+    Q[i, 1] = Q[i, 0] * u
+    Q[i, 2] = Q[i, 0] * v
+    Q[i, 3] = p_in/(gam-1) + (1/2)*Q[i, 0]*( u[i]**2 + v[i]**2 )
+
+
+# test basic AUSM schemes
+
+res = np.zeros( [ len(mesh.elements), 4 ] )
+
+# for n in range(0, 1000):
+
+#     for i, face in enumerate( mesh.faces ):

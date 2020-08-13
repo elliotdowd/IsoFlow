@@ -1,6 +1,7 @@
+import matplotlib.pyplot as plt
+
 
 # plot geometry mesh
-
 def plot_mesh(mesh):
 
     import matplotlib.pyplot as plt
@@ -20,6 +21,26 @@ def plot_mesh(mesh):
     plt.show()
 
 
+# unstructured mesh plotting from meshpy output
+def plot_unstruct_mesh( mesh ):
+    # plot unstructured mesh
+    for face in enumerate( mesh.faces ):
+        i = face[0]
+        pts = []
+        for pt in enumerate( face[1] ):
+            pts.append( mesh.points[pt[1]] )
+
+        tag = mesh.face_tags[i]
+
+        if tag == 0:
+            # interior faces
+            plt.plot( (pts[0][0], pts[1][0]), (pts[0][1], pts[1][1]), 'g-', linewidth=0.15 )
+        else:
+            plt.plot( (pts[0][0], pts[1][0]), (pts[0][1], pts[1][1]), 'k-', linewidth=0.5 )
+
+    # plot mesh lines
+    plt.axis('equal')
+    plt.show()
 
 # contour plotting
 def plot_contour(domain, mesh, state):

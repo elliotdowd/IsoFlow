@@ -4,9 +4,9 @@ def gen_naca4points( airfoil ):
 
     # import domain values
     M = airfoil.M
-    naca = airfoil.spec
+    naca = airfoil.naca
     a = airfoil.alpha
-    L = airfoil.size
+    L = airfoil.L
 
     # concentrate points on object
     x = cospace( np.linspace(0, L, M) )
@@ -25,8 +25,8 @@ def gen_naca4points( airfoil ):
 
         xL, xU, yL, yU, yc = NACA4( x, L, np.array( (m, p, thick) ) )
 
-        x = np.hstack( [xL, xU] ) - float(L/2)
-        y = np.hstack( [yL, yU] )
+        x = np.hstack( [xL, np.flipud(xU)] ) - float(L/2)
+        y = np.hstack( [yL, np.flipud(yU)] )
 
     xy = rotate( np.transpose( np.vstack([x, y]) ), a )
 
