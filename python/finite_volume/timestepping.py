@@ -44,3 +44,17 @@ def local_timestep( domain, mesh, state, parameters, gas ):
 
     return state
 
+
+# local timestepping for unstructured meshes
+def local_unstruct_timestep( mesh, state, parameters, gas ):
+
+    # find temperature at centroids
+    c = thermo.calc_c( state.p, state.Q[:,0], gas.gamma )
+    state.c = c
+
+    # function for calculating spectral radius
+    spectral = np.abs(state.U)*mesh.dV + c*mesh.dV
+
+    state.dt = parameters.CFL * spectral
+    return state
+

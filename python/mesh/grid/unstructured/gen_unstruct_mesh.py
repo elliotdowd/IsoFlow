@@ -15,18 +15,18 @@ def gen_nacamesh(domain, airfoil):
         x = pt[0]
  
         if x < -airfoil.L/2:
-            return 2e-2*la.norm(pt)**2 + 1e-5
+            return 4e-2*la.norm(pt)**2 + 2e-5
         elif x > airfoil.L/2:
-            return 2e-2*la.norm(pt-pt_back)**2 + 1e-5
+            return 4e-2*la.norm(pt-pt_back)**2 + 2e-5
         else:
-            return 2e-2*pt[1]**2 + 1e-5
+            return 4e-2*pt[1]**2 + 2e-5
  
     def needs_refinement(vertices, area):
         barycenter =  sum(np.array(v) for v in vertices)/3
         return bool(area > max_area(barycenter))
  
     # from meshpy.naca import get_naca_points
-    # points = get_naca_points(naca_digits=airfoil.naca, number_of_points=airfoil.N)
+    # points = get_naca_points(naca_digits=airfoil.naca, number_of_points=airfoil.M)
     points = airfoil.vertices
  
     from meshpy.geometry import GeometryBuilder, Marker
@@ -45,7 +45,6 @@ def gen_nacamesh(domain, airfoil):
     builder.set(mi)
     mi.set_holes( [builder.center()] )
 
- 
     mesh = build(mi, refinement_func=needs_refinement,
             #allow_boundary_steiner=False,
             generate_faces=True)

@@ -1,3 +1,4 @@
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -87,5 +88,31 @@ def plot_contour(domain, mesh, state):
 
     # plot labeling 
 
+    plt.show()
 
+
+def plot_unstruct_contour( mesh, state ): 
+    
+    coord = np.zeros( [ len(mesh.faces), 2 ] )
+    Qinterp = np.zeros( [ len(mesh.faces), 4 ] )
+
+    for i, faces in enumerate( mesh.face_pairs ):
+
+        # find midpoint of each face
+        coord[i,0] = (1/2) * ( mesh.points[mesh.faces[i][0]][0] + mesh.points[mesh.faces[i][1]][0] )
+        coord[i,1] = (1/2) * ( mesh.points[mesh.faces[i][0]][1] + mesh.points[mesh.faces[i][1]][1] )
+
+        Qinterp[i,:] = state.Q[int(faces[0]),:]
+
+
+    # contour plotting
+    fig = plt.figure('Contour')
+    ax = fig.gca(projection='3d')
+
+    surf = ax.plot_trisurf(coord[:,0], coord[:,1], Qinterp[:,0], linewidth=0)
+    fig.colorbar(surf)
+
+    # ax.contourf( coord[:,0], coord[:,1], Qinterp[:,0] )
+
+    fig.tight_layout()
     plt.show()

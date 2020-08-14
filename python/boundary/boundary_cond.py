@@ -171,13 +171,7 @@ def visc_wall(Qwall, pwall, Twall, s_proj, gas, M, N, flip):
     return Qwall
 
 
-# characteristic variable subsonic outlet
-# def subsonic_outflow(Qwall, pwall, Twall, cwall, M, N, n)
-
-
-
 # covariant velocities 
-
 def covariant(mesh, state):
 
     state.U = (1/mesh.s_proj[:,:,4]) * \
@@ -187,3 +181,4 @@ def covariant(mesh, state):
               (state.u*mesh.s_proj[:,:,2] + state.v*mesh.s_proj[:,:,3])
 
     return state
+

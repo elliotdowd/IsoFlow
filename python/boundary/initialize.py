@@ -1,10 +1,9 @@
-
+import numpy as np
+from python.finite_volume.helper import thermo
+from python.boundary.unstruct_boundary_cond import unstruct_boundary_cond, unstruct_covariant
 
 # initialize Q vector given simulation parameters
 def init_state(domain, mesh, boundary, parameters, gas):
-
-    import numpy as np
-    from python.finite_volume.helper import thermo
 
     # specific heat ratio calculation
     gas.Cp = np.zeros( (domain.M+2, domain.N+2 ) ) + gas.Cp_fn( gas.gamma_p, gas.Cp_p, gas.theta, parameters.T_out )
@@ -41,9 +40,53 @@ def init_state(domain, mesh, boundary, parameters, gas):
     state.c = c
 
     # boundary conditions
-    from python.boundary.boundary_cond import enforce_bc, covariant
     state = enforce_bc(domain, mesh, boundary, parameters, state, gas)
 
     state = covariant(mesh, state)
 
     return state
+
+
+# initialization for unstructured meshes
+def init_unstruct_state( mesh, parameters, gas ):
+
+    # initialize state vector at each element
+    Q = np.zeros( [ len(mesh.elements), 4 ] )
+    c = np.zeros( len(mesh.elements) ) + np.sqrt( gas.gamma*parameters.p_in / (parameters.p_in / (gas.R * parameters.T_in)) )
+    u = np.zeros( len(mesh.elements) ) + parameters.M_in * c
+    v = np.zeros( len(mesh.elements) ) + 0
+    p = np.zeros( len(mesh.elements) ) + parameters.p_in
+    T = np.zeros( len(mesh.elements) ) + parameters.T_in
+
+    Q[:, 0] = parameters.p_in / (gas.R * parameters.T_in)
+    Q[:, 1] = Q[:, 0] * u
+    Q[:, 2] = Q[:, 0] * v
+    Q[:, 3] = parameters.p_in/(gas.gamma-1) + (1/2)*Q[:, 0]*( u**2 + v**2 )
+
+    class state:
+        pass
+
+    state.Q = Q
+    state.u = u
+    state.v = v
+    state.p = p
+    state.T = T
+    state.c = c
+    state.n = 0
+
+    # create boundary "halo" cell state vector and variables with indices pointing to related cell face, Q
+    state.Qbound = np.zeros( [len( mesh.bdry_ind[0] ), 4] )
+    state.pbound = np.zeros( len( mesh.bdry_ind[0] ) )
+    state.Tbound = np.zeros( len( mesh.bdry_ind[0] ) )
+    state.ubound = np.zeros( len( mesh.bdry_ind[0] ) )
+    state.vbound = np.zeros( len( mesh.bdry_ind[0] ) )
+    state.Ubound = np.zeros( [len( mesh.bdry_ind[0] ), 2] )
+
+    # enforce boundary conditions
+    state = unstruct_boundary_cond( mesh, state, parameters, gas )
+
+    # calculate covariant velocities 
+    state.U = np.zeros( [len(mesh.faces), 2] )
+    state = unstruct_covariant( mesh, state )
+
+    return mesh, state
