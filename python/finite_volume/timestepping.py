@@ -52,9 +52,22 @@ def local_unstruct_timestep( mesh, state, parameters, gas ):
     c = thermo.calc_c( state.p, state.Q[:,0], gas.gamma )
     state.c = c
 
-    # function for calculating spectral radius
-    spectral = np.abs(state.U)*mesh.dV + c*mesh.dV
+    spectral = np.zeros( len(mesh.elements) )
+    uv = np.transpose( np.vstack( [ state.u, state.v ] ) )
 
-    state.dt = parameters.CFL * spectral
+
+    # calculate inviscid spectral radii at each element via summation over element faces (pg. 188 Blazek)
+    for i, faces in enumerate( mesh.elem_to_face ):
+
+        spectral[i] = 0
+
+        for face in faces:
+            
+            # function for calculating spectral radius
+            spectral[i] = spectral[i] + ( np.abs( np.dot( uv[i,:], mesh.n[face] ) ) + state.c[i] ) * mesh.dS[face]
+
+
+    state.dt = parameters.CFL * mesh.dV / spectral
+
     return state
 

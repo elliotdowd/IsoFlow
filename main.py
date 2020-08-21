@@ -2,6 +2,8 @@
 import numpy as np
 from pytictoc import TicToc
 
+from meshpy.geometry import Marker
+
 t = TicToc()
 
 class domain:
@@ -9,6 +11,16 @@ class domain:
     N = 7
     L = 6
     h = 5
+
+    profile_marker = Marker.FIRST_USER_MARKER
+
+    face_marker_to_tag = {
+            profile_marker: "noslip",
+            Marker.MINUS_X: "inflow",
+            Marker.PLUS_X: "outflow",
+            Marker.MINUS_Y: "outflow",
+            Marker.PLUS_Y: "outflow"
+            }
 
 class airfoil:
     naca = '2412'
@@ -39,12 +51,12 @@ t.toc('meshing time:')
 
 # initialize state vector, simulation parameters and fluid properties
 class parameters:
-    M_in = 0.5
+    M_in = 3
     p_in = 101325
     T_in = 300
     iterations = 100
     tolerance = -6
-    CFL = 0.25
+    CFL = 0.2
 class gas:
     gamma = 1.4
     Cp = 1006
@@ -53,14 +65,14 @@ class gas:
 # initialize state vector, thermodynamic variables
 t.tic()
 from python.boundary.initialize import init_unstruct_state
-mesh, state = init_unstruct_state( mesh, parameters, gas )
+mesh, state = init_unstruct_state( domain, mesh, parameters, gas )
 t.toc('initialize time:')
 
 # run AUSM scheme
 t.tic()
-from python.finite_volume.AUSM.unstruct_AUSMfamily import unstruct_AUSM
+from python.finite_volume.AUSM.unstruct_AUSMfamily import unstruct_AUSM, avg_vars
 
-state = unstruct_AUSM( mesh, state, parameters, gas )
+state = unstruct_AUSM( domain, mesh, state, parameters, gas )
 t.toc('simulation time:')
 
 # call plotting functions

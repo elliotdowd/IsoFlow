@@ -48,7 +48,7 @@ def init_state(domain, mesh, boundary, parameters, gas):
 
 
 # initialization for unstructured meshes
-def init_unstruct_state( mesh, parameters, gas ):
+def init_unstruct_state( domain, mesh, parameters, gas ):
 
     # initialize state vector at each element
     Q = np.zeros( [ len(mesh.elements), 4 ] )
@@ -75,15 +75,15 @@ def init_unstruct_state( mesh, parameters, gas ):
     state.n = 0
 
     # create boundary "halo" cell state vector and variables with indices pointing to related cell face, Q
-    state.Qbound = np.zeros( [len( mesh.bdry_ind[0] ), 4] )
-    state.pbound = np.zeros( len( mesh.bdry_ind[0] ) )
-    state.Tbound = np.zeros( len( mesh.bdry_ind[0] ) )
-    state.ubound = np.zeros( len( mesh.bdry_ind[0] ) )
-    state.vbound = np.zeros( len( mesh.bdry_ind[0] ) )
+    state.Qbound = np.zeros( [len( mesh.bdry_ind[0] ), 4] ) + state.Q[0,:]
+    state.pbound = np.zeros( len( mesh.bdry_ind[0] ) )      + state.p[0]
+    state.Tbound = np.zeros( len( mesh.bdry_ind[0] ) )      + state.T[0]
+    state.ubound = np.zeros( len( mesh.bdry_ind[0] ) )      + state.u[0]
+    state.vbound = np.zeros( len( mesh.bdry_ind[0] ) )      + state.v[0]
     state.Ubound = np.zeros( [len( mesh.bdry_ind[0] ), 2] )
 
     # enforce boundary conditions
-    state = unstruct_boundary_cond( mesh, state, parameters, gas )
+    state = unstruct_boundary_cond( domain, mesh, state, parameters, gas )
 
     # calculate covariant velocities 
     state.U = np.zeros( [len(mesh.faces), 2] )

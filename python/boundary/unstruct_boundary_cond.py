@@ -1,6 +1,6 @@
 import numpy as np
 
-def unstruct_boundary_cond( mesh, state, parameters, gas ):
+def unstruct_boundary_cond( domain, mesh, state, parameters, gas ):
     
     for i, bdry_id in enumerate( mesh.bdry_ind[0] ):
 
@@ -21,14 +21,29 @@ def unstruct_boundary_cond( mesh, state, parameters, gas ):
 
         else:
 
-            state.Qbound[i,0] = parameters.p_in / (gas.R * parameters.T_in)
-            state.Qbound[i,1] = state.Qbound[i,0] * parameters.M_in * np.sqrt( gas.gamma * parameters.p_in / state.Qbound[i,0] )
-            state.Qbound[i,2] = 0
-            state.Qbound[i,3] = parameters.p_in/(gas.gamma-1) + \
-                               (1/2)*state.Qbound[i,0]*( (state.Qbound[i,1]/state.Qbound[i,0])**2 + (state.Qbound[i,2]/state.Qbound[i,0])**2 )
+            bound_type = domain.face_marker_to_tag[type_id]
 
-            state.pbound[i] = parameters.p_in
-            state.Tbound[i] = parameters.T_in
+            if bound_type == 'inflow':
+
+                state.Qbound[i,0] = parameters.p_in / (gas.R * parameters.T_in)
+                state.Qbound[i,1] = state.Qbound[i,0] * parameters.M_in * np.sqrt( gas.gamma * parameters.p_in / state.Qbound[i,0] )
+                state.Qbound[i,2] = 0
+                state.Qbound[i,3] = parameters.p_in/(gas.gamma-1) + \
+                                (1/2)*state.Qbound[i,0]*( (state.Qbound[i,1]/state.Qbound[i,0])**2 + (state.Qbound[i,2]/state.Qbound[i,0])**2 )
+
+                state.pbound[i] = parameters.p_in
+                state.Tbound[i] = parameters.T_in
+
+            elif bound_type == 'outflow':
+
+                state.Qbound[i,:] = state.Q[L,:]
+
+                state.pbound[i] = state.p[L]
+                state.Tbound[i] = state.T[L]
+
+        state.ubound = state.Qbound[:,1] / state.Qbound[:,0]
+        state.vbound = state.Qbound[:,2] / state.Qbound[:,0]
+        
 
     return state
 
@@ -46,8 +61,8 @@ def noslip_wall( Q, p, T, gas ):
     Qwall = np.zeros( 4 )
     
     Qwall[0] = pwall / (gas.R * Twall)
-    Qwall[1] = Qwall[0] * Q[1]/Q[0]
-    Qwall[2] = Qwall[0] * Q[2]/Q[0]
+    Qwall[1] = -Qwall[0] * Q[1]/Q[0]
+    Qwall[2] = -Qwall[0] * Q[2]/Q[0]
     Qwall[3] = pwall/(gas.gamma-1) + (1/2)*Qwall[0]*( (Qwall[1]/Qwall[0])**2 + (Qwall[2]/Qwall[0])**2 )
 
     return Qwall, pwall, Twall
@@ -69,23 +84,21 @@ def unstruct_covariant( mesh, state ):
 
         # account for boundary cells
         if R < 0:
-            bound_i = int(np.where(np.isin(mesh.bdry_ind,i))[0])
+            bound_i = int(np.where(np.isin(mesh.bdry_ind,i))[1])
             u_L = np.array( [ state.u[int(mesh.face_pairs[i,0])], state.v[int(mesh.face_pairs[i,0])] ] ).reshape([1,2])
             u_R = np.array( [ state.ubound[bound_i], state.vbound[bound_i] ] ).reshape([1,2])
 
             # calculate covariant velocity at each cell face
-            state.U[L,0] = np.dot( u_L, mesh.n[i,:] )
+            state.U[i,0] = np.dot( u_L, mesh.n[i,:] )
             state.Ubound[bound_i,1] = np.dot( u_R, mesh.n[i,:] )
 
         else:
             u_L = np.array( [ state.u[int(mesh.face_pairs[i,0])], state.v[int(mesh.face_pairs[i,0])] ] ).reshape([1,2])
             u_R = np.array( [ state.u[int(mesh.face_pairs[i,1])], state.v[int(mesh.face_pairs[i,1])] ] ).reshape([1,2])
 
-            # calculate covariant velocity at each cell face
-            state.U[L,0] = np.dot( u_L, mesh.n[i,:] )
-            state.U[R,1] = np.dot( u_R, mesh.n[i,:] )
+            # calculate left and right covariant velocity at each cell face
+            state.U[i,0] = np.dot( u_L, mesh.n[i,:] )
+            state.U[i,1] = np.dot( u_R, mesh.n[i,:] )
 
-        # calculate contravariant velocity at each cell face
-        # state.V[i] = np.
 
     return state

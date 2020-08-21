@@ -104,11 +104,13 @@ def unstruct_cellmetrics( mesh ):
     return mesh
 
 
-# determine neighbors of each cell face (left and right cell states)
-def find_facepairs(mesh):
+# determine neighbors of each cell face, pointers from elements to faces (left and right cell states)
+def find_facepairs( mesh ):
 
     mesh.face_pairs = np.zeros( [len(mesh.faces), 2] )
     mesh.face_pts = np.zeros( [len(mesh.faces), 2] )
+    mesh.elem_to_face = np.zeros( [len(mesh.elements), 3], dtype=int ) - 1
+    elem_face_allocated = np.zeros( len(mesh.elements), dtype=int )
 
     # loop through faces to convert face points to numpy array
     for i, face in enumerate( mesh.faces ):
@@ -135,6 +137,12 @@ def find_facepairs(mesh):
                     
                     if np.any( np.isin( np.nonzero(mesh.face_tags), face_id ) ):
                         mesh.face_pairs[face_id,:] = ( i, -mesh.face_tags[int(face_id[0])] )
+
+                        if elem_face_allocated[i] < 3:
+                            # point from elements to faces
+                            mesh.elem_to_face[i,elem_face_allocated[i]] = face_id[0]
+                            # tracking of how many element -> face pointers have been allocated for a given element
+                            elem_face_allocated[i] = int(elem_face_allocated[i] + 1)
                 
             else:
                 elem_pts = mesh.elements[i]
@@ -151,7 +159,12 @@ def find_facepairs(mesh):
                 face_id = np.where( np.logical_and( face_id_mask[:,0] == True, face_id_mask[:,1] == True ) )
 
                 # inside(left) element, then right(outside) element in mesh.face_pairs
-                mesh.face_pairs[face_id,:] = (i, elem)
+                mesh.face_pairs[face_id,:] = (elem, i)
+
+                # point from elements to faces
+                mesh.elem_to_face[i,elem_face_allocated[i]] = face_id[0]
+                # tracking of how many element->face pointers have been allocated for a given element
+                elem_face_allocated[i] = int(elem_face_allocated[i] + 1)
 
     return mesh
 

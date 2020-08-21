@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
+from matplotlib import cm
 
 
 # plot geometry mesh
@@ -95,6 +97,7 @@ def plot_unstruct_contour( mesh, state ):
     
     coord = np.zeros( [ len(mesh.faces), 2 ] )
     Qinterp = np.zeros( [ len(mesh.faces), 4 ] )
+    pinterp = np.zeros( len(mesh.faces) )
 
     for i, faces in enumerate( mesh.face_pairs ):
 
@@ -103,14 +106,20 @@ def plot_unstruct_contour( mesh, state ):
         coord[i,1] = (1/2) * ( mesh.points[mesh.faces[i][0]][1] + mesh.points[mesh.faces[i][1]][1] )
 
         Qinterp[i,:] = state.Q[int(faces[0]),:]
+        pinterp[i] = state.p[int(faces[0])]
 
 
     # contour plotting
     fig = plt.figure('Contour')
     ax = fig.gca(projection='3d')
-
-    surf = ax.plot_trisurf(coord[:,0], coord[:,1], Qinterp[:,0], linewidth=0)
+    
+    # ax.scatter( coord[:,0], coord[:,1], Qinterp[:,0], cmap = cm.jet )
+    surf = ax.plot_trisurf(coord[:,0], coord[:,1], Qinterp[:,0], cmap = cm.jet, linewidth=0)
     fig.colorbar(surf)
+
+    ax.xaxis.set_major_locator(MaxNLocator(5))
+    ax.yaxis.set_major_locator(MaxNLocator(6))
+    ax.zaxis.set_major_locator(MaxNLocator(5))
 
     # ax.contourf( coord[:,0], coord[:,1], Qinterp[:,0] )
 

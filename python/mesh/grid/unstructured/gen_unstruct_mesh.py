@@ -32,11 +32,10 @@ def gen_nacamesh(domain, airfoil):
     from meshpy.geometry import GeometryBuilder, Marker
     from meshpy.triangle import write_gnuplot_mesh
  
-    profile_marker = Marker.FIRST_USER_MARKER
     builder = GeometryBuilder()
     builder.add_geometry(points=points,
             facets=round_trip_connect(points),
-            facet_markers=profile_marker)
+            facet_markers=domain.profile_marker)
 
     builder.wrap_in_box((domain.L, domain.h), (domain.M, domain.N))
  
@@ -59,14 +58,6 @@ def gen_nacamesh(domain, airfoil):
     print( "%d elements" % len(mesh.elements) )
  
     fvi2fm = mesh.face_vertex_indices_to_face_marker
- 
-    face_marker_to_tag = {
-            profile_marker: "noslip",
-            Marker.MINUS_X: "inflow",
-            Marker.PLUS_X: "outflow",
-            Marker.MINUS_Y: "inflow",
-            Marker.PLUS_Y: "inflow"
-            }
 
     # create list of face tags 
     mesh.face_tags = []
@@ -74,7 +65,7 @@ def gen_nacamesh(domain, airfoil):
         # tag for specified face
         tag = face[1]
 
-        for key in enumerate(face_marker_to_tag.keys()):
+        for key in enumerate(domain.face_marker_to_tag.keys()):
             if tag == key:
                 tag = face_marker_to_tag[key]
 
