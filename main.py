@@ -7,15 +7,15 @@ from meshpy.geometry import Marker
 t = TicToc()
 
 class domain:
-    M = 8
-    N = 7
-    L = 6
-    h = 5
+    M = 16
+    N = 14
+    L = 1 #6
+    h = 1 #5
 
     profile_marker = Marker.FIRST_USER_MARKER
 
     face_marker_to_tag = {
-            profile_marker: "noslip",
+            profile_marker: "slip",
             Marker.MINUS_X: "inflow",
             Marker.PLUS_X: "outflow",
             Marker.MINUS_Y: "outflow",
@@ -24,14 +24,15 @@ class domain:
 
 class airfoil:
     naca = '2412'
-    M = 100
+    # naca = 0.05
+    M = 40 #100
     alpha = np.deg2rad(0)
     L = 2
 
 # calculate wedge grid coordinates
 t.tic()
-from python.mesh.grid.unstructured.gen_object import gen_naca4points
-from python.mesh.grid.unstructured.gen_unstruct_mesh import gen_nacamesh
+from python.mesh.grid.unstructured.gen_object import gen_naca4points, gen_biconvexpoints
+from python.mesh.grid.unstructured.gen_unstruct_mesh import gen_nacamesh, gen_circlemesh, gen_biconvexmesh
 
 airfoil = gen_naca4points( airfoil )
 mesh = gen_nacamesh( domain, airfoil )
@@ -55,8 +56,8 @@ class parameters:
     p_in = 101325
     T_in = 300
     iterations = 100
-    tolerance = -6
-    CFL = 0.2
+    tolerance = -12
+    CFL = 0.004
 class gas:
     gamma = 1.4
     Cp = 1006
@@ -70,9 +71,9 @@ t.toc('initialize time:')
 
 # run AUSM scheme
 t.tic()
-from python.finite_volume.AUSM.unstruct_AUSMfamily import unstruct_AUSM, avg_vars
+from python.finite_volume.AUSM.unstruct_AUSMfamily import unstruct_AUSM, avg_vars, unstruct_AUSM_facebased, centered_scheme, centered_face
 
-state = unstruct_AUSM( domain, mesh, state, parameters, gas )
+state = centered_face( domain, mesh, state, parameters, gas )
 t.toc('simulation time:')
 
 # call plotting functions

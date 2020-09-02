@@ -1,4 +1,5 @@
 import numpy as np
+from python.finite_volume.helper import thermo
 
 def unstruct_boundary_cond( domain, mesh, state, parameters, gas ):
     
@@ -10,7 +11,18 @@ def unstruct_boundary_cond( domain, mesh, state, parameters, gas ):
         L = int( mesh.face_pairs[bdry_id,0] )
         R = int( mesh.face_pairs[bdry_id,1] )
 
-        if type_id > 999:
+        bound_type = domain.face_marker_to_tag[type_id]
+
+        if bound_type == 'slip':
+
+            # update wall values
+            Qwall, pwall, Twall = slip_wall( state.Q[L,:], state.p[L], state.T[L], mesh.n[bdry_id,0], mesh.n[bdry_id,1], gas )
+
+            state.Qbound[i,:] = np.transpose( Qwall )
+            state.pbound[i] = pwall
+            state.Tbound[i] = Twall
+
+        elif bound_type == 'noslip':
 
             # update wall values
             Qwall, pwall, Twall = noslip_wall( state.Q[L,:], state.p[L], state.T[L], gas )
@@ -18,28 +30,24 @@ def unstruct_boundary_cond( domain, mesh, state, parameters, gas ):
             state.Qbound[i,:] = np.transpose( Qwall )
             state.pbound[i] = pwall
             state.Tbound[i] = Twall
+            
+        elif bound_type == 'inflow':
 
-        else:
+            state.Qbound[i,0] = parameters.p_in / (gas.R * parameters.T_in)
+            state.Qbound[i,1] = state.Qbound[i,0] * parameters.M_in * np.sqrt( gas.gamma * parameters.p_in / state.Qbound[i,0] )
+            state.Qbound[i,2] = 0
+            state.Qbound[i,3] = parameters.p_in/(gas.gamma-1) + \
+                            (1/2)*state.Qbound[i,0]*( (state.Qbound[i,1]/state.Qbound[i,0])**2 + (state.Qbound[i,2]/state.Qbound[i,0])**2 )
 
-            bound_type = domain.face_marker_to_tag[type_id]
+            state.pbound[i] = parameters.p_in
+            state.Tbound[i] = parameters.T_in
 
-            if bound_type == 'inflow':
+        elif bound_type == 'outflow':
 
-                state.Qbound[i,0] = parameters.p_in / (gas.R * parameters.T_in)
-                state.Qbound[i,1] = state.Qbound[i,0] * parameters.M_in * np.sqrt( gas.gamma * parameters.p_in / state.Qbound[i,0] )
-                state.Qbound[i,2] = 0
-                state.Qbound[i,3] = parameters.p_in/(gas.gamma-1) + \
-                                (1/2)*state.Qbound[i,0]*( (state.Qbound[i,1]/state.Qbound[i,0])**2 + (state.Qbound[i,2]/state.Qbound[i,0])**2 )
+            state.Qbound[i,:] = state.Q[L,:]
 
-                state.pbound[i] = parameters.p_in
-                state.Tbound[i] = parameters.T_in
-
-            elif bound_type == 'outflow':
-
-                state.Qbound[i,:] = state.Q[L,:]
-
-                state.pbound[i] = state.p[L]
-                state.Tbound[i] = state.T[L]
+            state.pbound[i] = state.p[L]
+            state.Tbound[i] = state.T[L]
 
         state.ubound = state.Qbound[:,1] / state.Qbound[:,0]
         state.vbound = state.Qbound[:,2] / state.Qbound[:,0]
@@ -68,7 +76,33 @@ def noslip_wall( Q, p, T, gas ):
     return Qwall, pwall, Twall
 
 
-# covariant velocity at each cell face
+def slip_wall( Q, p, T, nx, ny, gas ):
+
+    # adiabatic wall
+    Twall = T
+
+    # no pressure gradient 
+    pwall = p
+
+    # u0 = -u1 and v0 = -v1
+    Qwall = np.zeros( 4 )
+
+    # inviscid velocity projection
+    transform = np.array( [ 1-2*nx**2,   -2*nx*ny, \
+                           -2*nx*ny,      1-2*ny**2 ] ).reshape( [2, 2] )
+
+    uv = np.matmul( transform, np.array( [Q[1]/Q[0], Q[2]/Q[0] ] ).reshape([2,1]) )
+    
+    Qwall[0] = pwall / (gas.R * Twall)
+    Qwall[1] = uv[0] * Qwall[0]
+    Qwall[2] = uv[1] * Qwall[0]
+    # Qwall[3] = pwall/(gas.gamma-1) + (1/2)*Qwall[0]*( (Qwall[1]/Qwall[0])**2 + (Qwall[2]/Qwall[0])**2 )
+    Qwall[3] = thermo.calc_rho_et( pwall, Qwall[0], Qwall[1]/Qwall[0], Qwall[2]/Qwall[0], gas.gamma )
+
+    return Qwall, pwall, Twall
+
+
+# convective velocity at each cell face
 def unstruct_covariant( mesh, state ):
 
     # pointers from faces to left (interior) and right (exterior) elements

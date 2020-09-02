@@ -113,15 +113,13 @@ def plot_unstruct_contour( mesh, state ):
     fig = plt.figure('Contour')
     ax = fig.gca(projection='3d')
     
-    # ax.scatter( coord[:,0], coord[:,1], Qinterp[:,0], cmap = cm.jet )
+    # ax.scatter( coord[:,0], coord[:,1], Qinterp[:,0] )
     surf = ax.plot_trisurf(coord[:,0], coord[:,1], Qinterp[:,0], cmap = cm.jet, linewidth=0)
     fig.colorbar(surf)
 
     ax.xaxis.set_major_locator(MaxNLocator(5))
     ax.yaxis.set_major_locator(MaxNLocator(6))
     ax.zaxis.set_major_locator(MaxNLocator(5))
-
-    # ax.contourf( coord[:,0], coord[:,1], Qinterp[:,0] )
 
     fig.tight_layout()
     plt.show()

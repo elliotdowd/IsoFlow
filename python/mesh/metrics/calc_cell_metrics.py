@@ -50,8 +50,8 @@ def unstruct_cellmetrics( mesh ):
 
     mesh.face_areas = []
     mesh.dV = np.zeros( len(mesh.elements) )
-    mesh.Sx = np.zeros( len(mesh.faces) )
-    mesh.Sy = np.zeros( len(mesh.faces) )
+    mesh.dx = np.zeros( len(mesh.faces) )
+    mesh.dy = np.zeros( len(mesh.faces) )
     mesh.dS = np.zeros( len(mesh.faces) )
     mesh.n = np.zeros( [len(mesh.faces), 2] )
 
@@ -88,18 +88,26 @@ def unstruct_cellmetrics( mesh ):
     for j, pts in enumerate( mesh.faces ):
 
         # outward pointing face vector components
-        Sx = mesh.points[pts[1]][1] - mesh.points[pts[0]][1]
-        Sy = mesh.points[pts[0]][0] - mesh.points[pts[1]][0]
+        dy = mesh.points[pts[1]][1] - mesh.points[pts[0]][1]
+        dx = mesh.points[pts[0]][0] - mesh.points[pts[1]][0]
 
-        dS = np.sqrt( Sx**2 + Sy**2 )
+        dS = np.sqrt( dx**2 + dy**2 )
 
         mesh.face_areas.append( dS )
-        mesh.Sx[j] = Sx
-        mesh.Sy[j] = Sy
+        mesh.dx[j] = -dx
+        mesh.dy[j] = dy
         mesh.dS[j] = dS
 
-        mesh.normals[j] = ( Sx/dS, Sy/dS )
+        mesh.normals[j] = ( dy/dS, dx/dS )
         mesh.n[j,:] = mesh.normals[j]
+
+
+    # elementwise normals
+    # mesh.n_elem = []
+    # for i, elem in enumerate( mesh.elements ):
+
+    #     for j, pts in enumerate( elem ):
+    #         p0 = elem
 
     return mesh
 
@@ -107,8 +115,8 @@ def unstruct_cellmetrics( mesh ):
 # determine neighbors of each cell face, pointers from elements to faces (left and right cell states)
 def find_facepairs( mesh ):
 
-    mesh.face_pairs = np.zeros( [len(mesh.faces), 2] )
-    mesh.face_pts = np.zeros( [len(mesh.faces), 2] )
+    mesh.face_pairs = np.zeros( [len(mesh.faces), 2], dtype=int )
+    mesh.face_pts = np.zeros( [len(mesh.faces), 2], dtype=int )
     mesh.elem_to_face = np.zeros( [len(mesh.elements), 3], dtype=int ) - 1
     elem_face_allocated = np.zeros( len(mesh.elements), dtype=int )
 
@@ -135,14 +143,14 @@ def find_facepairs( mesh ):
                     face_id_mask = np.logical_or( face_pts == mesh.face_pts, np.flipud(face_pts) ==  mesh.face_pts )
                     face_id = np.where( np.logical_and( face_id_mask[:,0] == True, face_id_mask[:,1] == True ) )
                     
-                    if np.any( np.isin( np.nonzero(mesh.face_tags), face_id ) ):
+                    if np.any( np.isin( np.nonzero(mesh.face_tags), face_id ) ) and not np.any(mesh.elem_to_face[i]==face_id):
                         mesh.face_pairs[face_id,:] = ( i, -mesh.face_tags[int(face_id[0])] )
 
                         if elem_face_allocated[i] < 3:
                             # point from elements to faces
                             mesh.elem_to_face[i,elem_face_allocated[i]] = face_id[0]
                             # tracking of how many element -> face pointers have been allocated for a given element
-                            elem_face_allocated[i] = int(elem_face_allocated[i] + 1)
+                            elem_face_allocated[i] = elem_face_allocated[i] + 1
                 
             else:
                 elem_pts = mesh.elements[i]
@@ -161,10 +169,33 @@ def find_facepairs( mesh ):
                 # inside(left) element, then right(outside) element in mesh.face_pairs
                 mesh.face_pairs[face_id,:] = (elem, i)
 
-                # point from elements to faces
-                mesh.elem_to_face[i,elem_face_allocated[i]] = face_id[0]
-                # tracking of how many element->face pointers have been allocated for a given element
-                elem_face_allocated[i] = int(elem_face_allocated[i] + 1)
+                if elem_face_allocated[i] < 3:
+                    # point from elements to faces
+                    mesh.elem_to_face[i,elem_face_allocated[i]] = face_id[0]
+                    # tracking of how many element -> face pointers have been allocated for a given element
+                    elem_face_allocated[i] = elem_face_allocated[i] + 1
+
+
+    # determine if faces are counterclockwise by point
+    ccw = []
+    for L, faces in enumerate( mesh.elem_to_face ):
+
+        mask = np.zeros(len(mesh.elements[L]))
+        # loop through faces belonging to each CV
+        for j, face in enumerate( faces ):
+
+            # determine if face is clockwise or counter-clockwise
+            pts = np.hstack( [mesh.elements[L], mesh.elements[L][0]] )
+            pt_pairs = np.zeros( [len(faces), 2] )
+            for i, pt in enumerate( pts[0:-1] ):
+                pt_pairs[i,:] = (pt, pts[i+1])
+
+            mask[j] = np.any( np.logical_and( np.isin( pt_pairs[:,0], mesh.faces[face][0] ), np.isin( pt_pairs[:,1], mesh.faces[face][1] ) ) )
+
+        ccw.append( mask )
+
+    mesh.ccw = ccw
+
 
     return mesh
 

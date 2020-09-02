@@ -35,6 +35,30 @@ def gen_naca4points( airfoil ):
     return airfoil
 
 
+def gen_biconvexpoints( airfoil ):
+
+    # import domain values
+    M = airfoil.M
+    t = airfoil.naca
+    a = airfoil.alpha
+    L = airfoil.L
+
+    # concentrate points on object
+    # x = cospace( np.linspace(0, L, M) ) / airfoil.L
+    x = np.linspace(0, L, M) / airfoil.L
+
+    yt = 2*t*(x)*( 1 - (x) )
+
+    x = np.hstack( [x, np.flipud(x)] )*airfoil.L - float(L/2)
+    y = np.hstack( [-yt, np.flipud(yt)] )*airfoil.L
+
+    xy = rotate( np.transpose( np.vstack([x, y]) ), a )
+
+    airfoil.vertices = xy
+
+    return airfoil
+
+
 ## NACA related functions
 def NACA4symm( x, c, t ):
     import numpy as np

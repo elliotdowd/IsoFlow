@@ -69,5 +69,19 @@ def local_unstruct_timestep( mesh, state, parameters, gas ):
 
     state.dt = parameters.CFL * mesh.dV / spectral
 
+    # state.dt = np.zeros( len(mesh.elements) )
+
+    # # calculate inviscid spectral radii at each element via summation over element faces (Section 2.6, Hanel et al. 2011)
+    # for i, faces in enumerate( mesh.elem_to_face ):
+
+    #     dSmin = 10E10
+
+    #     for j, face in enumerate( faces ):
+
+    #         dSmin = np.min( [mesh.dS[face], dSmin] )
+
+    #     state.dt[i] = parameters.CFL * dSmin / ( np.sqrt( state.u[i]**2 + state.v[i]**2 ) + state.c[i] )
+
+
     return state
 
